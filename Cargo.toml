@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+  "script",
+  "rustic_tales"
+]
