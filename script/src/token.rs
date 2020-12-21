@@ -1,4 +1,5 @@
 use regex::Regex;
+//use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum Token {
@@ -18,24 +19,24 @@ fn parse_symbol(stream: &str) -> Option<(Token, usize)> {
     }
 }
 
+// A command should take up an entire line
 fn parse_command(stream: &str) -> Option<(Token, usize)> {
     // regex are completely incomprehensible (it doesn't help that I suck at writing them)
-    let re = Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:(.*)\}\}")
+    let re = Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:(.*)\}\}[[:space:]]*(\n|$)")
         .expect("If this is invalid, there is a bug");
     if let Some(cap) = re.captures(stream) {
         let name = cap[1].to_string();
         let arg_list = &cap[2];
+        let arg_list = if arg_list.len() == 0 {
+            vec![]
+        } else {
+            arg_list
+                .split("|,|")
+                .map(|s| s.trim().to_string())
+                .collect()
+        };
 
-        Some((
-            Token::Command(
-                name,
-                arg_list
-                    .split("|,|")
-                    .map(|s| s.trim().to_string())
-                    .collect(),
-            ),
-            cap[0].len(),
-        ))
+        Some((Token::Command(name, arg_list), cap[0].len()))
     } else {
         None
     }
@@ -54,23 +55,22 @@ pub(crate) fn tokenize(stream: &str) -> Vec<Token> {
     let mut ret = vec![];
 
     let mut beg = 0;
+    let mut search_pos = beg;
     while beg < stream.len() {
-        println!("beg: {}", beg);
         let special_chars: &[char] = &['{', '$'];
-        if let Some(end) = stream[beg..].find(special_chars) {
-            ret.push(Token::Text(stream[beg..beg + end].to_string()));
-
-            beg += end;
+        if let Some(end) = stream[search_pos..].find(special_chars) {
+            search_pos += end;
             // at most one of these can be Some
-            let sym = parse_symbol(&stream[beg..]);
-            let cmd = parse_command(&stream[beg..]);
-            let var = parse_variable(&stream[beg..]);
+            let sym = parse_symbol(&stream[search_pos..]);
+            let cmd = parse_command(&stream[search_pos..]);
+            let var = parse_variable(&stream[search_pos..]);
             if let Some((tkn, len)) = sym.or(cmd).or(var) {
+                ret.push(Token::Text(stream[beg..search_pos].to_string()));
                 ret.push(tkn);
-                beg += len;
+                search_pos += len;
+                beg = search_pos;
             } else {
-                // TODO: Some sort of merger
-                beg += 1;
+                search_pos += 1;
             }
         } else {
             ret.push(Token::Text(stream[beg..].trim_start().to_string()));
@@ -80,6 +80,16 @@ pub(crate) fn tokenize(stream: &str) -> Vec<Token> {
 
     ret
 }
+
+/*
+// Maybe move this somewheer else (and change Vec<Token>) later on
+impl FromStr for Vec<Token> {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, ()> {
+        Ok(tokenize(s))
+    }
+}
+*/
 
 #[cfg(test)]
 mod tests {
@@ -147,14 +157,37 @@ mod tests {
         assert_eq!(parse_command("{print : here}"), None);
         assert_eq!(parse_command(" {{ gotta : start |,| with |,| it }}"), None);
         assert_eq!(
-            parse_command("{{ can : end |,| without}} fdasfkdlsafjd;slkfjdlas;"),
+            parse_command("{{ must_be : whole |,| line}} fdasfkdlsafjd;slkfjdlas;"),
+            None
+        );
+        assert_eq!(
+            parse_command("{{ command : is |,| entire |,| line }}\n"),
             Some((
                 Token::Command(
-                    "can".to_string(),
-                    vec!["end".to_string(), "without".to_string()]
+                    "command".to_string(),
+                    vec!["is".to_string(), "entire".to_string(), "line".to_string()]
                 ),
-                26
+                39
             ))
+        );
+        assert_eq!(
+            parse_command("{{ space_at_end_is_fine : ok}}"),
+            Some((
+                Token::Command("space_at_end_is_fine".to_string(), vec!["ok".to_string()]),
+                30
+            ))
+        );
+        assert_eq!(parse_command("{{ : }}"), None);
+        assert_eq!(
+            parse_command("{{ empty_arg : }}"),
+            Some((
+                Token::Command("empty_arg".to_string(), vec!["".to_string()]),
+                17
+            ))
+        );
+        assert_eq!(
+            parse_command("{{ no_arg :}}"),
+            Some((Token::Command("no_arg".to_string(), vec![]), 13))
         );
     }
     #[test]

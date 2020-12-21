@@ -31,4 +31,25 @@ mod tests {
             ]
         )
     }
+
+    #[test]
+    fn tokenization_with_cash_sign() {
+        let test = "\
+          Your total comes out to ${{BLUE_DBG}} $5.98. Is that ok?\n\
+          {{ user_input : $response$}}\n\
+          You answered '${{response}}'.\
+        ";
+        assert_eq!(
+            tokenize(&test),
+            vec![
+                Token::Text("Your total comes out to ".to_string()),
+                Token::Variable("BLUE_DBG".to_string()),
+                Token::Text(" $5.98. Is that ok?\n".to_string()),
+                Token::Command("user_input".to_string(), vec!["$response$".to_string()]),
+                Token::Text("You answered '".to_string()),
+                Token::Variable("response".to_string()),
+                Token::Text("'.".to_string())
+            ]
+        );
+    }
 }
