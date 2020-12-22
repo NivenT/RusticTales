@@ -44,7 +44,7 @@ impl Unit {
         use Unit::*;
         match tkn {
             Token::Text(s) => {
-                let re = Regex::new("[[:space:]]+").expect("Type if this does not work");
+                let re = Regex::new("[[:space:]]+").expect("Typo if this does not work");
                 re.split(s).map(|w| Word(w.to_string())).collect()
             }
             t => vec![Special(t.clone())],
@@ -82,6 +82,7 @@ impl Story {
     }
 }
 
+// TODO: Make state machine (e.g. so can backspace over time)
 #[derive(Debug, Clone)]
 pub struct StoryTeller {
     story: Story,
@@ -125,7 +126,7 @@ impl StoryTeller {
     }
     pub fn tell(&mut self) {
         while !self.story.is_over() {
-            let word = &self.story.content[self.story.place];
+            let word = self.story.content[self.story.place].clone();
             match word {
                 Unit::Char(c) => print!("{}", c),
                 Unit::Word(w) => print!("{} ", w),
@@ -133,8 +134,11 @@ impl StoryTeller {
                     assert!(!t.is_text());
                     match t {
                         Token::Variable(s) => {
-                            let val = self.get_val(s);
+                            let val = self.get_val(&s);
                             print!("{}", val);
+                        }
+                        Token::Command(func, args) => {
+                            self.eval_command(&func, &args);
                         }
                         _ => {}
                     }
@@ -149,6 +153,24 @@ impl StoryTeller {
 
     fn get_val(&self, var: &str) -> String {
         self.env.get(var).unwrap_or(&String::new()).clone()
+    }
+    fn eval_command(&mut self, func: &str, args: &Vec<String>) {
+        match func.as_ref() {
+            "backspace" => {
+                if args.len() < 2 {
+                    return;
+                }
+                if let Ok(len) = args[0].parse::<usize>() {
+                    let erase_chars = args[1] == "chars";
+                    if erase_chars {
+                        for _ in 0..len {
+                            print!("\u{8}");
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
     }
     fn cleanup(&self) {
         println!("{}{}", self.get_val("DEFCOL_BG"), self.get_val("DEFCOL_FG"));
