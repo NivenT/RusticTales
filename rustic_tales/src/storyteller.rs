@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::io::{stdout, Write};
 use std::path::Path;
@@ -25,7 +26,7 @@ struct STOptions {
 impl Default for STOptions {
     fn default() -> Self {
         STOptions {
-            ms_per_symbol: 700,
+            ms_per_symbol: 458,
             disp_by: DisplayUnit::Word,
         }
     }
@@ -46,7 +47,7 @@ impl Unit {
                 let re = Regex::new("[[:space:]]+").expect("Type if this does not work");
                 re.split(s).map(|w| Word(w.to_string())).collect()
             }
-            t @ _ => vec![Special(t.clone())],
+            t => vec![Special(t.clone())],
         }
     }
 }
@@ -85,14 +86,41 @@ impl Story {
 pub struct StoryTeller {
     story: Story,
     options: STOptions,
+    env: HashMap<String, String>,
 }
 
 impl StoryTeller {
+    fn prepare_builtins() -> HashMap<String, String> {
+        let mut env = HashMap::new();
+
+        // color support ("\033[%dm")
+        //   FG val + 10 ==    BG val
+        // dark val + 60 == light val
+        const COLORS: [&str; 7] = ["RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "GREY"];
+        for (val, name) in COLORS.iter().enumerate() {
+            env.insert(format!("{}_DFG", name), format!("\x1b[0;{}m", val + 31));
+            env.insert(format!("{}_DBG", name), format!("\x1b[0;{}m", val + 41));
+            env.insert(format!("{}_LFG", name), format!("\x1b[0;{}m", val + 91));
+            env.insert(format!("{}_LBG", name), format!("\x1b[0;{}m", val + 101));
+        }
+        // This placement is awkward, but can't put it before calls to
+        // "env.insert" since this closure mutably borrows env
+        let mut add = |k: &str, v: &str| {
+            env.insert(k.to_string(), v.to_string());
+        };
+        add("DEFCOL_FG", "\x1b[0;39m");
+        add("DEFCOL_BG", "\x1b[0;49m");
+        add("RED_LFG", "\x1b[0;91m");
+
+        env
+    }
+
     pub fn new<P: AsRef<Path>>(story: P) -> Result<Self> {
         let story: Story = fs::read_to_string(story)?.parse()?;
         Ok(StoryTeller {
             story: story,
             options: STOptions::default(),
+            env: StoryTeller::prepare_builtins(),
         })
     }
     pub fn tell(&mut self) {
@@ -103,11 +131,26 @@ impl StoryTeller {
                 Unit::Word(w) => print!("{} ", w),
                 Unit::Special(t) => {
                     assert!(!t.is_text());
+                    match t {
+                        Token::Variable(s) => {
+                            let val = self.get_val(s);
+                            print!("{}", val);
+                        }
+                        _ => {}
+                    }
                 }
             }
-            stdout().flush();
+            let _ = stdout().flush();
             sleep(Duration::from_millis(self.options.ms_per_symbol as u64));
             self.story.place += 1;
         }
+        self.cleanup();
+    }
+
+    fn get_val(&self, var: &str) -> String {
+        self.env.get(var).unwrap_or(&String::new()).clone()
+    }
+    fn cleanup(&self) {
+        println!("{}{}", self.get_val("DEFCOL_BG"), self.get_val("DEFCOL_FG"));
     }
 }

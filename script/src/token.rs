@@ -10,10 +10,7 @@ pub enum Token {
 
 impl Token {
     pub fn is_text(&self) -> bool {
-        match self {
-            Token::Text(_) => true,
-            _ => false,
-        }
+        matches!(self, Token::Text(_))
     }
 }
 
@@ -35,7 +32,7 @@ fn parse_command(stream: &str) -> Option<(Token, usize)> {
     if let Some(cap) = re.captures(stream) {
         let name = cap[1].to_string();
         let arg_list = &cap[2];
-        let arg_list = if arg_list.len() == 0 {
+        let arg_list = if arg_list.is_empty() {
             vec![]
         } else {
             arg_list
