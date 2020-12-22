@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 script = { path = "../script" }
+regex = "1"

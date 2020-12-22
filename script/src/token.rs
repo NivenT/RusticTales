@@ -1,12 +1,20 @@
 use regex::Regex;
-//use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum Token {
+pub enum Token {
     Text(String),
     Command(String, Vec<String>),
     Variable(String),
     Symbol(String),
+}
+
+impl Token {
+    pub fn is_text(&self) -> bool {
+        match self {
+            Token::Text(_) => true,
+            _ => false,
+        }
+    }
 }
 
 fn parse_symbol(stream: &str) -> Option<(Token, usize)> {
@@ -51,7 +59,7 @@ fn parse_variable(stream: &str) -> Option<(Token, usize)> {
     }
 }
 
-pub(crate) fn tokenize(stream: &str) -> Vec<Token> {
+pub fn tokenize(stream: &str) -> Vec<Token> {
     let mut ret = vec![];
 
     let mut beg = 0;
@@ -80,16 +88,6 @@ pub(crate) fn tokenize(stream: &str) -> Vec<Token> {
 
     ret
 }
-
-/*
-// Maybe move this somewheer else (and change Vec<Token>) later on
-impl FromStr for Vec<Token> {
-    type Err = ();
-    fn from_str(s: &str) -> Result<Self, ()> {
-        Ok(tokenize(s))
-    }
-}
-*/
 
 #[cfg(test)]
 mod tests {

@@ -1,5 +1,5 @@
 extern crate regex;
-mod token;
+pub mod token;
 
 #[cfg(test)]
 mod tests {
