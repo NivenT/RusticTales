@@ -1,3 +1,3 @@
-Once upon a time, there was a large and terrifying ${{RED_LFG}} credit card bill!
+Once upon a time, there was a large and terrifying credit card bill!
 {{ backspace : 20 |,| chars |,| one_by_one }}
-OVERDUE Credit Card Bill!
+${{RED_LFG}}OVERDUE Credit Card Bill!

@@ -1,6 +1,7 @@
 extern crate regex;
 extern crate script;
 
+mod commands;
 mod err;
 mod storyteller;
 

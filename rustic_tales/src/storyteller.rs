@@ -11,10 +11,34 @@ use script::token::{tokenize, Token};
 
 use super::err::{RTError, Result};
 
-#[derive(Debug, Clone, Copy)]
-enum DisplayUnit {
+use super::commands::*;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DisplayUnit {
     Char,
     Word,
+}
+
+impl FromStr for DisplayUnit {
+    type Err = RTError;
+
+    fn from_str(s: &str) -> Result<Self> {
+        if s.eq_ignore_ascii_case("chars") {
+            Ok(DisplayUnit::Char)
+        } else if s.eq_ignore_ascii_case("words") {
+            Ok(DisplayUnit::Word)
+        } else {
+            Err(RTError::InvalidInput(
+                "DisplayUnit can only be constructed from 'chars' or 'words'".to_string(),
+            ))
+        }
+    }
+}
+
+impl DisplayUnit {
+    pub fn is_char(&self) -> bool {
+        matches!(self, DisplayUnit::Char)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -34,6 +58,7 @@ impl Default for STOptions {
 
 #[derive(Debug, Clone)]
 enum Unit {
+    #[allow(dead_code)]
     Char(char), // Can probably get rid of this?
     Word(String),
     Special(Token), // Not Token::Text
@@ -138,7 +163,9 @@ impl StoryTeller {
                             print!("{}", val);
                         }
                         Token::Command(func, args) => {
-                            self.eval_command(&func, &args);
+                            if let Err(e) = self.eval_command(&func, &args) {
+                                eprintln!("Error: {}", e)
+                            }
                         }
                         _ => {}
                     }
@@ -154,22 +181,19 @@ impl StoryTeller {
     fn get_val(&self, var: &str) -> String {
         self.env.get(var).unwrap_or(&String::new()).clone()
     }
-    fn eval_command(&mut self, func: &str, args: &Vec<String>) {
-        match func.as_ref() {
+    fn eval_command(&mut self, func: &str, args: &Vec<String>) -> Result<()> {
+        match func {
             "backspace" => {
                 if args.len() < 2 {
-                    return;
+                    return Err(RTError::InvalidInput(
+                        "'backspace' requires two arguments".to_string(),
+                    ));
                 }
-                if let Ok(len) = args[0].parse::<usize>() {
-                    let erase_chars = args[1] == "chars";
-                    if erase_chars {
-                        for _ in 0..len {
-                            print!("\u{8}");
-                        }
-                    }
-                }
+                let len: usize = args[0].parse()?;
+                backspace(len, args[1].parse()?);
+                Ok(())
             }
-            _ => {}
+            _ => Err(RTError::UnrecognizedCommand(func.to_string())),
         }
     }
     fn cleanup(&self) {
