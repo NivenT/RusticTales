@@ -8,6 +8,7 @@ pub enum TermAction {
     MoveCursor(isize, isize),
     SetCursor(usize, usize),
     ClearScreen,
+    ResetColor,
 }
 
 impl fmt::Display for TermAction {
@@ -18,12 +19,28 @@ impl fmt::Display for TermAction {
             EraseLineFromCursor => write!(f, "\x1b[0K"),
             EraseLineToCursor => write!(f, "\x1b[1K"),
             MoveCursor(x, y) => {
-                let fb = if *x > 0 { 'C' } else { 'D' };
-                let ud = if *y > 0 { 'A' } else { 'B' };
-                write!(f, "\x1b[{}{}\x1b[{}{}", x.abs(), fb, y.abs(), ud)
+                if *x != 0 {
+                    let fb = if *x > 0 { 'C' } else { 'D' };
+                    write!(f, "\x1b[{}{}", x.abs(), fb)?;
+                }
+                if *y != 0 {
+                    let ud = if *y > 0 { 'A' } else { 'B' };
+                    write!(f, "\x1b[{}{}", y.abs(), ud)?;
+                }
+                Ok(())
             }
-            SetCursor(x, y) => write!(f, "\x1b[H\x1b[{}C\x1b[{}B", x, y),
+            SetCursor(x, y) => {
+                write!(f, "\x1b[H")?;
+                if *x != 0 {
+                    write!(f, "\x1b[{}C", x)?;
+                }
+                if *y != 0 {
+                    write!(f, "\x1b[{}B", y)?;
+                }
+                Ok(())
+            }
             ClearScreen => write!(f, "\x1b[2J"),
+            ResetColor => write!(f, "\x1b[39m\x1b[49m"),
         }
     }
 }

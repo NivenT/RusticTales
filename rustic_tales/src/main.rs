@@ -1,5 +1,7 @@
+extern crate image;
 extern crate regex;
 extern crate script;
+extern crate terminal_size;
 
 pub mod ansi;
 pub mod commands;
@@ -16,6 +18,7 @@ fn menu(items: Vec<&str>) -> Result<usize> {
     for (idx, item) in items.iter().enumerate() {
         println!("{}. {}", idx + 1, item);
     }
+    println!();
 
     let mut choice = String::new();
     let _ = stdin().read_line(&mut choice)?;
@@ -40,7 +43,12 @@ fn choose_story() -> Result<String> {
 
     let stories: Vec<String> = fs::read_dir(dir)?
         .filter(|e| e.is_ok())
-        .map(|e| e.unwrap().file_name().into_string())
+        .map(|e| e.unwrap())
+        .filter(|e| match e.file_type() {
+            Ok(file_type) => file_type.is_file(),
+            _ => false,
+        })
+        .map(|e| e.file_name().into_string())
         .filter(|s| s.is_ok())
         .map(|s| s.unwrap())
         .collect();

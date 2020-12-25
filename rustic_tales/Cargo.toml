@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 script = { path = "../script" }
 regex = "1"
+image = "0.23.12"
+terminal_size = "0.1.15"

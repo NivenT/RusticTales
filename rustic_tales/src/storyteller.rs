@@ -9,9 +9,9 @@ use regex::Regex;
 
 use script::token::{tokenize, Token};
 
-use super::err::{RTError, Result};
-
+use super::ansi::TermAction;
 use super::commands::*;
+use super::err::{RTError, Result};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DisplayUnit {
@@ -134,9 +134,15 @@ impl StoryTeller {
         let mut add = |k: &str, v: &str| {
             env.insert(k.to_string(), v.to_string());
         };
+
         add("DEFCOL_FG", "\x1b[0;39m");
         add("DEFCOL_BG", "\x1b[0;49m");
         add("RED_LFG", "\x1b[0;91m");
+
+        add("BOLD", "\x1b[1mBold");
+        add("DIM", "\x1b[2mDim");
+        add("UNDERLINE", "\x1b[4mUnderlined");
+        add("BLINK", "\x1b[5mBlink");
 
         env
     }
@@ -150,6 +156,7 @@ impl StoryTeller {
         })
     }
     pub fn tell(&mut self) {
+        self.setup();
         while !self.story.is_over() {
             let word = self.story.content[self.story.place].clone();
             match word {
@@ -164,7 +171,7 @@ impl StoryTeller {
                         }
                         Token::Command(func, args) => {
                             if let Err(e) = self.eval_command(&func, &args) {
-                                eprintln!("Error: {}", e)
+                                eprintln!("\nError: {}", e)
                             }
                         }
                         _ => {}
@@ -185,18 +192,42 @@ impl StoryTeller {
         match func {
             "backspace" => {
                 if args.len() < 2 {
-                    return Err(RTError::InvalidInput(
+                    Err(RTError::InvalidInput(
                         "'backspace' requires two arguments".to_string(),
-                    ));
+                    ))
+                } else {
+                    let len: isize = args[0].parse()?;
+                    backspace(len, args[1].parse()?);
+                    Ok(())
                 }
-                let len: isize = args[0].parse()?;
-                backspace(len, args[1].parse()?);
-                Ok(())
+            }
+            "display_img" => {
+                if args.len() != 1 {
+                    Err(RTError::InvalidInput(
+                        "'display_img' takes 1 arg".to_string(),
+                    ))
+                } else {
+                    img_to_ascii(&args[0])?;
+                    Ok(())
+                }
             }
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),
         }
     }
+    fn setup(&self) {
+        TermAction::ClearScreen
+            .and_then(TermAction::SetCursor(0, 0))
+            .and_then(TermAction::ResetColor)
+            .execute();
+    }
     fn cleanup(&self) {
         println!("{}{}", self.get_val("DEFCOL_BG"), self.get_val("DEFCOL_FG"));
+
+        let mut temp = String::new();
+        let _ = std::io::stdin().read_line(&mut temp);
+
+        TermAction::ClearScreen
+            .and_then(TermAction::SetCursor(0, 0))
+            .execute();
     }
 }

@@ -1,3 +1,4 @@
 Once upon a time, there was a large and terrifying credit card bill!
 {{ backspace : 20 |,| chars |,| one_by_one }}
 ${{RED_LFG}}OVERDUE Credit Card Bill!
+{{ display_img : stories/images/past_due.png }}
