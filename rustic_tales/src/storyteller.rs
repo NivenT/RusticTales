@@ -189,7 +189,7 @@ impl StoryTeller {
                         "'backspace' requires two arguments".to_string(),
                     ));
                 }
-                let len: usize = args[0].parse()?;
+                let len: isize = args[0].parse()?;
                 backspace(len, args[1].parse()?);
                 Ok(())
             }

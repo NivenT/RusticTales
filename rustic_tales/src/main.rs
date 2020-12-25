@@ -1,9 +1,10 @@
 extern crate regex;
 extern crate script;
 
-mod commands;
-mod err;
-mod storyteller;
+pub mod ansi;
+pub mod commands;
+pub mod err;
+pub mod storyteller;
 
 use std::io::stdin;
 use std::{env, fs};
