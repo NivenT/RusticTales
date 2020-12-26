@@ -124,10 +124,10 @@ impl StoryTeller {
         // dark val + 60 == light val
         const COLORS: [&str; 7] = ["RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "GREY"];
         for (val, name) in COLORS.iter().enumerate() {
-            env.insert(format!("{}_DFG", name), format!("\x1b[0;{}m", val + 31));
-            env.insert(format!("{}_DBG", name), format!("\x1b[0;{}m", val + 41));
-            env.insert(format!("{}_LFG", name), format!("\x1b[0;{}m", val + 91));
-            env.insert(format!("{}_LBG", name), format!("\x1b[0;{}m", val + 101));
+            env.insert(format!("{}_DFG", name), format!("\x1b[{}m", val + 31));
+            env.insert(format!("{}_DBG", name), format!("\x1b[{}m", val + 41));
+            env.insert(format!("{}_LFG", name), format!("\x1b[{}m", val + 91));
+            env.insert(format!("{}_LBG", name), format!("\x1b[{}m", val + 101));
         }
         // This placement is awkward, but can't put it before calls to
         // "env.insert" since this closure mutably borrows env
@@ -135,14 +135,15 @@ impl StoryTeller {
             env.insert(k.to_string(), v.to_string());
         };
 
-        add("DEFCOL_FG", "\x1b[0;39m");
-        add("DEFCOL_BG", "\x1b[0;49m");
-        add("RED_LFG", "\x1b[0;91m");
+        add("DEFCOL_FG", "\x1b[39m");
+        add("DEFCOL_BG", "\x1b[49m");
+        add("RED_LFG", "\x1b[91m");
 
-        add("BOLD", "\x1b[1mBold");
-        add("DIM", "\x1b[2mDim");
-        add("UNDERLINE", "\x1b[4mUnderlined");
-        add("BLINK", "\x1b[5mBlink");
+        add("BOLD", "\x1b[1m");
+        add("DIM", "\x1b[2m");
+        add("UNDERLINE", "\x1b[4m");
+        add("BLINK", "\x1b[5m");
+        add("NORMAL", "\x1b[0m");
 
         env
     }

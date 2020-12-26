@@ -12,6 +12,14 @@ impl Token {
     pub fn is_text(&self) -> bool {
         matches!(self, Token::Text(_))
     }
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Token::Text(s) => s.is_empty(),
+            Token::Command(c, _) => c.is_empty(),
+            Token::Variable(v) => v.is_empty(),
+            Token::Symbol(s) => s.is_empty(),
+        }
+    }
 }
 
 fn parse_symbol(stream: &str) -> Option<(Token, usize)> {
@@ -48,7 +56,7 @@ fn parse_command(stream: &str) -> Option<(Token, usize)> {
 }
 
 fn parse_variable(stream: &str) -> Option<(Token, usize)> {
-    let re = Regex::new(r"^\$\{\{([^[[:space:]]]+)\}\}").expect("If bad, then bug");
+    let re = Regex::new(r"^\$\{\{([^[[:space:]]}]+)\}\}").expect("If bad, then bug");
     if let Some(cap) = re.captures(stream) {
         Some((Token::Variable(cap[1].to_string()), cap[0].len()))
     } else {
@@ -69,7 +77,7 @@ pub fn tokenize(stream: &str) -> Vec<Token> {
             let sym = parse_symbol(&stream[search_pos..]);
             let cmd = parse_command(&stream[search_pos..]);
             let var = parse_variable(&stream[search_pos..]);
-            if let Some((tkn, len)) = sym.or(cmd).or(var) {
+            if let Some((tkn, len)) = var.or(cmd).or(sym) {
                 ret.push(Token::Text(stream[beg..search_pos].to_string()));
                 ret.push(tkn);
                 search_pos += len;
@@ -83,7 +91,7 @@ pub fn tokenize(stream: &str) -> Vec<Token> {
         }
     }
 
-    ret
+    ret.into_iter().filter(|t| !t.is_empty()).collect()
 }
 
 #[cfg(test)]

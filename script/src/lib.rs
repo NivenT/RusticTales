@@ -52,4 +52,22 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn tokenization_consecutive_variables() {
+        let test = "${{VAR1}}${{VAR2}}Text${{VAR3}}Text${{VAR4}}${{VAR5}}${{VAR6}}";
+        assert_eq!(
+            tokenize(&test),
+            vec![
+                Token::Variable("VAR1".to_string()),
+                Token::Variable("VAR2".to_string()),
+                Token::Text("Text".to_string()),
+                Token::Variable("VAR3".to_string()),
+                Token::Text("Text".to_string()),
+                Token::Variable("VAR4".to_string()),
+                Token::Variable("VAR5".to_string()),
+                Token::Variable("VAR6".to_string()),
+            ]
+        );
+    }
 }
