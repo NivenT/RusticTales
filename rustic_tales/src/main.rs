@@ -14,6 +14,12 @@ use std::{env, fs};
 use err::{RTError, Result};
 use storyteller::StoryTeller;
 
+pub fn wait_for_enter(prompt: &str) {
+    println!("{}", prompt);
+    let mut temp = String::new();
+    let _ = std::io::stdin().read_line(&mut temp);
+}
+
 fn menu(items: Vec<&str>) -> Result<usize> {
     for (idx, item) in items.iter().enumerate() {
         println!("{}. {}", idx + 1, item);

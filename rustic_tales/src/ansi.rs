@@ -49,8 +49,8 @@ impl TermAction {
     pub fn execute(&self) {
         print!("{}", self)
     }
-    pub fn and_then(&self, then: TermAction) -> TermActions {
-        TermActions::Nil.and_then(*self).and_then(then)
+    pub fn then(&self, next: TermAction) -> TermActions {
+        TermActions::Nil.then(*self).then(next)
     }
 }
 
@@ -67,7 +67,7 @@ impl TermActions {
             last.execute();
         }
     }
-    pub fn and_then(self, then: TermAction) -> Self {
-        TermActions::Cons(Box::new(self), then)
+    pub fn then(self, next: TermAction) -> Self {
+        TermActions::Cons(Box::new(self), next)
     }
 }

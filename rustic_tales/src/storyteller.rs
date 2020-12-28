@@ -7,11 +7,14 @@ use std::{thread::sleep, time::Duration};
 
 use regex::Regex;
 
+use terminal_size::{terminal_size, Height, Width};
+
 use script::token::{tokenize, Token};
 
 use super::ansi::TermAction;
 use super::commands::*;
 use super::err::{RTError, Result};
+use super::wait_for_enter;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DisplayUnit {
@@ -41,6 +44,7 @@ impl DisplayUnit {
     }
 }
 
+// TODO: Add JSON config file (files to ignore, auto vs. manual scroll, etc.)
 #[derive(Debug, Clone)]
 struct STOptions {
     ms_per_symbol: usize,
@@ -58,10 +62,9 @@ impl Default for STOptions {
 
 #[derive(Debug, Clone)]
 enum Unit {
-    #[allow(dead_code)]
-    Char(char), // Can probably get rid of this?
+    Char(char),
     Word(String),
-    Special(Token), // Not Token::Text
+    Special(Token), // Not Token::Text or Token::Char
 }
 
 impl Unit {
@@ -72,14 +75,65 @@ impl Unit {
                 let re = Regex::new("[[:space:]]+").expect("Typo if this does not work");
                 re.split(s).map(|w| Word(w.to_string())).collect()
             }
+            Token::Char(c) => vec![Unit::Char(*c)],
             t => vec![Special(t.clone())],
         }
+    }
+    fn len(&self) -> usize {
+        match self {
+            Unit::Char(_) => 1,
+            Unit::Word(w) => w.len(),
+            Unit::Special(t) => match t {
+                Token::Command(_, _) => 0,
+                Token::Variable(_) => 7, // can't know variable length a priori so just guess
+                Token::Symbol(s) => s.len() + 2,
+                _ => unreachable!(),
+            },
+        }
+    }
+    fn is_page_end(&self) -> bool {
+        matches!(self, Unit::Special(Token::PageEnd))
     }
 }
 
 #[derive(Debug, Clone)]
+struct Page {
+    // index into the 'contents' of the containing story
+    start_idx: usize,
+    len: usize,
+}
+
+impl Default for Page {
+    fn default() -> Self {
+        Page {
+            start_idx: 0,
+            len: 0,
+        }
+    }
+}
+
+impl Page {
+    fn max_page_len() -> usize {
+        if let Some((Width(w), Height(h))) = terminal_size() {
+            (w * h) as usize
+        } else {
+            80 * 25
+        }
+    }
+}
+
+// Should this be copy?
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Bookmark {
+    page: usize,
+    word: usize,
+    letter: usize,
+}
+
+#[derive(Debug, Clone)]
 struct Story {
-    content: Vec<Unit>,
+    pages: Vec<Page>,
+    contents: Vec<Unit>,
     place: usize,
 }
 
@@ -88,14 +142,43 @@ impl FromStr for Story {
 
     fn from_str(s: &str) -> Result<Self> {
         let tkns = tokenize(s);
-        let content: Vec<_> = tkns
+        let contents: Vec<_> = tkns
             .into_iter()
-            .map(|t| Unit::from_token(&t).into_iter())
-            .flatten()
+            .flat_map(|t| Unit::from_token(&t))
             .collect();
 
+        let mut pages = Vec::new();
+        let mut idx = 0;
+        loop {
+            let mut curr_page = Page {
+                start_idx: idx,
+                ..Page::default()
+            };
+            curr_page.len = contents[idx..]
+                .iter()
+                .scan(0, |len, next| {
+                    if next.is_page_end() {
+                        None
+                    } else if *len + next.len() > Page::max_page_len() {
+                        None
+                    } else {
+                        *len += next.len();
+                        Some(next)
+                    }
+                })
+                .count();
+            idx += curr_page.len;
+            pages.push(curr_page);
+            if idx < contents.len() {
+                idx += contents[idx].is_page_end() as usize;
+            } else {
+                break;
+            }
+        }
+
         Ok(Story {
-            content: content,
+            pages: pages,
+            contents: contents,
             place: 0,
         })
     }
@@ -103,7 +186,7 @@ impl FromStr for Story {
 
 impl Story {
     fn is_over(&self) -> bool {
-        self.place >= self.content.len()
+        self.place >= self.contents.len()
     }
 }
 
@@ -150,6 +233,15 @@ impl StoryTeller {
 
     pub fn new<P: AsRef<Path>>(story: P) -> Result<Self> {
         let story: Story = fs::read_to_string(story)?.parse()?;
+
+        println!("{:?}", story);
+        println!(
+            "There were {} pages. The max page length is {}.",
+            story.pages.len(),
+            Page::max_page_len()
+        );
+        wait_for_enter("...");
+
         Ok(StoryTeller {
             story: story,
             options: STOptions::default(),
@@ -158,31 +250,33 @@ impl StoryTeller {
     }
     pub fn tell(&mut self) {
         self.setup();
+        /*
         while !self.story.is_over() {
-            let word = self.story.content[self.story.place].clone();
-            match word {
-                Unit::Char(c) => print!("{}", c),
-                Unit::Word(w) => print!("{} ", w),
-                Unit::Special(t) => {
-                    assert!(!t.is_text());
-                    match t {
-                        Token::Variable(s) => {
-                            let val = self.get_val(&s);
-                            print!("{}", val);
-                        }
-                        Token::Command(func, args) => {
-                            if let Err(e) = self.eval_command(&func, &args) {
-                                eprintln!("\nError: {}", e)
+        let word = self.story.contents[self.story.place].clone();
+        match word {
+        Unit::Char(c) => print!("{}", c),
+        Unit::Word(w) => print!("{} ", w),
+        Unit::Special(t) => {
+        assert!(!t.is_text());
+        match t {
+        Token::Variable(s) => {
+        let val = self.get_val(&s);
+                                    print!("{}", val);
+                                }
+                                Token::Command(func, args) => {
+                                    if let Err(e) = self.eval_command(&func, &args) {
+                                        eprintln!("\nError: {}", e)
+                                    }
+                                }
+                                _ => {}
                             }
                         }
-                        _ => {}
                     }
+                    let _ = stdout().flush();
+                    sleep(Duration::from_millis(self.options.ms_per_symbol as u64));
+                    self.story.place += 1;
                 }
-            }
-            let _ = stdout().flush();
-            sleep(Duration::from_millis(self.options.ms_per_symbol as u64));
-            self.story.place += 1;
-        }
+        */
         self.cleanup();
     }
 
@@ -216,22 +310,14 @@ impl StoryTeller {
     }
     fn setup(&self) {
         TermAction::ClearScreen
-            .and_then(TermAction::SetCursor(0, 0))
-            .and_then(TermAction::ResetColor)
+            .then(TermAction::SetCursor(0, 0))
+            .then(TermAction::ResetColor)
             .execute();
     }
     fn cleanup(&self) {
-        println!(
-            "{}{}The end...",
-            self.get_val("DEFCOL_BG"),
-            self.get_val("DEFCOL_FG")
-        );
-
-        let mut temp = String::new();
-        let _ = std::io::stdin().read_line(&mut temp);
-
+        wait_for_enter(&format!("{}The end...", self.get_val("NORMAL")));
         TermAction::ClearScreen
-            .and_then(TermAction::SetCursor(0, 0))
+            .then(TermAction::SetCursor(0, 0))
             .execute();
     }
 }

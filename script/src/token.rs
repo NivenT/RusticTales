@@ -79,7 +79,7 @@ pub fn tokenize(stream: &str) -> Vec<Token> {
     let mut beg = 0;
     let mut search_pos = beg;
     while beg < stream.len() {
-        let special_chars: &[char] = &['{', '$'];
+        let special_chars: &[char] = &['{', '$', '/'];
         if let Some(end) = stream[search_pos..].find(special_chars) {
             search_pos += end;
             // (ideally) at most one of these will return Some

@@ -103,7 +103,7 @@ mod tests {
     fn tokenize_unicode() {
         let test = "\
           Il était une fois que j'ai oublié mon {.}{.}{.} portable.\n\
-          Alor, j'ai dû emprunter le portable à mon ami. Malheureusement, il est anglais.\n\
+          Alor, j'ai dû emprunter un portable à mon ami. Malheureusement, il était anglais.\n\
           Donc, je n'ai pas su comment trouver le clé '${{BLUE_LFG}}{é}'. C'était triste.\
         ";
         assert_eq!(
@@ -113,10 +113,28 @@ mod tests {
                 Token::Char('.'),
                 Token::Char('.'),
                 Token::Char('.'),
-                Token::Text(" portable.\nAlor, j'ai dû emprunter le portable à mon ami. Malheureusement, il est anglais.\nDonc, je n'ai pas su comment trouver le clé '".to_string()),
+                Token::Text(" portable.\nAlor, j'ai dû emprunter un portable à mon ami. Malheureusement, il était anglais.\nDonc, je n'ai pas su comment trouver le clé '".to_string()),
                 Token::Variable("BLUE_LFG".to_string()),
                 Token::Char('é'),
                 Token::Text("'. C'était triste.".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn tokenize_pages() {
+        let test = "Page 1/PAGE/ Page 2/PAGE/ 3 and then empty/PAGE//PAGE/Fin.";
+        assert_eq!(
+            tokenize(&test),
+            vec![
+                Token::Text("Page 1".to_string()),
+                Token::PageEnd,
+                Token::Text(" Page 2".to_string()),
+                Token::PageEnd,
+                Token::Text(" 3 and then empty".to_string()),
+                Token::PageEnd,
+                Token::PageEnd,
+                Token::Text("Fin.".to_string()),
             ]
         );
     }

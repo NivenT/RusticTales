@@ -12,7 +12,7 @@ use crate::storyteller::DisplayUnit;
 pub fn backspace(len: isize, unit: DisplayUnit) {
     if unit.is_char() {
         TermAction::MoveCursor(-len, 0)
-            .and_then(TermAction::EraseLineFromCursor)
+            .then(TermAction::EraseLineFromCursor)
             .execute()
     } else {
         unimplemented!()
@@ -26,17 +26,13 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
     if let Some((Width(w), Height(h))) = terminal_size() {
         let (w, h) = (w as u32, h as u32);
         let img = ImgReader::open(path)?.decode()?;
-        let ascii = img
-            .resize_exact(w, h, imageops::FilterType::CatmullRom)
+        println!();
+        img.resize_exact(w, h, imageops::FilterType::CatmullRom)
             .grayscale()
             .to_bytes()
             .into_iter()
-            .map(|b| ASCII_CHARS[NUM_CHARS - 1 - (NUM_CHARS * (b as usize) / 256)]);
-
-        println!();
-        for c in ascii {
-            print!("{}", c);
-        }
+            .map(|b| ASCII_CHARS[NUM_CHARS - 1 - (NUM_CHARS * (b as usize) / 256)])
+            .for_each(|c| print!("{}", c));
         Ok(())
     } else {
         Err(RTError::Internal("Could not get the terminal dimensions"))
@@ -64,9 +60,10 @@ pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
     if let Some((Width(w), Height(h))) = terminal_size() {
         let (w, h) = (w as u32, h as u32);
         let img = ImgReader::open(path)?.decode()?;
+
+        println!();
         // I can't tell if this is trashy or idiomatic rust
-        let ascii: Vec<_> = img
-            .resize_exact(w, h, imageops::FilterType::CatmullRom)
+        img.resize_exact(w, h, imageops::FilterType::CatmullRom)
             .into_rgb8()
             .pixels()
             .map(|p| {
@@ -82,12 +79,7 @@ pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
                     .expect("Iterator is not empty")
                     .0
             })
-            .collect();
-
-        println!();
-        for c in ascii {
-            print!("{} ", c);
-        }
+            .for_each(|c| print!("{} ", c));
         Ok(())
     } else {
         Err(RTError::Internal("Could not get the terminal dimensions"))
