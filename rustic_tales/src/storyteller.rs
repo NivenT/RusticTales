@@ -203,10 +203,13 @@ impl StoryTeller {
                 }
             }
             "display_img" => {
-                if args.len() != 1 {
+                if !matches!(args.len(), 1 | 2) {
                     Err(RTError::InvalidInput(
-                        "'display_img' takes 1 arg".to_string(),
+                        "'display_img' takes 1 or 2 args".to_string(),
                     ))
+                } else if args.len() == 2 && args[1].eq_ignore_ascii_case("term") {
+                    img_to_term(&args[0])?;
+                    Ok(())
                 } else {
                     img_to_ascii(&args[0])?;
                     Ok(())
@@ -222,7 +225,11 @@ impl StoryTeller {
             .execute();
     }
     fn cleanup(&self) {
-        println!("{}{}", self.get_val("DEFCOL_BG"), self.get_val("DEFCOL_FG"));
+        println!(
+            "{}{}The end...",
+            self.get_val("DEFCOL_BG"),
+            self.get_val("DEFCOL_FG")
+        );
 
         let mut temp = String::new();
         let _ = std::io::stdin().read_line(&mut temp);

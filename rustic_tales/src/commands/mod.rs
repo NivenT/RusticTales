@@ -26,12 +26,9 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
     if let Some((Width(w), Height(h))) = terminal_size() {
         let (w, h) = (w as u32, h as u32);
         let img = ImgReader::open(path)?.decode()?;
-        // TODO: Get terminal dimensions
-        let img = img
-            .resize_exact(w, h, imageops::FilterType::CatmullRom)
-            .grayscale();
-
         let ascii = img
+            .resize_exact(w, h, imageops::FilterType::CatmullRom)
+            .grayscale()
             .to_bytes()
             .into_iter()
             .map(|b| ASCII_CHARS[NUM_CHARS - 1 - (NUM_CHARS * (b as usize) / 256)]);
@@ -39,6 +36,57 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
         println!();
         for c in ascii {
             print!("{}", c);
+        }
+        Ok(())
+    } else {
+        Err(RTError::Internal("Could not get the terminal dimensions"))
+    }
+}
+
+pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
+    // I thought I stopped having to look at ugly type names when I decdied not to use C++
+    const TERM_COLORS: [(&'static str, [u8; 3]); 14] = [
+        ("\x1b[0;41m", [128, 0, 0]), // red
+        ("\x1b[0;101m", [255, 0, 0]),
+        ("\x1b[0;42m", [0, 128, 0]), // green
+        ("\x1b[0;102m", [0, 255, 0]),
+        ("\x1b[0;43m", [128, 128, 0]), // yellow
+        ("\x1b[0;103m", [255, 255, 0]),
+        ("\x1b[0;44m", [0, 0, 128]), // blue
+        ("\x1b[0;104m", [0, 0, 255]),
+        ("\x1b[0;45m", [128, 0, 128]), // magenta
+        ("\x1b[0;105m", [255, 0, 255]),
+        ("\x1b[0;46m", [0, 128, 128]), // cyan
+        ("\x1b[0;106m", [0, 255, 255]),
+        ("\x1b[0;47m", [128, 128, 128]), // grey
+        ("\x1b[0;107m", [255, 255, 255]),
+    ];
+    if let Some((Width(w), Height(h))) = terminal_size() {
+        let (w, h) = (w as u32, h as u32);
+        let img = ImgReader::open(path)?.decode()?;
+        // TODO: Get terminal dimensions
+        let ascii: Vec<_> = img
+            .resize_exact(w, h, imageops::FilterType::CatmullRom)
+            .into_rgb8()
+            .pixels()
+            .map(|p| {
+                TERM_COLORS
+                    .iter()
+                    .min_by_key(|&c| {
+                        c.1.iter()
+                            .zip(p.0.iter())
+                            .map(|(&l, &r)| l as isize - r as isize)
+                            .map(|diff| diff * diff)
+                            .sum::<isize>()
+                    })
+                    .expect("Iterator is not empty")
+                    .0
+            })
+            .collect();
+
+        println!();
+        for c in ascii {
+            print!("{} ", c);
         }
         Ok(())
     } else {
