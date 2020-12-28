@@ -2,10 +2,12 @@ use regex::Regex;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
-    Text(String),
-    Command(String, Vec<String>),
-    Variable(String),
-    Symbol(String),
+    Text(String),                 // blah
+    Command(String, Vec<String>), // {{ cmd : arg1 |,| arg2 |,| ... }}
+    Variable(String),             // ${{var}}
+    Symbol(String),               // $sym$
+    PageEnd,                      // /PAGE/
+    Char(char),                   // {c}
 }
 
 impl Token {
@@ -18,6 +20,8 @@ impl Token {
             Token::Command(c, _) => c.is_empty(),
             Token::Variable(v) => v.is_empty(),
             Token::Symbol(s) => s.is_empty(),
+            Token::PageEnd => false,
+            Token::Char(c) => c == &'\0',
         }
     }
 }
@@ -25,11 +29,8 @@ impl Token {
 fn parse_symbol(stream: &str) -> Option<(Token, usize)> {
     let re =
         Regex::new(r"^\$([^[[:space:]]]+)\$").expect("If this regex is invalid, that is a bug");
-    if let Some(cap) = re.captures(stream) {
-        Some((Token::Symbol(cap[1].to_string()), cap[0].len()))
-    } else {
-        None
-    }
+    re.captures(stream)
+        .map(|cap| (Token::Symbol(cap[1].to_string()), cap[0].len()))
 }
 
 // A command should take up an entire line
@@ -37,7 +38,7 @@ fn parse_command(stream: &str) -> Option<(Token, usize)> {
     // regex are completely incomprehensible (it doesn't help that I suck at writing them)
     let re = Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:(.*)\}\}[[:space:]]*(\n|$)")
         .expect("If this is invalid, there is a bug");
-    if let Some(cap) = re.captures(stream) {
+    re.captures(stream).map(|cap| {
         let name = cap[1].to_string();
         let arg_list = &cap[2];
         let arg_list = if arg_list.is_empty() {
@@ -48,20 +49,28 @@ fn parse_command(stream: &str) -> Option<(Token, usize)> {
                 .map(|s| s.trim().to_string())
                 .collect()
         };
+        (Token::Command(name, arg_list), cap[0].len())
+    })
+}
 
-        Some((Token::Command(name, arg_list), cap[0].len()))
+fn parse_variable(stream: &str) -> Option<(Token, usize)> {
+    let re = Regex::new(r"^\$\{\{([^[[:space:]]\{\}]+)\}\}").expect("If bad, then bug");
+    re.captures(stream)
+        .map(|cap| (Token::Variable(cap[1].to_string()), cap[0].len()))
+}
+
+fn parse_pageend(stream: &str) -> Option<(Token, usize)> {
+    if stream.starts_with("/PAGE/") {
+        Some((Token::PageEnd, 6))
     } else {
         None
     }
 }
 
-fn parse_variable(stream: &str) -> Option<(Token, usize)> {
-    let re = Regex::new(r"^\$\{\{([^[[:space:]]}]+)\}\}").expect("If bad, then bug");
-    if let Some(cap) = re.captures(stream) {
-        Some((Token::Variable(cap[1].to_string()), cap[0].len()))
-    } else {
-        None
-    }
+fn parse_char(stream: &str) -> Option<(Token, usize)> {
+    let re = Regex::new(r"^\{(.)\}").expect("reggie gud");
+    re.captures(stream) // extracting chars from string is my least favorite part of this language
+        .map(|cap| (Token::Char(cap[1].chars().next().unwrap()), cap[0].len()))
 }
 
 pub fn tokenize(stream: &str) -> Vec<Token> {
@@ -73,12 +82,28 @@ pub fn tokenize(stream: &str) -> Vec<Token> {
         let special_chars: &[char] = &['{', '$'];
         if let Some(end) = stream[search_pos..].find(special_chars) {
             search_pos += end;
-            // at most one of these can be Some
-            let sym = parse_symbol(&stream[search_pos..]);
-            let cmd = parse_command(&stream[search_pos..]);
-            let var = parse_variable(&stream[search_pos..]);
-            if let Some((tkn, len)) = var.or(cmd).or(sym) {
+            // (ideally) at most one of these will return Some
+            const PARSE_FUNCS: [fn(&str) -> Option<(Token, usize)>; 5] = [
+                parse_variable,
+                parse_command,
+                parse_symbol,
+                parse_pageend,
+                parse_char,
+            ];
+
+            let parsed = PARSE_FUNCS
+                .iter()
+                .fold(None, |acc, f| acc.or(f(&stream[search_pos..])));
+            if let Some((tkn, len)) = parsed {
                 ret.push(Token::Text(stream[beg..search_pos].to_string()));
+                /*
+                println!(
+                    "parsed token '{:?}' at postion {} after \"{}\"",
+                    tkn,
+                    search_pos,
+                    &stream[beg..search_pos]
+                );
+                */
                 ret.push(tkn);
                 search_pos += len;
                 beg = search_pos;
@@ -206,5 +231,26 @@ mod tests {
             parse_variable("${{_=?!2#232}} huh?"),
             Some((Token::Variable("_=?!2#232".to_string()), 14))
         );
+    }
+    #[test]
+    fn test_pageend_parsing() {
+        assert_eq!(parse_pageend("/PAGE/"), Some((Token::PageEnd, 6)));
+        assert_eq!(parse_pageend("/page/"), None);
+        assert_eq!(parse_pageend("fail"), None);
+        assert_eq!(
+            parse_pageend("/PAGE/ other stuff is allowed"),
+            Some((Token::PageEnd, 6))
+        );
+    }
+    #[test]
+    fn test_char_parsing() {
+        assert_eq!(parse_char("fail"), None);
+        assert_eq!(parse_char("{c}"), Some((Token::Char('c'), 3)));
+        assert_eq!(parse_char("{.}"), Some((Token::Char('.'), 3)));
+        assert_eq!(parse_char("{too_long}"), None);
+        assert_eq!(parse_char("{{}"), Some((Token::Char('{'), 3)));
+        assert_eq!(parse_char("{}}"), Some((Token::Char('}'), 3)));
+        assert_eq!(parse_char("{é}"), Some((Token::Char('é'), 4)));
+        assert_eq!(parse_char("must be at beginning {n}"), None);
     }
 }

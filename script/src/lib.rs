@@ -70,4 +70,54 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn tokenize_gutenberg() -> reqwest::Result<()> {
+        extern crate reqwest;
+
+        const BOOKS: [&'static str; 5] = [
+            // Soup and Soup Making
+            "https://www.gutenberg.org/files/64140/64140-0.txt",
+            // The Price of Things
+            "https://dev.gutenberg.org/cache/epub/9809/pg9809.txt",
+            // Kid Wolf of Texas
+            "https://www.gutenberg.org/cache/epub/22057/pg22057.txt",
+            // Odd
+            "https://www.gutenberg.org/cache/epub/22291/pg22291.txt",
+            // Death, the Knight, and the Lady
+            "https://www.gutenberg.org/cache/epub/55708/pg55708.txt",
+        ];
+        for &book in &BOOKS {
+            let test = reqwest::blocking::get(book)?.text()?;
+            let tkns = tokenize(&test);
+            assert!(tkns.len() == 1);
+            assert!(tkns[0].is_text());
+            if let Token::Text(s) = &tkns[0] {
+                assert!(s.len() > 1000); // just to make sure we downloaded something
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn tokenize_unicode() {
+        let test = "\
+          Il était une fois que j'ai oublié mon {.}{.}{.} portable.\n\
+          Alor, j'ai dû emprunter le portable à mon ami. Malheureusement, il est anglais.\n\
+          Donc, je n'ai pas su comment trouver le clé '${{BLUE_LFG}}{é}'. C'était triste.\
+        ";
+        assert_eq!(
+            tokenize(&test),
+            vec![
+                Token::Text("Il était une fois que j'ai oublié mon ".to_string()),
+                Token::Char('.'),
+                Token::Char('.'),
+                Token::Char('.'),
+                Token::Text(" portable.\nAlor, j'ai dû emprunter le portable à mon ami. Malheureusement, il est anglais.\nDonc, je n'ai pas su comment trouver le clé '".to_string()),
+                Token::Variable("BLUE_LFG".to_string()),
+                Token::Char('é'),
+                Token::Text("'. C'était triste.".to_string()),
+            ]
+        );
+    }
 }
