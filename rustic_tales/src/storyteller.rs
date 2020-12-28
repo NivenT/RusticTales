@@ -197,9 +197,7 @@ impl StoryTeller {
                         "'backspace' requires two arguments".to_string(),
                     ))
                 } else {
-                    let len: isize = args[0].parse()?;
-                    backspace(len, args[1].parse()?);
-                    Ok(())
+                    Ok(backspace(args[0].parse()?, args[1].parse()?))
                 }
             }
             "display_img" => {
@@ -208,11 +206,9 @@ impl StoryTeller {
                         "'display_img' takes 1 or 2 args".to_string(),
                     ))
                 } else if args.len() == 2 && args[1].eq_ignore_ascii_case("term") {
-                    img_to_term(&args[0])?;
-                    Ok(())
+                    img_to_term(&args[0])
                 } else {
-                    img_to_ascii(&args[0])?;
-                    Ok(())
+                    img_to_ascii(&args[0])
                 }
             }
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),

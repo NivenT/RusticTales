@@ -64,7 +64,7 @@ pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
     if let Some((Width(w), Height(h))) = terminal_size() {
         let (w, h) = (w as u32, h as u32);
         let img = ImgReader::open(path)?.decode()?;
-        // TODO: Get terminal dimensions
+        // I can't tell if this is trashy or idiomatic rust
         let ascii: Vec<_> = img
             .resize_exact(w, h, imageops::FilterType::CatmullRom)
             .into_rgb8()

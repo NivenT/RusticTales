@@ -22,10 +22,7 @@ fn menu(items: Vec<&str>) -> Result<usize> {
 
     let mut choice = String::new();
     let _ = stdin().read_line(&mut choice)?;
-    let choice: usize = choice
-        .trim()
-        .parse()
-        .map_err(|e| RTError::InvalidInput(format!("Could not parse choice because: {}", e)))?;
+    let choice: usize = choice.trim().parse()?;
 
     if choice == 0 || choice > items.len() {
         Err(RTError::InvalidInput(format!(
