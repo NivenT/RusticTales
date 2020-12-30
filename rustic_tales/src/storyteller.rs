@@ -96,20 +96,11 @@ impl Unit {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct Page {
     // index into the 'contents' of the containing story
     start_idx: usize,
     len: usize,
-}
-
-impl Default for Page {
-    fn default() -> Self {
-        Page {
-            start_idx: 0,
-            len: 0,
-        }
-    }
 }
 
 impl Page {
@@ -123,7 +114,7 @@ impl Page {
 }
 
 // Should this be copy?
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 struct Bookmark {
     page: usize,
     word: usize,
@@ -134,7 +125,7 @@ struct Bookmark {
 struct Story {
     pages: Vec<Page>,
     contents: Vec<Unit>,
-    place: usize,
+    place: Bookmark,
 }
 
 impl FromStr for Story {
@@ -179,14 +170,15 @@ impl FromStr for Story {
         Ok(Story {
             pages: pages,
             contents: contents,
-            place: 0,
+            place: Bookmark::default(),
         })
     }
 }
 
 impl Story {
     fn is_over(&self) -> bool {
-        self.place >= self.contents.len()
+        self.place.page >= self.pages.len()
+            || self.pages[self.place.page].start_idx + self.place.word >= self.contents.len()
     }
 }
 
