@@ -82,7 +82,7 @@ impl Unit {
     fn len(&self) -> usize {
         match self {
             Unit::Char(_) => 1,
-            Unit::Word(w) => w.len(),
+            Unit::Word(w) => w.chars().count() + 1, // +1 cause of the space after the word
             Unit::Special(t) => match t {
                 Token::Command(_, _) => 0,
                 Token::Variable(_) => 7, // can't know variable length a priori so just guess
@@ -93,6 +93,9 @@ impl Unit {
     }
     fn is_page_end(&self) -> bool {
         matches!(self, Unit::Special(Token::PageEnd))
+    }
+    fn is_word(&self) -> bool {
+        matches!(self, Unit::Word(_))
     }
 }
 
@@ -106,7 +109,7 @@ struct Page {
 impl Page {
     fn max_page_len() -> usize {
         if let Some((Width(w), Height(h))) = terminal_size() {
-            (w * h) as usize
+            (w as usize) * (h as usize)
         } else {
             80 * 25
         }
@@ -123,6 +126,7 @@ struct Bookmark {
 
 #[derive(Debug, Clone)]
 struct Story {
+    // Should I impl Iterator for Story?
     pages: Vec<Page>,
     contents: Vec<Unit>,
     place: Bookmark,
@@ -179,6 +183,33 @@ impl Story {
     fn is_over(&self) -> bool {
         self.place.page >= self.pages.len()
             || self.pages[self.place.page].start_idx + self.place.word >= self.contents.len()
+    }
+    fn get<'a>(&'a self, place: Bookmark) -> &'a Unit {
+        &self.contents[self.pages[place.page].start_idx + place.word]
+    }
+    // Returns true if entered a new page
+    fn advance(&mut self, disp_by: DisplayUnit) -> bool {
+        let unit = self.get(self.place).clone(); // I really hate these clone's
+        if disp_by == DisplayUnit::Word || !unit.is_word() {
+            self.place.letter = 0;
+            self.place.word += 1;
+            if self.place.word == self.pages[self.place.page].len {
+                self.place.word = 0;
+                self.place.page += 1;
+                true
+            } else {
+                false
+            }
+        } else if let Unit::Word(w) = unit {
+            self.place.letter += 1;
+            if self.place.letter == w.chars().count() {
+                self.advance(DisplayUnit::Word)
+            } else {
+                false
+            }
+        } else {
+            unreachable!("unit is a word or is not a word")
+        }
     }
 }
 
@@ -240,36 +271,73 @@ impl StoryTeller {
             env: StoryTeller::prepare_builtins(),
         })
     }
-    pub fn tell(&mut self) {
-        self.setup();
-        /*
-        while !self.story.is_over() {
-        let word = self.story.contents[self.story.place].clone();
-        match word {
-        Unit::Char(c) => print!("{}", c),
-        Unit::Word(w) => print!("{} ", w),
-        Unit::Special(t) => {
-        assert!(!t.is_text());
-        match t {
-        Token::Variable(s) => {
-        let val = self.get_val(&s);
-                                    print!("{}", val);
-                                }
-                                Token::Command(func, args) => {
-                                    if let Err(e) = self.eval_command(&func, &args) {
-                                        eprintln!("\nError: {}", e)
-                                    }
-                                }
-                                _ => {}
-                            }
+    fn write(&mut self, place: Bookmark) {
+        // self.eval_command mutably borrows self, so need to clone or something
+        let unit = self.story.get(place).clone();
+        match unit {
+            Unit::Char(c) => print!("{}", c),
+            Unit::Word(w) => {
+                if self.options.disp_by == DisplayUnit::Char {
+                    print!(
+                        "{}",
+                        w.chars()
+                            .skip(self.story.place.letter)
+                            .next()
+                            .expect("story.place should be valid index")
+                    );
+                    if self.story.place.letter + 1 == w.chars().count() {
+                        print!(" ");
+                    }
+                } else {
+                    print!("{} ", w);
+                }
+            }
+            Unit::Special(t) => {
+                assert!(!t.is_text() && !t.is_page_end());
+                match t {
+                    Token::Variable(s) => print!("{}", self.get_val(&s)),
+                    Token::Command(func, args) => {
+                        if let Err(e) = self.eval_command(&func, &args) {
+                            eprintln!("\nError: {}", e)
                         }
                     }
-                    let _ = stdout().flush();
-                    sleep(Duration::from_millis(self.options.ms_per_symbol as u64));
-                    self.story.place += 1;
+                    _ => unreachable!(),
                 }
-        */
+            }
+        }
+    }
+    pub fn tell(&mut self) {
+        self.setup();
+        while !self.story.is_over() {
+            self.write(self.story.place);
+            let _ = stdout().flush();
+
+            sleep(Duration::from_millis(self.options.ms_per_symbol as u64));
+            if self.story.advance(self.options.disp_by) {
+                self.turn_page();
+            }
+        }
         self.cleanup();
+    }
+
+    fn setup(&self) {
+        TermAction::ClearScreen
+            .then(TermAction::SetCursor(0, 0))
+            .then(TermAction::ResetColor)
+            .execute();
+    }
+    fn cleanup(&self) {
+        wait_for_enter(&format!("{}The end...", self.get_val("NORMAL")));
+        TermAction::ClearScreen
+            .then(TermAction::SetCursor(0, 0))
+            .execute();
+    }
+    fn turn_page(&self) {
+        wait_for_enter("Next page...");
+        TermAction::ClearScreen
+            .then(TermAction::SetCursor(0, 0))
+            .then(TermAction::ResetColor)
+            .execute();
     }
 
     fn get_val(&self, var: &str) -> String {
@@ -299,17 +367,5 @@ impl StoryTeller {
             }
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),
         }
-    }
-    fn setup(&self) {
-        TermAction::ClearScreen
-            .then(TermAction::SetCursor(0, 0))
-            .then(TermAction::ResetColor)
-            .execute();
-    }
-    fn cleanup(&self) {
-        wait_for_enter(&format!("{}The end...", self.get_val("NORMAL")));
-        TermAction::ClearScreen
-            .then(TermAction::SetCursor(0, 0))
-            .execute();
     }
 }

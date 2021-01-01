@@ -12,7 +12,10 @@ pub enum Token {
 
 impl Token {
     pub fn is_text(&self) -> bool {
-        matches!(self, Token::Text(_))
+        matches!(self, Token::Text(_) | Token::Char(_))
+    }
+    pub fn is_page_end(&self) -> bool {
+        self == &Token::PageEnd
     }
     pub fn is_empty(&self) -> bool {
         match self {
