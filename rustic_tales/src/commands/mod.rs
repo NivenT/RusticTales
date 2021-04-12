@@ -7,7 +7,7 @@ use terminal_size::{terminal_size, Height, Width};
 
 use crate::ansi::TermAction;
 use crate::err::{RTError, Result};
-use crate::storyteller::DisplayUnit;
+use crate::options::DisplayUnit;
 
 pub fn backspace(len: isize, unit: DisplayUnit) {
     if unit.is_char() {
@@ -40,7 +40,7 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
 }
 
 pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
-    // I thought I stopped having to look at ugly type names when I decdied not to use C++
+    // I thought I stopped having to look at ugly type names when I decided not to use C++
     const TERM_COLORS: [(&'static str, [u8; 3]); 14] = [
         ("\x1b[0;41m", [128, 0, 0]), // red
         ("\x1b[0;101m", [255, 0, 0]),
