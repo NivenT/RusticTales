@@ -8,6 +8,7 @@ pub enum RTError {
     ParseIntError(std::num::ParseIntError),
     ImgError(image::ImageError),
     RonError(ron::Error),
+    GlobError(globset::Error),
 
     InvalidInput(String),
     UnrecognizedCommand(String),
@@ -23,6 +24,7 @@ impl fmt::Display for RTError {
             ParseIntError(e) => write!(f, "Parse error: {}", e),
             ImgError(e) => write!(f, "Image error: {}", e),
             RonError(e) => write!(f, "RON error: {}", e),
+            GlobError(e) => write!(f, "Glob error: {}", e),
             InvalidInput(r) => write!(f, "Invalid input: {}", r),
             UnrecognizedCommand(c) => write!(f, "Unrecognized command: {}", c),
             NotYetImplemented(r) => write!(f, "{} is not yet implemented", r),
@@ -31,6 +33,7 @@ impl fmt::Display for RTError {
     }
 }
 
+// Someone's never heard of a macro
 impl From<std::io::Error> for RTError {
     fn from(e: std::io::Error) -> Self {
         RTError::IOError(e)
@@ -52,5 +55,11 @@ impl From<image::ImageError> for RTError {
 impl From<ron::Error> for RTError {
     fn from(e: ron::Error) -> Self {
         RTError::RonError(e)
+    }
+}
+
+impl From<globset::Error> for RTError {
+    fn from(e: globset::Error) -> Self {
+        RTError::GlobError(e)
     }
 }

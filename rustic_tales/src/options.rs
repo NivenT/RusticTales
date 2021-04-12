@@ -77,4 +77,7 @@ impl Options {
         let opts = from_reader(File::open(path)?)?;
         Ok(opts)
     }
+    pub fn get_ignored(&self) -> &Vec<String> {
+        &self.file_ignore_patterns
+    }
 }
