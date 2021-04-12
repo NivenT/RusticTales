@@ -16,7 +16,7 @@ mod utils;
 use err::Result;
 use options::Options;
 use storyteller::StoryTeller;
-use utils::{choose_story, menu};
+use utils::{choose_story, clear_screen, menu};
 
 fn main() -> Result<()> {
     let options = match Options::from_file("options.ron") {
@@ -41,12 +41,10 @@ fn main() -> Result<()> {
                 }
                 Err(e) => println!("I could not understand your choice\n{}", e),
             },
-            Ok(n) => {
-                println!("{}", n);
-                break;
-            }
+            Ok(_) => break,
         }
     }
-    println!("G'day");
+    clear_screen();
+    println!("Fin");
     Ok(())
 }

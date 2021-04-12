@@ -58,7 +58,7 @@ impl StoryTeller {
 
     pub fn new<P: AsRef<Path>>(story: P) -> Result<Self> {
         let story: Story = fs::read_to_string(story)?.parse()?;
-
+        /*
         println!("{:?}", story);
         println!(
             "There were {} pages. The max page length is {}.",
@@ -66,7 +66,7 @@ impl StoryTeller {
             Page::max_page_len()
         );
         wait_for_enter("...");
-
+        */
         Ok(StoryTeller {
             story: story,
             options: STOptions::default(),

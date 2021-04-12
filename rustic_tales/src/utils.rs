@@ -66,17 +66,15 @@ pub fn choose_story(ignore_patterns: &Vec<String>) -> Result<String> {
     let mut dir = env::current_dir()?;
     dir.push("stories");
 
-    // Someone's never heard of filter_map
     let stories: Vec<String> = fs::read_dir(dir)?
-        .filter(|e| e.is_ok())
-        .map(|e| e.unwrap())
-        .filter(|e| match e.file_type() {
-            Ok(file_type) => file_type.is_file(),
-            _ => false,
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            e.file_type()
+                .ok()
+                .filter(|file_type| file_type.is_file())
+                .is_some()
         })
-        .map(|e| e.file_name().into_string())
-        .filter(|s| s.is_ok())
-        .map(|s| s.unwrap())
+        .filter_map(|e| e.file_name().into_string().ok())
         .collect();
     // I should just make menu take Vec<String>, but meh
     let refs = stories.iter().map(|s| &s[..]).collect::<Vec<_>>();
