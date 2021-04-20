@@ -36,17 +36,23 @@ impl DisplayUnit {
     }
 }
 
-// TODO: Add JSON config file (files to ignore, auto vs. manual scroll, etc.)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ScrollRate {
+    Millis(u64),  // symbol every ??? milliseconds
+    Lines(usize), // display ??? lines at a time
+    OnePage,      // display 1 page at a time
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct STOptions {
-    pub ms_per_symbol: usize,
+    pub scroll_rate: ScrollRate,
     pub disp_by: DisplayUnit,
 }
 
 impl Default for STOptions {
     fn default() -> Self {
         STOptions {
-            ms_per_symbol: 458,
+            scroll_rate: ScrollRate::OnePage,
             disp_by: DisplayUnit::Word,
         }
     }
@@ -79,5 +85,8 @@ impl Options {
     }
     pub fn get_ignored(&self) -> &Vec<String> {
         &self.file_ignore_patterns
+    }
+    pub fn get_story_opts(&self) -> &STOptions {
+        &self.st_opts
     }
 }

@@ -20,7 +20,6 @@ pub fn clear_screen() {
 
 pub fn menu(items: Vec<&str>, ignore_patterns: Option<&Vec<String>>) -> Result<usize> {
     clear_screen();
-
     let globs = ignore_patterns.and_then(|patts| {
         patts
             .iter()

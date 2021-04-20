@@ -9,21 +9,21 @@ use script::token::Token;
 use crate::ansi::TermAction;
 use crate::commands::*;
 use crate::err::{RTError, Result};
-use crate::options::{DisplayUnit, STOptions};
+use crate::options::{DisplayUnit, STOptions, ScrollRate};
 use crate::utils::wait_for_enter;
 
-use super::story::{Bookmark, Page, Story};
+use super::story::{Bookmark, Span, Story};
 use super::unit::Unit;
 
 // TODO: Make state machine (e.g. so can backspace over time)
 #[derive(Debug, Clone)]
-pub struct StoryTeller {
+pub struct StoryTeller<'a> {
     story: Story,
-    options: STOptions,
+    options: Option<&'a STOptions>,
     env: HashMap<String, String>,
 }
 
-impl StoryTeller {
+impl<'a> StoryTeller<'a> {
     fn prepare_builtins() -> HashMap<String, String> {
         let mut env = HashMap::new();
 
@@ -55,6 +55,10 @@ impl StoryTeller {
 
         env
     }
+    fn opts(&self) -> &STOptions {
+        self.options
+            .expect("opts should only be called after setup")
+    }
 
     pub fn new<P: AsRef<Path>>(story: P) -> Result<Self> {
         let story: Story = fs::read_to_string(story)?.parse()?;
@@ -69,7 +73,7 @@ impl StoryTeller {
         */
         Ok(StoryTeller {
             story: story,
-            options: STOptions::default(),
+            options: None,
             env: StoryTeller::prepare_builtins(),
         })
     }
@@ -79,7 +83,7 @@ impl StoryTeller {
         match unit {
             Unit::Char(c) => print!("{}", c),
             Unit::Word(w) => {
-                if self.options.disp_by == DisplayUnit::Char {
+                if self.opts().disp_by == DisplayUnit::Char {
                     print!(
                         "{}",
                         w.chars()
@@ -108,21 +112,57 @@ impl StoryTeller {
             }
         }
     }
-    pub fn tell(&mut self) {
-        self.setup();
+    pub fn tell(&mut self, opts: &'a STOptions) {
+        self.setup(opts);
         while !self.story.is_over() {
             self.write(self.story.get_place());
             let _ = stdout().flush();
 
-            sleep(Duration::from_millis(self.options.ms_per_symbol as u64));
-            if self.story.advance(self.options.disp_by) {
+            // TODO: Make this less trash
+            let span = match self.opts().scroll_rate {
+                ScrollRate::Millis(ms) => {
+                    sleep(Duration::from_millis(ms));
+                    self.story.advance(self.opts().disp_by)
+                }
+                ScrollRate::Lines(num) => {
+                    let mut ret = Span::LINE;
+                    'outer: for _ in 0..num {
+                        loop {
+                            ret = self.story.advance(self.opts().disp_by);
+                            if ret == Span::PAGE {
+                                break 'outer;
+                            } else if ret == Span::LINE {
+                                break;
+                            }
+                        }
+                    }
+                    ret
+                }
+                ScrollRate::OnePage => {
+                    loop {
+                        if self.story.advance(DisplayUnit::Word) == Span::PAGE {
+                            break;
+                        }
+                    }
+                    Span::PAGE
+                }
+            };
+            if span == Span::PAGE {
                 self.turn_page();
             }
+
+            /*
+            sleep(Duration::from_millis(self.opts().ms_per_symbol as u64));
+            if self.story.advance(self.opts().disp_by) {
+                self.turn_page();
+            }
+            */
         }
         self.cleanup();
     }
 
-    fn setup(&self) {
+    fn setup(&mut self, opts: &'a STOptions) {
+        self.options = Some(opts);
         TermAction::ClearScreen
             .then(TermAction::SetCursor(0, 0))
             .then(TermAction::ResetColor)
@@ -135,7 +175,7 @@ impl StoryTeller {
             .execute();
     }
     fn turn_page(&self) {
-        wait_for_enter("Next page...");
+        wait_for_enter("\nNext page...");
         TermAction::ClearScreen
             .then(TermAction::SetCursor(0, 0))
             .then(TermAction::ResetColor)

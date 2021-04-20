@@ -8,6 +8,7 @@ use terminal_size::{terminal_size, Height, Width};
 use crate::ansi::TermAction;
 use crate::err::{RTError, Result};
 use crate::options::DisplayUnit;
+use crate::utils::wait_for_enter;
 
 pub fn backspace(len: isize, unit: DisplayUnit) {
     if unit.is_char() {
@@ -33,6 +34,7 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
             .into_iter()
             .map(|b| ASCII_CHARS[NUM_CHARS - 1 - (NUM_CHARS * (b as usize) / 256)])
             .for_each(|c| print!("{}", c));
+        wait_for_enter("");
         Ok(())
     } else {
         Err(RTError::Internal("Could not get the terminal dimensions"))
@@ -80,6 +82,8 @@ pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
                     .0
             })
             .for_each(|c| print!("{} ", c));
+        wait_for_enter("");
+        TermAction::ResetColor.execute();
         Ok(())
     } else {
         Err(RTError::Internal("Could not get the terminal dimensions"))

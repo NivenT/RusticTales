@@ -33,6 +33,24 @@ impl Unit {
             },
         }
     }
+    // basically len but keeps track of vertical spacing as well
+    pub fn area(&self) -> (usize, usize) {
+        match self {
+            Unit::Char('\n') => (0, 1),
+            Unit::Char(_) => (1, 0),
+            // words aren't allowed to have newline/space type characters in them
+            Unit::Word(w) => (w.chars().count() + 1, 0),
+            Unit::Special(t) => match t {
+                // might need to depend on the command in the future
+                Token::Command(_, _) => (0, 0),
+                // can't know variable length a priori so just guess
+                // ^^^^^^^ This is dumb. I should make pagination more dynamic at some point
+                Token::Variable(_) => (7, 0),
+                Token::Symbol(s) => (s.len() + 2, 0),
+                _ => unreachable!(),
+            },
+        }
+    }
     pub fn is_page_end(&self) -> bool {
         matches!(self, Unit::Special(Token::PageEnd))
     }

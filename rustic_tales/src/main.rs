@@ -37,7 +37,7 @@ fn main() -> Result<()> {
                 Ok(story) => {
                     let mut st = StoryTeller::new(&story)
                         .expect("choose_story should only return existing files");
-                    st.tell();
+                    st.tell(options.get_story_opts());
                 }
                 Err(e) => println!("I could not understand your choice\n{}", e),
             },
