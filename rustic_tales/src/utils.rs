@@ -1,4 +1,4 @@
-use std::io::stdin;
+use std::io::Write;
 use std::{env, fs};
 
 use globset::{Glob, GlobSetBuilder};
@@ -7,7 +7,8 @@ use crate::ansi::TermAction;
 use crate::err::{RTError, Result};
 
 pub fn wait_for_enter(prompt: &str) {
-    println!("{}", prompt);
+    print!("{}", prompt);
+    let _ = std::io::stdout().flush();
     let mut temp = String::new();
     let _ = std::io::stdin().read_line(&mut temp);
 }
@@ -15,6 +16,7 @@ pub fn wait_for_enter(prompt: &str) {
 pub fn clear_screen() {
     TermAction::ClearScreen
         .then(TermAction::SetCursor(0, 0))
+        .then(TermAction::ResetColor)
         .execute();
 }
 
@@ -47,7 +49,7 @@ pub fn menu(items: Vec<&str>, ignore_patterns: Option<&Vec<String>>) -> Result<u
     println!();
 
     let mut choice = String::new();
-    let _ = stdin().read_line(&mut choice)?;
+    let _ = std::io::stdin().read_line(&mut choice)?;
     let choice: usize = choice.trim().parse()?;
     let max_choice = true_indices.len();
 

@@ -51,10 +51,11 @@ impl Page {
         Page { lines: Vec::new() }
     }
     pub fn max_page_len() -> usize {
+        // Leave a couple lines open at the end to say 'Next page...'
         if let Some((Width(w), Height(h))) = terminal_size() {
-            (w as usize) * (h as usize)
+            (w as usize) * (h.checked_sub(2).unwrap_or(h) as usize)
         } else {
-            80 * 25
+            80 * 23
         }
     }
 
@@ -84,13 +85,14 @@ impl Page {
                     }
                 })
                 .count();
-            idx += curr_line.len;
-            page.lines.push(curr_line);
-
-            if idx < units.len() && units[idx].is_page_end() {
-                idx += 1;
+            if curr_line.len != 0 {
+                idx += curr_line.len;
+                page.lines.push(curr_line);
+            }
+            if idx >= units.len() || idx >= Page::max_page_len() {
                 break;
-            } else {
+            } else if units[idx].is_page_end() {
+                idx += 1;
                 break;
             }
         }
@@ -140,7 +142,9 @@ impl FromStr for Story {
         loop {
             let (page, offset) = Page::extract_page(&contents[idx..], idx);
             if offset > 0 {
-                pages.push(page);
+                if !page.lines.is_empty() {
+                    pages.push(page);
+                }
                 idx += offset;
             } else {
                 break;
