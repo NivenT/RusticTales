@@ -112,9 +112,49 @@ impl<'a> StoryTeller<'a> {
             }
         }
     }
+    fn write_and_advance(&mut self, place: Bookmark, disp_by: DisplayUnit) -> Span {
+        self.write(place);
+        let ret = self.story.advance(disp_by);
+        if ret == Span::PAGE {
+            self.turn_page();
+        }
+        ret
+    }
     pub fn tell(&mut self, opts: &'a STOptions) {
         self.setup(opts);
         while !self.story.is_over() {
+            match self.opts().scroll_rate {
+                ScrollRate::Millis(ms) => {
+                    self.write_and_advance(self.story.get_place(), self.opts().disp_by);
+                    let _ = stdout().flush();
+                    sleep(Duration::from_millis(ms));
+                }
+                ScrollRate::Lines(num) => {
+                    'outer: for _ in 0..num {
+                        loop {
+                            let span =
+                                self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
+                            if span == Span::PAGE {
+                                break 'outer;
+                            } else if span == Span::LINE {
+                                break;
+                            }
+                        }
+                    }
+                    let _ = stdout().flush();
+                }
+                ScrollRate::OnePage => {
+                    loop {
+                        if self.write_and_advance(self.story.get_place(), DisplayUnit::Word)
+                            == Span::PAGE
+                        {
+                            break;
+                        }
+                    }
+                    let _ = stdout().flush();
+                }
+            }
+            /*
             self.write(self.story.get_place());
             let _ = stdout().flush();
 
@@ -150,7 +190,7 @@ impl<'a> StoryTeller<'a> {
             if span == Span::PAGE {
                 self.turn_page();
             }
-
+            */
             /*
             sleep(Duration::from_millis(self.opts().ms_per_symbol as u64));
             if self.story.advance(self.opts().disp_by) {
