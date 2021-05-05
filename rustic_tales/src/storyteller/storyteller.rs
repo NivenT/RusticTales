@@ -10,7 +10,7 @@ use crate::ansi::TermAction;
 use crate::commands::*;
 use crate::err::{RTError, Result};
 use crate::options::{DisplayUnit, STOptions, ScrollRate};
-use crate::utils::wait_for_enter;
+use crate::utils::{get_kb, wait_for_enter};
 
 use super::story::{Bookmark, Page, Span, Story};
 use super::unit::Unit;
@@ -71,7 +71,7 @@ impl<'a> StoryTeller<'a> {
         wait_for_enter("...");
 
         Ok(StoryTeller {
-            story: story,
+            story,
             options: None,
             env: StoryTeller::prepare_builtins(),
         })
@@ -86,8 +86,7 @@ impl<'a> StoryTeller<'a> {
                     print!(
                         "{}",
                         w.chars()
-                            .skip(self.story.get_place().letter)
-                            .next()
+                            .nth(self.story.get_place().letter)
                             .expect("story.place should be a valid index")
                     );
                     if self.story.get_place().letter + 1 == w.chars().count() {
@@ -122,18 +121,22 @@ impl<'a> StoryTeller<'a> {
     pub fn tell(&mut self, opts: &'a STOptions) {
         self.setup(opts);
         while !self.story.is_over() {
-            match self.opts().scroll_rate {
+            // TODO: Make this code less trash
+            let last_span = match self.opts().scroll_rate {
                 ScrollRate::Millis(ms) => {
                     self.write_and_advance(self.story.get_place(), self.opts().disp_by);
                     let _ = stdout().flush();
                     sleep(Duration::from_millis(ms));
+                    None
                 }
                 ScrollRate::Lines(num) => {
+                    let mut last_span = Span::LINE;
                     'outer: for _ in 0..num {
                         loop {
                             let span =
                                 self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
                             if span == Span::PAGE {
+                                last_span = span;
                                 break 'outer;
                             } else if span == Span::LINE {
                                 break;
@@ -141,6 +144,7 @@ impl<'a> StoryTeller<'a> {
                         }
                     }
                     let _ = stdout().flush();
+                    Some(last_span)
                 }
                 ScrollRate::OnePage => {
                     loop {
@@ -151,7 +155,11 @@ impl<'a> StoryTeller<'a> {
                         }
                     }
                     let _ = stdout().flush();
+                    Some(Span::PAGE)
                 }
+            };
+            if let Some(Span::LINE) = last_span {
+                while get_kb() == None {}
             }
         }
         self.cleanup();
@@ -181,7 +189,7 @@ impl<'a> StoryTeller<'a> {
     fn get_val(&self, var: &str) -> String {
         self.env.get(var).unwrap_or(&String::new()).clone()
     }
-    fn eval_command(&mut self, func: &str, args: &Vec<String>) -> Result<()> {
+    fn eval_command(&mut self, func: &str, args: &[String]) -> Result<()> {
         match func {
             "backspace" => {
                 if args.len() < 2 {
@@ -189,7 +197,8 @@ impl<'a> StoryTeller<'a> {
                         "'backspace' requires two arguments".to_string(),
                     ))
                 } else {
-                    Ok(backspace(args[0].parse()?, args[1].parse()?))
+                    backspace(args[0].parse()?, args[1].parse()?);
+                    Ok(())
                 }
             }
             "display_img" => {

@@ -43,7 +43,7 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
 
 pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
     // I thought I stopped having to look at ugly type names when I decided not to use C++
-    const TERM_COLORS: [(&'static str, [u8; 3]); 14] = [
+    const TERM_COLORS: [(&str, [u8; 3]); 14] = [
         ("\x1b[0;41m", [128, 0, 0]), // red
         ("\x1b[0;101m", [255, 0, 0]),
         ("\x1b[0;42m", [0, 128, 0]), // green

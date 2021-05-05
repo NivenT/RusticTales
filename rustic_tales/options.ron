@@ -1,6 +1,6 @@
 (
     st_opts: (
-        scroll_rate: OnePage,
+        scroll_rate: Lines(2),
         disp_by: Word,
     ),
     file_ignore_patterns: [

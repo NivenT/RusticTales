@@ -16,7 +16,7 @@ mod utils;
 use err::Result;
 use options::Options;
 use storyteller::StoryTeller;
-use utils::{choose_story, clear_screen, menu};
+use utils::{choose_story, clear_screen, menu, wait_for_enter};
 
 fn main() -> Result<()> {
     let options = match Options::from_file("options.ron") {
@@ -27,6 +27,8 @@ fn main() -> Result<()> {
             temp
         }
     };
+    println!("Using options\n{:?}", options);
+    wait_for_enter("...");
     loop {
         match menu(vec!["Tell me a story", "Goodbye"], None) {
             Err(e) => println!(

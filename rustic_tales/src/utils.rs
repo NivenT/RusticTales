@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::io::{Read, Write};
 use std::{env, fs};
 
 use globset::{Glob, GlobSetBuilder};
@@ -13,6 +13,10 @@ pub fn wait_for_enter(prompt: &str) {
     let _ = std::io::stdin().read_line(&mut temp);
 }
 
+pub fn get_kb() -> Option<u8> {
+    std::io::stdin().bytes().next().and_then(|res| res.ok())
+}
+
 pub fn clear_screen() {
     TermAction::ClearScreen
         .then(TermAction::SetCursor(0, 0))
@@ -20,7 +24,7 @@ pub fn clear_screen() {
         .execute();
 }
 
-pub fn menu(items: Vec<&str>, ignore_patterns: Option<&Vec<String>>) -> Result<usize> {
+pub fn menu(items: Vec<&str>, ignore_patterns: Option<&[String]>) -> Result<usize> {
     clear_screen();
     let globs = ignore_patterns.and_then(|patts| {
         patts
@@ -63,7 +67,7 @@ pub fn menu(items: Vec<&str>, ignore_patterns: Option<&Vec<String>>) -> Result<u
     }
 }
 
-pub fn choose_story(ignore_patterns: &Vec<String>) -> Result<String> {
+pub fn choose_story(ignore_patterns: &[String]) -> Result<String> {
     let mut dir = env::current_dir()?;
     dir.push("stories");
 

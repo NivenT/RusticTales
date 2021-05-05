@@ -51,12 +51,18 @@ impl Page {
         Page { lines: Vec::new() }
     }
     pub fn max_page_len() -> usize {
+        Page::max_page_height() * Line::max_line_len()
+    }
+    pub fn max_page_height() -> usize {
         // Leave a couple lines open at the end to say 'Next page...'
-        if let Some((Width(w), Height(h))) = terminal_size() {
-            (w as usize) * (h.checked_sub(2).unwrap_or(h) as usize)
+        if let Some((_, Height(h))) = terminal_size() {
+            h.checked_sub(2).unwrap_or(h) as usize
         } else {
-            80 * 23
+            23
         }
+    }
+    pub fn len(&self) -> usize {
+        self.lines.iter().map(|line| line.len).sum()
     }
 
     fn area_to_len((w, h): (usize, usize)) -> usize {
@@ -89,7 +95,10 @@ impl Page {
                 idx += curr_line.len;
                 page.lines.push(curr_line);
             }
-            if idx >= units.len() || idx >= Page::max_page_len() {
+            if idx >= units.len()
+                || page.lines.len() >= Page::max_page_height()
+                || idx >= Page::max_page_len()
+            {
                 break;
             } else if units[idx].is_page_end() {
                 idx += 1;
@@ -143,6 +152,11 @@ impl FromStr for Story {
             let (page, offset) = Page::extract_page(&contents[idx..], idx);
             if offset > 0 {
                 if !page.lines.is_empty() {
+                    println!(
+                        "Adding page with {} lines and total length {}",
+                        page.lines.len(),
+                        page.len()
+                    );
                     pages.push(page);
                 }
                 idx += offset;
@@ -152,8 +166,8 @@ impl FromStr for Story {
         }
 
         Ok(Story {
-            pages: pages,
-            contents: contents,
+            pages,
+            contents,
             place: Bookmark::default(),
         })
     }
@@ -184,7 +198,7 @@ impl Story {
          */
         self.place >= self.end()
     }
-    pub fn get<'a>(&'a self, place: Bookmark) -> &'a Unit {
+    pub fn get(&self, place: Bookmark) -> &Unit {
         &self.contents[self.pages[place.page].lines[place.line].start_idx + place.word]
     }
     pub fn advance(&mut self, disp_by: DisplayUnit) -> Span {
