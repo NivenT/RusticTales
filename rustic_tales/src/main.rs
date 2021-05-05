@@ -5,6 +5,7 @@ extern crate ron;
 extern crate script;
 extern crate serde;
 extern crate terminal_size;
+extern crate termios;
 
 mod ansi;
 mod commands;

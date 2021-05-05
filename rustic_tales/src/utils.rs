@@ -1,4 +1,5 @@
-use std::io::{Read, Write};
+use std::io::{stdin, Read, Write};
+use std::os::unix::io::AsRawFd;
 use std::{env, fs};
 
 use globset::{Glob, GlobSetBuilder};
@@ -13,8 +14,20 @@ pub fn wait_for_enter(prompt: &str) {
     let _ = std::io::stdin().read_line(&mut temp);
 }
 
+// This works on unix-like systems only
 pub fn get_kb() -> Option<u8> {
-    std::io::stdin().bytes().next().and_then(|res| res.ok())
+    use termios::*;
+    let stdin = stdin().as_raw_fd();
+    let orig_termios = Termios::from_fd(stdin).ok()?;
+
+    let mut new_termios = orig_termios;
+    new_termios.c_lflag &= !(ICANON | ECHO);
+    new_termios.c_cc[VMIN] = 0;
+    new_termios.c_cc[VTIME] = 0;
+    tcsetattr(stdin, TCSANOW, &new_termios).ok()?;
+    let res = std::io::stdin().bytes().next().and_then(|res| res.ok());
+    tcsetattr(stdin, TCSANOW, &orig_termios).ok()?;
+    res
 }
 
 pub fn clear_screen() {
