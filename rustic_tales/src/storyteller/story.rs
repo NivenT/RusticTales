@@ -125,6 +125,7 @@ pub enum Span {
     LINE,
     WORD,
     CHAR,
+    COMMAND,
 }
 
 // Instead of directly printing everything, should there be a buffer keeping better track of words and whatnot?
@@ -142,7 +143,7 @@ impl FromStr for Story {
         let tkns = tokenize(s);
         let contents: Vec<_> = tkns
             .into_iter()
-            // Oh, so I had heard of flat map?
+            // Oh, so I had heard of flat map? (see 4f03ae49273ff751a6f4603bd3194d16d65448ec)
             .flat_map(|t| Unit::from_token(&t))
             .collect();
 
@@ -152,11 +153,13 @@ impl FromStr for Story {
             let (page, offset) = Page::extract_page(&contents[idx..], idx);
             if offset > 0 {
                 if !page.lines.is_empty() {
+                    /*
                     println!(
                         "Adding page with {} lines and total length {}",
                         page.lines.len(),
                         page.len()
                     );
+                    */
                     pages.push(page);
                 }
                 idx += offset;
@@ -200,6 +203,9 @@ impl Story {
     }
     pub fn get(&self, place: Bookmark) -> &Unit {
         &self.contents[self.pages[place.page].lines[place.line].start_idx + place.word]
+    }
+    pub fn get_curr(&self) -> &Unit {
+        self.get(self.place)
     }
     pub fn advance(&mut self, disp_by: DisplayUnit) -> Span {
         let unit = self.get(self.place).clone(); // I really hate these clone's

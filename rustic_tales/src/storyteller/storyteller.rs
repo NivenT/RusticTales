@@ -118,47 +118,53 @@ impl<'a> StoryTeller<'a> {
         }
         ret
     }
+    fn tell_millis(&mut self, ms: u64) -> Option<Span> {
+        self.write_and_advance(self.story.get_place(), self.opts().disp_by);
+        let _ = stdout().flush();
+        sleep(Duration::from_millis(ms));
+        None
+    }
+    fn tell_lines(&mut self, num: usize) -> Span {
+        let mut last_span = Span::LINE;
+        let mut span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
+        'outer: for _ in 0..num {
+            while span != Span::LINE {
+                if span == Span::PAGE {
+                    last_span = span;
+                    break 'outer;
+                } else if self.story.get_curr().is_command() {
+                    last_span = Span::COMMAND;
+                    break 'outer;
+                }
+                span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
+            }
+        }
+        let _ = stdout().flush();
+        last_span
+    }
+    fn tell_onepage(&mut self) -> Span {
+        let mut last_span = Span::PAGE;
+        let mut span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
+        while span != Span::PAGE {
+            if self.story.get_curr().is_command() {
+                last_span = Span::COMMAND;
+                break;
+            }
+            span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
+        }
+        let _ = stdout().flush();
+        last_span
+    }
+
     pub fn tell(&mut self, opts: &'a STOptions) {
         self.setup(opts);
         while !self.story.is_over() {
-            // TODO: Make this code less trash
             let last_span = match self.opts().scroll_rate {
-                ScrollRate::Millis(ms) => {
-                    self.write_and_advance(self.story.get_place(), self.opts().disp_by);
-                    let _ = stdout().flush();
-                    sleep(Duration::from_millis(ms));
-                    None
-                }
-                ScrollRate::Lines(num) => {
-                    let mut last_span = Span::LINE;
-                    'outer: for _ in 0..num {
-                        loop {
-                            let span =
-                                self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
-                            if span == Span::PAGE {
-                                last_span = span;
-                                break 'outer;
-                            } else if span == Span::LINE {
-                                break;
-                            }
-                        }
-                    }
-                    let _ = stdout().flush();
-                    Some(last_span)
-                }
-                ScrollRate::OnePage => {
-                    loop {
-                        if self.write_and_advance(self.story.get_place(), DisplayUnit::Word)
-                            == Span::PAGE
-                        {
-                            break;
-                        }
-                    }
-                    let _ = stdout().flush();
-                    Some(Span::PAGE)
-                }
+                ScrollRate::Millis(ms) => self.tell_millis(ms),
+                ScrollRate::Lines(num) => Some(self.tell_lines(num)),
+                ScrollRate::OnePage => Some(self.tell_onepage()),
             };
-            if let Some(Span::LINE) = last_span {
+            if matches!(last_span, Some(Span::LINE) | Some(Span::COMMAND)) {
                 while get_kb() == None {}
             }
         }

@@ -57,4 +57,7 @@ impl Unit {
     pub fn is_word(&self) -> bool {
         matches!(self, Unit::Word(_))
     }
+    pub fn is_command(&self) -> bool {
+        matches!(self, Unit::Special(Token::Command(_, _)))
+    }
 }
