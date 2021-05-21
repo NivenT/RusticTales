@@ -38,9 +38,9 @@ impl DisplayUnit {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ScrollRate {
-    Millis(u64),  // symbol every ??? milliseconds
-    Lines(usize), // display ??? lines at a time
-    OnePage,      // display 1 page at a time
+    Millis { num: usize, ms: u64 }, // num symbols every ms milliseconds
+    Lines(usize),                   // display ??? lines at a time
+    OnePage,                        // display 1 page at a time
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -51,8 +51,9 @@ pub struct STOptions {
 
 impl Default for STOptions {
     fn default() -> Self {
+        use ScrollRate::*;
         STOptions {
-            scroll_rate: ScrollRate::OnePage,
+            scroll_rate: Millis { num: 5, ms: 743 },
             disp_by: DisplayUnit::Word,
         }
     }

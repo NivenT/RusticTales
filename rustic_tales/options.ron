@@ -1,6 +1,9 @@
 (
     st_opts: (
-        scroll_rate: OnePage,
+        scroll_rate: Millis(
+            num: 5,
+            ms: 743,
+        ),
         disp_by: Word,
     ),
     file_ignore_patterns: [

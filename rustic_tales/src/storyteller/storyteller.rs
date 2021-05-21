@@ -137,11 +137,21 @@ impl<'a> StoryTeller<'a> {
         }
         the_story_goes_on.then(|| ret)
     }
-    fn tell_millis(&mut self, ms: u64) -> SnippetInfo {
-        self.write_and_advance(self.opts().disp_by);
+    fn tell_millis(&mut self, num: usize, ms: u64) -> SnippetInfo {
+        let mut info = SnippetInfo::Nothing;
+        for _ in 0..num {
+            let span = self.write_and_advance(self.opts().disp_by);
+            if span == None {
+                info = SnippetInfo::StoryOver;
+                break;
+            } else if self.story.get_curr().is_command() {
+                info = SnippetInfo::EndedWith(Span::COMMAND);
+                break;
+            }
+        }
         let _ = stdout().flush();
         sleep(Duration::from_millis(ms));
-        SnippetInfo::Nothing
+        info
     }
     fn tell_lines(&mut self, num: usize) -> SnippetInfo {
         let mut last_span = Span::LINE;
@@ -192,7 +202,7 @@ impl<'a> StoryTeller<'a> {
         self.setup(opts);
         loop {
             let snippet_info = match self.opts().scroll_rate {
-                ScrollRate::Millis(ms) => self.tell_millis(ms),
+                ScrollRate::Millis { num, ms } => self.tell_millis(num, ms),
                 ScrollRate::Lines(num) => self.tell_lines(num),
                 ScrollRate::OnePage => self.tell_onepage(),
             };
