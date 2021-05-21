@@ -12,6 +12,7 @@ pub enum RTError {
 
     InvalidInput(String),
     UnrecognizedCommand(String),
+    #[allow(dead_code)]
     NotYetImplemented(String),
     Internal(&'static str),
 }

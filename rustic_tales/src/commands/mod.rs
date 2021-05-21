@@ -1,3 +1,4 @@
+use std::io::{stdout, Write};
 use std::path::Path;
 
 use image::imageops;
@@ -34,6 +35,7 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
             .into_iter()
             .map(|b| ASCII_CHARS[NUM_CHARS - 1 - (NUM_CHARS * (b as usize) / 256)])
             .for_each(|c| print!("{}", c));
+        let _ = stdout().flush();
         wait_for_kb();
         Ok(())
     } else {
@@ -82,6 +84,7 @@ pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
                     .0
             })
             .for_each(|c| print!("{} ", c));
+        let _ = stdout().flush();
         wait_for_kb();
         TermAction::ResetColor.execute();
         Ok(())

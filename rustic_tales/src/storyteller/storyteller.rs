@@ -12,8 +12,26 @@ use crate::err::{RTError, Result};
 use crate::options::{DisplayUnit, STOptions, ScrollRate};
 use crate::utils::{get_kb, wait_for_enter, wait_for_kb};
 
-use super::story::{Bookmark, Page, Span, Story};
+use super::story::{Span, Story};
 use super::unit::Unit;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SnippetInfo {
+    Nothing,
+    EndedWith(Span),
+    StoryOver,
+}
+
+impl SnippetInfo {
+    fn should_wait_for_kb(&self) -> bool {
+        use SnippetInfo::*;
+        matches!(self, EndedWith(Span::LINE) | EndedWith(Span::COMMAND))
+    }
+    fn story_ended(&self) -> bool {
+        use SnippetInfo::*;
+        matches!(self, StoryOver)
+    }
+}
 
 // TODO: Make state machine (e.g. so can backspace over time)
 #[derive(Debug, Clone)]
@@ -76,9 +94,9 @@ impl<'a> StoryTeller<'a> {
             env: StoryTeller::prepare_builtins(),
         })
     }
-    fn write(&mut self, place: Bookmark) {
+    fn write(&mut self) {
         // self.eval_command mutably borrows self, so need to clone or something
-        let unit = self.story.get(place).clone();
+        let unit = self.story.get_curr().clone();
         match unit {
             Unit::Char(c) => print!("{}", c),
             Unit::Word(w) => {
@@ -110,23 +128,28 @@ impl<'a> StoryTeller<'a> {
             }
         }
     }
-    fn write_and_advance(&mut self, place: Bookmark, disp_by: DisplayUnit) -> Span {
-        self.write(place);
+    fn write_and_advance(&mut self, disp_by: DisplayUnit) -> Option<Span> {
+        self.write();
+        let the_story_goes_on = !self.story.is_over();
         let ret = self.story.advance(disp_by);
-        if ret == Span::PAGE {
+        if ret == Span::PAGE && !self.story.is_over() {
             self.turn_page();
         }
-        ret
+        the_story_goes_on.then(|| ret)
     }
-    fn tell_millis(&mut self, ms: u64) -> Option<Span> {
-        self.write_and_advance(self.story.get_place(), self.opts().disp_by);
+    fn tell_millis(&mut self, ms: u64) -> SnippetInfo {
+        self.write_and_advance(self.opts().disp_by);
         let _ = stdout().flush();
         sleep(Duration::from_millis(ms));
-        None
+        SnippetInfo::Nothing
     }
-    fn tell_lines(&mut self, num: usize) -> Span {
+    fn tell_lines(&mut self, num: usize) -> SnippetInfo {
         let mut last_span = Span::LINE;
-        let mut span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
+        // There's gotta be a better way to write this
+        let mut span = match self.write_and_advance(DisplayUnit::Word) {
+            Some(span) => span,
+            None => return SnippetInfo::StoryOver,
+        };
         'outer: for _ in 0..num {
             while span != Span::LINE {
                 if self.story.get_curr().is_command() {
@@ -136,41 +159,51 @@ impl<'a> StoryTeller<'a> {
                     last_span = span;
                     break 'outer;
                 }
-                span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
+                span = match self.write_and_advance(DisplayUnit::Word) {
+                    Some(span) => span,
+                    None => return SnippetInfo::StoryOver,
+                };
             }
         }
         let _ = stdout().flush();
-        last_span
+        SnippetInfo::EndedWith(last_span)
     }
-    fn tell_onepage(&mut self) -> Span {
+    fn tell_onepage(&mut self) -> SnippetInfo {
         let mut last_span = Span::PAGE;
-        let mut span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
+        let mut span = match self.write_and_advance(DisplayUnit::Word) {
+            Some(span) => span,
+            None => return SnippetInfo::StoryOver,
+        };
         while span != Span::PAGE {
             if self.story.get_curr().is_command() {
                 last_span = Span::COMMAND;
                 break;
             }
-            span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
+            span = match self.write_and_advance(DisplayUnit::Word) {
+                Some(span) => span,
+                None => return SnippetInfo::StoryOver,
+            };
         }
         let _ = stdout().flush();
-        last_span
+        SnippetInfo::EndedWith(last_span)
     }
 
     pub fn tell(&mut self, opts: &'a STOptions) {
         self.setup(opts);
         loop {
-            let last_span = match self.opts().scroll_rate {
+            let snippet_info = match self.opts().scroll_rate {
                 ScrollRate::Millis(ms) => self.tell_millis(ms),
-                ScrollRate::Lines(num) => Some(self.tell_lines(num)),
-                ScrollRate::OnePage => Some(self.tell_onepage()),
+                ScrollRate::Lines(num) => self.tell_lines(num),
+                ScrollRate::OnePage => self.tell_onepage(),
             };
-            if matches!(last_span, Some(Span::LINE) | Some(Span::COMMAND)) {
+            //println!("snippet info: {:?}", snippet_info);
+            if snippet_info.should_wait_for_kb() {
                 wait_for_kb();
                 // only waits for one byte, but some keys (e.g. arrow keys) generate multiple bytes
                 // we want to exhause all of those so the next call actually waits for a new
                 // keypress. This is not the nicest way to do it, but meh
                 while get_kb() != None {}
-            } else if self.story.is_over() {
+            } else if snippet_info.story_ended() {
                 break;
             }
         }

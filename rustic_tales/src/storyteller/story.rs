@@ -61,9 +61,6 @@ impl Page {
             23
         }
     }
-    pub fn len(&self) -> usize {
-        self.lines.iter().map(|line| line.len).sum()
-    }
 
     fn area_to_len((w, h): (usize, usize)) -> usize {
         w + h * Line::max_line_len()
@@ -237,6 +234,7 @@ impl Story {
             unreachable!("unit is a word or is not a word")
         }
     }
+    #[allow(dead_code)]
     pub fn num_pages(&self) -> usize {
         self.pages.len()
     }

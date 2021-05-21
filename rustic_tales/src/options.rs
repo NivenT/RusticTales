@@ -74,12 +74,12 @@ impl Default for Options {
 }
 
 impl Options {
-    pub fn to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+    pub fn to_file(&self, path: impl AsRef<Path>) -> Result<()> {
         let file = File::create(path)?;
         to_writer_pretty(file, self, PrettyConfig::default())?;
         Ok(())
     }
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
+    pub fn from_file(path: impl AsRef<Path>) -> Result<Self> {
         let opts = from_reader(File::open(path)?)?;
         Ok(opts)
     }
