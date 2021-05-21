@@ -10,7 +10,7 @@ use crate::ansi::TermAction;
 use crate::commands::*;
 use crate::err::{RTError, Result};
 use crate::options::{DisplayUnit, STOptions, ScrollRate};
-use crate::utils::{get_kb, wait_for_enter};
+use crate::utils::{get_kb, wait_for_enter, wait_for_kb};
 
 use super::story::{Bookmark, Page, Span, Story};
 use super::unit::Unit;
@@ -62,14 +62,14 @@ impl<'a> StoryTeller<'a> {
 
     pub fn new<P: AsRef<Path>>(story: P) -> Result<Self> {
         let story: Story = fs::read_to_string(story)?.parse()?;
-
+        /*
         println!(
             "There were {} pages. The max page length is {}.",
             story.num_pages(),
             Page::max_page_len()
         );
         wait_for_enter("...");
-
+        */
         Ok(StoryTeller {
             story,
             options: None,
@@ -79,7 +79,6 @@ impl<'a> StoryTeller<'a> {
     fn write(&mut self, place: Bookmark) {
         // self.eval_command mutably borrows self, so need to clone or something
         let unit = self.story.get(place).clone();
-        println!("\nCurrent unit: {:?}", unit);
         match unit {
             Unit::Char(c) => print!("{}", c),
             Unit::Word(w) => {
@@ -159,14 +158,20 @@ impl<'a> StoryTeller<'a> {
 
     pub fn tell(&mut self, opts: &'a STOptions) {
         self.setup(opts);
-        while !self.story.is_over() {
+        loop {
             let last_span = match self.opts().scroll_rate {
                 ScrollRate::Millis(ms) => self.tell_millis(ms),
                 ScrollRate::Lines(num) => Some(self.tell_lines(num)),
                 ScrollRate::OnePage => Some(self.tell_onepage()),
             };
             if matches!(last_span, Some(Span::LINE) | Some(Span::COMMAND)) {
-                while get_kb() == None {}
+                wait_for_kb();
+                // only waits for one byte, but some keys (e.g. arrow keys) generate multiple bytes
+                // we want to exhause all of those so the next call actually waits for a new
+                // keypress. This is not the nicest way to do it, but meh
+                while get_kb() != None {}
+            } else if self.story.is_over() {
+                break;
             }
         }
         self.cleanup();

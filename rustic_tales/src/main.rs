@@ -17,21 +17,20 @@ mod utils;
 use err::Result;
 use options::Options;
 use storyteller::StoryTeller;
-use utils::{choose_story, clear_screen, menu, wait_for_enter};
+use utils::{choose_story, clear_screen, menu};
 
 fn main() -> Result<()> {
     let options = match Options::from_file("options.ron") {
         Ok(opts) => opts,
         Err(_) => {
             let temp = Options::default();
-            temp.to_file("options.ron")?;
+            // It's not important that this succeeds
+            let _ = temp.to_file("options.ron");
             temp
         }
     };
-    println!("Using options\n{:?}", options);
-    wait_for_enter("...");
     loop {
-        match menu(vec!["Tell me a story", "Goodbye"], None) {
+        match menu(&["Tell me a story", "Goodbye"], None) {
             Err(e) => println!(
                 "I did not understand your choice.\n{}\nPlease try again.\n",
                 e

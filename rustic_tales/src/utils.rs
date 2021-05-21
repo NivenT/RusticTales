@@ -17,16 +17,16 @@ pub fn wait_for_enter(prompt: &str) {
 // This works on unix-like systems only
 pub fn get_kb() -> Option<u8> {
     use termios::*;
-    let stdin = stdin().as_raw_fd();
-    let orig_termios = Termios::from_fd(stdin).ok()?;
+    let stdin_fd = stdin().as_raw_fd();
+    let orig_termios = Termios::from_fd(stdin_fd).ok()?;
 
     let mut new_termios = orig_termios;
     new_termios.c_lflag &= !(ICANON | ECHO);
     new_termios.c_cc[VMIN] = 0;
     new_termios.c_cc[VTIME] = 0;
-    tcsetattr(stdin, TCSANOW, &new_termios).ok()?;
-    let res = std::io::stdin().bytes().next().and_then(|res| res.ok());
-    tcsetattr(stdin, TCSANOW, &orig_termios).ok()?;
+    tcsetattr(stdin_fd, TCSANOW, &new_termios).ok()?;
+    let res = stdin().bytes().next().and_then(|res| res.ok());
+    tcsetattr(stdin_fd, TCSANOW, &orig_termios).ok()?;
     res
 }
 
@@ -42,7 +42,7 @@ pub fn clear_screen() {
         .execute();
 }
 
-pub fn menu(items: Vec<&str>, ignore_patterns: Option<&[String]>) -> Result<usize> {
+pub fn menu<T: AsRef<str>>(items: &[T], ignore_patterns: Option<&[String]>) -> Result<usize> {
     clear_screen();
     let globs = ignore_patterns.and_then(|patts| {
         patts
@@ -62,10 +62,13 @@ pub fn menu(items: Vec<&str>, ignore_patterns: Option<&[String]>) -> Result<usiz
     for (num, (idx, item)) in items
         .iter()
         .enumerate()
-        .filter(|(_, item)| globs.as_ref().map_or(true, |gs| !gs.is_match(item)))
+        .filter(|(_, item)| {
+            let s = item.as_ref();
+            globs.as_ref().map_or(true, |gs| !gs.is_match(s))
+        })
         .enumerate()
     {
-        println!("{}. {}", num + 1, item);
+        println!("{}. {}", num + 1, item.as_ref());
         true_indices.push(idx);
     }
     println!();
@@ -76,10 +79,8 @@ pub fn menu(items: Vec<&str>, ignore_patterns: Option<&[String]>) -> Result<usiz
     let max_choice = true_indices.len();
 
     if choice == 0 || choice > max_choice {
-        Err(RTError::InvalidInput(format!(
-            "Need to make a choice in range 1 -- {}",
-            max_choice
-        )))
+        let err_msg = format!("Need to make a choice in range 1 -- {}", max_choice);
+        Err(RTError::InvalidInput(err_msg))
     } else {
         Ok(true_indices[choice - 1])
     }
@@ -99,9 +100,6 @@ pub fn choose_story(ignore_patterns: &[String]) -> Result<String> {
         })
         .filter_map(|e| e.file_name().into_string().ok())
         .collect();
-    // I should just make menu take Vec<String>, but meh
-    let refs = stories.iter().map(|s| &s[..]).collect::<Vec<_>>();
-    let file_name = &stories[menu(refs, Some(ignore_patterns))?];
-
+    let file_name = &stories[menu(&stories, Some(ignore_patterns))?];
     Ok(format!("stories/{}", file_name))
 }
