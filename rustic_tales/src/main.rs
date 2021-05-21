@@ -35,7 +35,7 @@ fn main() -> Result<()> {
                 "I did not understand your choice.\n{}\nPlease try again.\n",
                 e
             ),
-            Ok(0) => match choose_story(options.get_ignored()) {
+            Ok(0) => match choose_story(options.get_ignored(), options.get_story_folder()) {
                 Ok(story) => {
                     let mut st = StoryTeller::new(&story)
                         .expect("choose_story should only return existing files");

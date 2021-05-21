@@ -43,10 +43,11 @@ pub enum ScrollRate {
     OnePage,                        // display 1 page at a time
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct STOptions {
     pub scroll_rate: ScrollRate,
     pub disp_by: DisplayUnit,
+    pub stories_directory: String,
 }
 
 impl Default for STOptions {
@@ -55,6 +56,7 @@ impl Default for STOptions {
         STOptions {
             scroll_rate: Millis { num: 5, ms: 743 },
             disp_by: DisplayUnit::Word,
+            stories_directory: "stories".to_owned(),
         }
     }
 }
@@ -89,5 +91,8 @@ impl Options {
     }
     pub fn get_story_opts(&self) -> &STOptions {
         &self.st_opts
+    }
+    pub fn get_story_folder(&self) -> &String {
+        &self.st_opts.stories_directory
     }
 }

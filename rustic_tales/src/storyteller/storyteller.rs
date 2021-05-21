@@ -241,6 +241,9 @@ impl<'a> StoryTeller<'a> {
             .execute();
     }
 
+    fn get_full_path(&self, p: &str) -> String {
+        format!("{}/{}", self.opts().stories_directory, p)
+    }
     fn get_val(&self, var: &str) -> String {
         self.env.get(var).unwrap_or(&String::new()).clone()
     }
@@ -262,9 +265,9 @@ impl<'a> StoryTeller<'a> {
                         "'display_img' takes 1 or 2 args".to_string(),
                     ))
                 } else if args.len() == 2 && args[1].eq_ignore_ascii_case("term") {
-                    img_to_term(&args[0])
+                    img_to_term(self.get_full_path(&args[0]))
                 } else {
-                    img_to_ascii(&args[0])
+                    img_to_ascii(self.get_full_path(&args[0]))
                 }
             }
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),

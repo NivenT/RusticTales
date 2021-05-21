@@ -86,9 +86,9 @@ pub fn menu(items: &[impl AsRef<str>], ignore_patterns: Option<&[String]>) -> Re
     }
 }
 
-pub fn choose_story(ignore_patterns: &[String]) -> Result<String> {
+pub fn choose_story(ignore_patterns: &[String], folder: &str) -> Result<String> {
     let mut dir = env::current_dir()?;
-    dir.push("stories");
+    dir.push(folder);
 
     let stories: Vec<String> = fs::read_dir(dir)?
         .filter_map(|e| e.ok())
@@ -101,5 +101,5 @@ pub fn choose_story(ignore_patterns: &[String]) -> Result<String> {
         .filter_map(|e| e.file_name().into_string().ok())
         .collect();
     let file_name = &stories[menu(&stories, Some(ignore_patterns))?];
-    Ok(format!("stories/{}", file_name))
+    Ok(format!("{}/{}", folder, file_name))
 }
