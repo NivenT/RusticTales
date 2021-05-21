@@ -5,12 +5,12 @@ Interactive stories in your terminal
 
 - [X] Make a TODO List
 - [ ] Pagination
-  - [ ] Hit enter to go to next page
-  - [ ] Pagination takes into account newlines
+  - [X] Hit enter to go to next page
+  - [X] Pagination takes into account newlines
   - [ ] Other stuff... It's been too long since I worked on this. I don't remember what I need to do
-- [ ] Config file
+- [X] Config file
   - [ ] Story directory
-  - [ ] Word every x seconds vs. word on enter
-  - [ ] More
+  - [X] Word every x seconds vs. word on enter
+  - [X] More
 - [ ] ...
 - [ ] Write stories
