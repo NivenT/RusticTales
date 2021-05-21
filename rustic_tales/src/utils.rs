@@ -30,6 +30,11 @@ pub fn get_kb() -> Option<u8> {
     res
 }
 
+// Don't tell anyone I wrote a spinlock, ok?
+pub fn wait_for_kb() {
+    while get_kb() == None {}
+}
+
 pub fn clear_screen() {
     TermAction::ClearScreen
         .then(TermAction::SetCursor(0, 0))

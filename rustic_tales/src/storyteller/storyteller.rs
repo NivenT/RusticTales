@@ -79,6 +79,7 @@ impl<'a> StoryTeller<'a> {
     fn write(&mut self, place: Bookmark) {
         // self.eval_command mutably borrows self, so need to clone or something
         let unit = self.story.get(place).clone();
+        println!("\nCurrent unit: {:?}", unit);
         match unit {
             Unit::Char(c) => print!("{}", c),
             Unit::Word(w) => {
@@ -129,11 +130,11 @@ impl<'a> StoryTeller<'a> {
         let mut span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
         'outer: for _ in 0..num {
             while span != Span::LINE {
-                if span == Span::PAGE {
-                    last_span = span;
-                    break 'outer;
-                } else if self.story.get_curr().is_command() {
+                if self.story.get_curr().is_command() {
                     last_span = Span::COMMAND;
+                    break 'outer;
+                } else if span == Span::PAGE {
+                    last_span = span;
                     break 'outer;
                 }
                 span = self.write_and_advance(self.story.get_place(), DisplayUnit::Word);
