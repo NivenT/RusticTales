@@ -8,6 +8,7 @@ pub enum Token {
     Symbol(String),               // $sym$
     PageEnd,                      // /PAGE/
     Char(char),                   // {c}
+    SectionStart(String),         // #=$ SECTION_NAME $=#
 }
 
 impl Token {
@@ -17,6 +18,9 @@ impl Token {
     pub fn is_page_end(&self) -> bool {
         self == &Token::PageEnd
     }
+    pub fn is_sect_start(&self) -> bool {
+        matches!(self, Token::SectionStart(_))
+    }
     pub fn is_empty(&self) -> bool {
         match self {
             Token::Text(s) => s.is_empty(),
@@ -25,6 +29,8 @@ impl Token {
             Token::Symbol(s) => s.is_empty(),
             Token::PageEnd => false,
             Token::Char(c) => c == &'\0',
+            // I think this is the right answer
+            Token::SectionStart(_) => false,
         }
     }
 }
@@ -76,27 +82,34 @@ fn parse_char(stream: &str) -> Option<(Token, usize)> {
         .map(|cap| (Token::Char(cap[1].chars().next().unwrap()), cap[0].len()))
 }
 
+fn parse_sect_start(stream: &str) -> Option<(Token, usize)> {
+    let re = Regex::new(r"^#=\$ (.*) \$=#(\n|$)").expect("open an issue");
+    re.captures(stream)
+        .map(|cap| (Token::SectionStart(cap[1].to_string()), cap[0].len()))
+}
+
 pub fn tokenize(stream: &str) -> Vec<Token> {
     let mut ret = vec![];
 
     let mut beg = 0;
     let mut search_pos = beg;
     while beg < stream.len() {
-        let special_chars: &[char] = &['{', '$', '/'];
+        let special_chars: &[char] = &['{', '$', '/', '#'];
         if let Some(end) = stream[search_pos..].find(special_chars) {
             search_pos += end;
             // (ideally) at most one of these will return Some
-            const PARSE_FUNCS: [fn(&str) -> Option<(Token, usize)>; 5] = [
+            const PARSE_FUNCS: [fn(&str) -> Option<(Token, usize)>; 6] = [
                 parse_variable,
                 parse_command,
                 parse_symbol,
                 parse_pageend,
                 parse_char,
+                parse_sect_start,
             ];
 
             let parsed = PARSE_FUNCS
                 .iter()
-                .fold(None, |acc, f| acc.or(f(&stream[search_pos..])));
+                .fold(None, |acc, f| acc.or_else(|| f(&stream[search_pos..])));
             if let Some((tkn, len)) = parsed {
                 ret.push(Token::Text(stream[beg..search_pos].to_string()));
                 /*
@@ -255,5 +268,29 @@ mod tests {
         assert_eq!(parse_char("{}}"), Some((Token::Char('}'), 3)));
         assert_eq!(parse_char("{é}"), Some((Token::Char('é'), 4)));
         assert_eq!(parse_char("must be at beginning {n}"), None);
+    }
+    #[test]
+    fn test_sectstart_parsing() {
+        assert_eq!(parse_sect_start("fail"), None);
+        assert_eq!(
+            parse_sect_start("#=$ secret section $=#"),
+            Some((Token::SectionStart("secret section".to_owned()), 22))
+        );
+        assert_eq!(
+            parse_sect_start("#=$  no_trim   $=#"),
+            Some((Token::SectionStart(" no_trim  ".to_owned()), 18))
+        );
+        assert_eq!(parse_sect_start("#=$Need space$=#"), None);
+        assert_eq!(
+            parse_sect_start("#=$ Need to be whole line $=# blah blah extra"),
+            None
+        );
+        assert_eq!(
+            parse_sect_start("#=$ special chars -?.#&?$ in middle are fine $=#"),
+            Some((
+                Token::SectionStart("special chars -?.#&?$ in middle are fine".to_owned()),
+                48
+            ))
+        );
     }
 }

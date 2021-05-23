@@ -138,4 +138,23 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn tokenize_sections() {
+        let test = "blah blah blah\n\
+                          #=$ section 1 $=#\n\
+                          more content\n\
+                          #=$ section 2 $=#\n\
+                          other content";
+        assert_eq!(
+            tokenize(&test),
+            vec![
+                Token::Text("blah blah blah\n".to_owned()),
+                Token::SectionStart("section 1".to_owned()),
+                Token::Text("more content\n".to_owned()),
+                Token::SectionStart("section 2".to_owned()),
+                Token::Text("other content".to_owned()),
+            ]
+        );
+    }
 }

@@ -1,0 +1,9 @@
+Is your favorite color red?
+{{ prompt_yesno : $ANSWER$ }}
+{{ jump_if_eq : $ANSWER$ |,| y |,| yes section |,| no section }}
+
+#=$ yes section $=#
+Wow, ${{RED_LFG}}red${{NORMAL}} is my favorite color too!
+
+#=$ no section $=#
+${{RED_LFG}} But it's such a good color. You must have said '${{ANSWER}}' by mistake.

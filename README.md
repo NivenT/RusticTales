@@ -12,8 +12,10 @@ Interactive stories in your terminal
   - [X] Story directory
   - [X] Word every x seconds vs. word on enter
   - [X] More
-- [ ] ...
-- [ ] Figure out what the '...' should be
+- [ ] Figure out a way to do branching
+- [X] Figure out what the '...' should be
+  - [ ] Stories across multiple files?
+  - [ ] Label sections?
 - [ ] Write stories
   - [ ] Add features to the scrip?
   - [ ] Think of a creative use of the terminal?
