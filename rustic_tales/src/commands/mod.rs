@@ -11,6 +11,8 @@ use crate::err::{RTError, Result};
 use crate::options::DisplayUnit;
 use crate::utils::wait_for_kb;
 
+pub mod prompts;
+
 pub fn backspace(len: isize, unit: DisplayUnit) {
     if unit.is_char() {
         TermAction::MoveCursor(-len, 0)

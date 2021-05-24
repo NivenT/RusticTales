@@ -4,9 +4,10 @@ use std::io::{stdout, Write};
 use std::path::Path;
 use std::{thread::sleep, time::Duration};
 
-use script::token::Token;
+use script::token::{tokenize, Token};
 
 use crate::ansi::TermAction;
+use crate::commands::prompts::*;
 use crate::commands::*;
 use crate::err::{RTError, Result};
 use crate::options::{DisplayUnit, STOptions, ScrollRate};
@@ -247,6 +248,29 @@ impl<'a> StoryTeller<'a> {
     fn get_val(&self, var: &str) -> String {
         self.env.get(var).unwrap_or(&String::new()).clone()
     }
+    fn set_val(&mut self, var: String, val: String) {
+        self.env.insert(var, val);
+    }
+    fn parse_arg(&self, arg: &str) -> Result<String> {
+        use Token::*;
+        let mut tkns = tokenize(&arg);
+        if tkns.len() != 1 {
+            let msg = format!("Could not parse arg '{}'", arg);
+            let e = RTError::InvalidInput(msg);
+            return Err(e);
+        }
+        let tkn = tkns.pop().unwrap();
+        match tkn {
+            Text(s) => Ok(s),
+            Symbol(s) => Ok(s),
+            Variable(v) => Ok(self.get_val(&v)),
+            _ => {
+                let msg = format!("commands can only take text, symbols, and variables. {} is none of they above.", arg);
+                let e = RTError::InvalidInput(msg);
+                Err(e)
+            }
+        }
+    }
     fn eval_command(&mut self, func: &str, args: &[String]) -> Result<()> {
         match func {
             "backspace" => {
@@ -268,6 +292,18 @@ impl<'a> StoryTeller<'a> {
                     img_to_term(self.get_full_path(&args[0]))
                 } else {
                     img_to_ascii(self.get_full_path(&args[0]))
+                }
+            }
+            "prompt_yesno" => {
+                if args.is_empty() {
+                    let e = RTError::InvalidInput("'prompt_yesno' requires an argument".to_owned());
+                    Err(e)
+                } else {
+                    self.set_val(
+                        self.parse_arg(&args[0])?,
+                        prompt_yesno(args.get(1).cloned()),
+                    );
+                    Ok(())
                 }
             }
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),
