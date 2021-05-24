@@ -82,11 +82,11 @@ impl<'a> StoryTeller<'a> {
     pub fn new<P: AsRef<Path>>(story: P) -> Result<Self> {
         let story: Story = fs::read_to_string(story)?.parse()?;
         /*
-        println!(
-            "There were {} pages. The max page length is {}.",
-            story.num_pages(),
-            Page::max_page_len()
-        );
+        println!("This is the complete story (spoiler warning):\n{:?}", story);
+        println!("The first unit of every section is...");
+        for sect in story.get_sections().iter() {
+            println!("{:?}", story.get_by_absolute_idx(sect.start_idx().unwrap()));
+        }
         wait_for_enter("...");
         */
         Ok(StoryTeller {
@@ -303,6 +303,23 @@ impl<'a> StoryTeller<'a> {
                         self.parse_arg(&args[0])?,
                         prompt_yesno(args.get(1).cloned()),
                     );
+                    Ok(())
+                }
+            }
+            "jump_if_eq" => {
+                if args.len() < 3 {
+                    let msg = "'jump_if_eq' requires at least 3 arguments".to_owned();
+                    let e = RTError::InvalidInput(msg);
+                    Err(e)
+                } else {
+                    let lhs = self.parse_arg(&args[0])?;
+                    let rhs = self.parse_arg(&args[1])?;
+                    let jump_happened = if lhs == rhs {
+                        self.story.jump_to_section(args.get(2))
+                    } else {
+                        self.story.jump_to_section(args.get(3))
+                    };
+                    if jump_happened { /* TODO */ }
                     Ok(())
                 }
             }

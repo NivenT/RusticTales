@@ -130,6 +130,13 @@ impl Section {
     pub fn num_pages(&self) -> usize {
         self.pages.len()
     }
+    #[allow(dead_code)]
+    pub fn start_idx(&self) -> Option<usize> {
+        self.pages
+            .first()
+            .and_then(|page| page.lines.first())
+            .map(|line| line.start_idx)
+    }
 }
 
 // Ord defaults to lexicographic order based on top-down declaration of members
@@ -141,6 +148,12 @@ pub struct Bookmark {
     pub letter: usize,
 }
 
+impl Bookmark {
+    fn reset(&mut self) {
+        *self = Bookmark::default();
+    }
+}
+
 // This is an awful name, but naming things is hard...
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Span {
@@ -149,6 +162,12 @@ pub enum Span {
     WORD,
     CHAR,
     COMMAND,
+    SECTION,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+pub struct StoryFlags {
+    just_changed_section: bool,
 }
 
 // Instead of directly printing everything, should there be a buffer keeping better track of words and whatnot?
@@ -158,6 +177,7 @@ pub struct Story {
     contents: Vec<Unit>,
     place: Bookmark,
     curr_sect_idx: usize,
+    flags: StoryFlags,
 }
 
 impl FromStr for Story {
@@ -194,6 +214,7 @@ impl FromStr for Story {
             contents,
             place: Bookmark::default(),
             curr_sect_idx: 0,
+            flags: StoryFlags::default(),
         })
     }
 }
@@ -232,10 +253,18 @@ impl Story {
         let sect = self.curr_sect();
         &self.contents[sect.pages[place.page].lines[place.line].start_idx + place.word]
     }
+    #[allow(dead_code)]
+    pub fn get_by_absolute_idx(&self, idx: usize) -> &Unit {
+        &self.contents[idx]
+    }
     pub fn get_curr(&self) -> &Unit {
         self.get(self.place)
     }
     pub fn advance(&mut self, disp_by: DisplayUnit) -> Span {
+        if self.flags.just_changed_section {
+            self.flags.just_changed_section = false;
+            return Span::SECTION;
+        }
         // Would rather call self.curr_sect(), but then the complier seems to think
         // I'm borrowing all of self and not just one field, since things are happening
         // across function boundaries (at least, I think this is the issue)
@@ -269,9 +298,33 @@ impl Story {
             unreachable!("unit is a word or is not a word")
         }
     }
+    // Returns true if a jump occured
+    pub fn jump_to_section(&mut self, sect_identifier: Option<&String>) -> bool {
+        self.flags.just_changed_section = false;
+        if let Some(ident) = sect_identifier {
+            let idx = ident.parse::<usize>().ok().or_else(|| {
+                self.sections
+                    .iter()
+                    .enumerate()
+                    .find(|(_, sect)| &sect.name == ident)
+                    .map(|(i, _)| i)
+            });
+            if let Some(idx) = idx {
+                let old_idx = self.curr_sect_idx;
+                self.curr_sect_idx = idx;
+                self.place.reset();
+                self.flags.just_changed_section = old_idx != idx;
+            }
+        }
+        self.flags.just_changed_section
+    }
     #[allow(dead_code)]
     pub fn num_sections(&self) -> usize {
         self.sections.len()
+    }
+    #[allow(dead_code)]
+    pub fn get_sections(&self) -> &[Section] {
+        &self.sections
     }
     pub fn get_place(&self) -> Bookmark {
         self.place

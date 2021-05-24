@@ -84,8 +84,12 @@ fn parse_char(stream: &str) -> Option<(Token, usize)> {
 
 fn parse_sect_start(stream: &str) -> Option<(Token, usize)> {
     let re = Regex::new(r"^#=\$ (.*) \$=#(\n|$)").expect("open an issue");
-    re.captures(stream)
-        .map(|cap| (Token::SectionStart(cap[1].to_string()), cap[0].len()))
+    re.captures(stream).and_then(|cap| {
+        let name = cap[1].to_owned();
+        name.parse::<usize>()
+            .err()
+            .and(Some((Token::SectionStart(name), cap[0].len())))
+    })
 }
 
 pub fn tokenize(stream: &str) -> Vec<Token> {
@@ -292,5 +296,7 @@ mod tests {
                 48
             ))
         );
+        // Section name can't be a usize
+        assert_eq!(parse_sect_start("#=$ 42 $=#"), None);
     }
 }
