@@ -30,11 +30,14 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [X] Story directory
   - [X] Word every x seconds vs. word on enter
   - [X] More
+- [X] Figure out what the '...' should be
 - [ ] Figure out a way to do branching
   - [ ] Stories across multiple files?
-  - [ ] Label sections?
-- [X] Figure out what the '...' should be
+  - [X] Label sections?
+- [ ] Pagination again, but for sections
+- [ ] Add debug features?
 - [ ] Write stories
   - [ ] Add features to the scrip?
   - [ ] Think of a creative use of the terminal?
   - [ ] Abandon this project before getting anything worth making public?
+  - [ ] Put off doing this until the very end of time?

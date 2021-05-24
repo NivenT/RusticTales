@@ -21,18 +21,20 @@ impl Unit {
             t => vec![Special(t.clone())],
         }
     }
-    pub fn len(&self) -> usize {
-        match self {
-            Unit::Char(_) => 1,
-            Unit::Word(w) => w.chars().count() + 1, // +1 cause of the space after the word
-            Unit::Special(t) => match t {
-                Token::Command(_, _) => 0,
-                Token::Variable(_) => 7, // can't know variable length a priori so just guess
-                Token::Symbol(s) => s.len() + 2,
-                _ => unreachable!(),
-            },
+    /*
+        pub fn len(&self) -> usize {
+            match self {
+                Unit::Char(_) => 1,
+                Unit::Word(w) => w.chars().count() + 1, // +1 cause of the space after the word
+                Unit::Special(t) => match t {
+                    Token::Command(_, _) => 0,
+                    Token::Variable(_) => 7, // can't know variable length a priori so just guess
+                    Token::Symbol(s) => s.len() + 2,
+                    _ => unreachable!(),
+                },
+            }
         }
-    }
+    */
     // basically len but keeps track of vertical spacing as well
     pub fn area(&self) -> (usize, usize) {
         match self {
@@ -53,6 +55,9 @@ impl Unit {
     }
     pub fn is_page_end(&self) -> bool {
         matches!(self, Unit::Special(Token::PageEnd))
+    }
+    pub fn is_sect_start(&self) -> bool {
+        matches!(self, Unit::Special(Token::SectionStart(_)))
     }
     pub fn is_word(&self) -> bool {
         matches!(self, Unit::Word(_))

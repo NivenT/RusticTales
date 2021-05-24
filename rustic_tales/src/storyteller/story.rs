@@ -2,21 +2,12 @@ use std::str::FromStr;
 
 use terminal_size::{terminal_size, Height, Width};
 
-use script::token::tokenize;
+use script::token::{tokenize, Token};
 
 use crate::err::{RTError, Result};
 use crate::options::DisplayUnit;
 
 use super::unit::Unit;
-
-/*
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Slice {
-    // index into the 'contents' of the containing story
-    start_idx: usize,
-    len: usize,
-}
-*/
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Line {
@@ -75,7 +66,7 @@ impl Page {
             curr_line.len = units[idx..]
                 .iter()
                 .scan(0, |len, next| {
-                    if next.is_page_end() {
+                    if next.is_page_end() || next.is_sect_start() {
                         None
                     } else {
                         let unit_size = Page::area_to_len(next.area());
@@ -95,6 +86,7 @@ impl Page {
             if idx >= units.len()
                 || page.lines.len() >= Page::max_page_height()
                 || idx >= Page::max_page_len()
+                || units[idx].is_sect_start()
             {
                 break;
             } else if units[idx].is_page_end() {
@@ -103,6 +95,40 @@ impl Page {
             }
         }
         (page, idx)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Section {
+    pages: Vec<Page>,
+    name: String,
+}
+
+impl Section {
+    // Returns number of units in this page
+    fn extract_section(name: &str, units: &[Unit], offset: usize) -> (Section, usize) {
+        let mut pages = Vec::new();
+        let mut idx = 0;
+        while idx < units.len() && !units[idx].is_sect_start() {
+            let (page, offset) = Page::extract_page(&units[idx..], offset + idx);
+            if offset > 0 {
+                if !page.lines.is_empty() {
+                    pages.push(page);
+                }
+                idx += offset;
+            } else {
+                break;
+            }
+        }
+        let sect = Section {
+            pages,
+            name: name.to_owned(),
+        };
+        (sect, idx)
+    }
+    #[allow(dead_code)]
+    pub fn num_pages(&self) -> usize {
+        self.pages.len()
     }
 }
 
@@ -128,9 +154,10 @@ pub enum Span {
 // Instead of directly printing everything, should there be a buffer keeping better track of words and whatnot?
 #[derive(Debug, Clone)]
 pub struct Story {
-    pages: Vec<Page>,
+    sections: Vec<Section>,
     contents: Vec<Unit>,
     place: Bookmark,
+    curr_sect_idx: usize,
 }
 
 impl FromStr for Story {
@@ -144,45 +171,46 @@ impl FromStr for Story {
             .flat_map(|t| Unit::from_token(&t))
             .collect();
 
-        let mut pages = Vec::new();
+        let mut sects = Vec::new();
         let mut idx = 0;
-        loop {
-            let (page, offset) = Page::extract_page(&contents[idx..], idx);
-            if offset > 0 {
-                if !page.lines.is_empty() {
-                    /*
-                    println!(
-                        "Adding page with {} lines and total length {}",
-                        page.lines.len(),
-                        page.len()
-                    );
-                    */
-                    pages.push(page);
-                }
-                idx += offset;
+        let mut name = "Main Section"; // The (default) name of the 0th section
+        while idx < contents.len() {
+            if let Unit::Special(Token::SectionStart(sname)) = &contents[idx] {
+                name = sname;
+                idx += 1;
             } else {
-                break;
+                let (sect, offset) = Section::extract_section(name, &contents[idx..], idx);
+                if offset > 0 {
+                    if !sect.pages.is_empty() {
+                        sects.push(sect);
+                    }
+                    idx += offset;
+                }
             }
         }
 
         Ok(Story {
-            pages,
+            sections: sects,
             contents,
             place: Bookmark::default(),
+            curr_sect_idx: 0,
         })
     }
 }
 
 impl Story {
     fn end(&self) -> Bookmark {
-        let last_page = self.pages.len().saturating_sub(1);
-        let last_line = self.pages[last_page].lines.len().saturating_sub(1);
-        let last_word = self.pages[last_page].lines[last_line].len.saturating_sub(1);
-        // sometimes, I don't understand rustfmt's choices
-        let last_letter = self.contents
-            [self.pages[last_page].lines[last_line].start_idx + last_word]
-            .len()
-            .saturating_sub(1);
+        let sect = self.curr_sect();
+        let last_page = sect.pages.len().saturating_sub(1);
+        let last_line = sect.pages[last_page].lines.len().saturating_sub(1);
+        let last_word = sect.pages[last_page].lines[last_line].len.saturating_sub(1);
+
+        let last_word_idx = sect.pages[last_page].lines[last_line].start_idx + last_word;
+        let last_letter = if let Unit::Word(w) = &self.contents[last_word_idx] {
+            w.chars().count().saturating_sub(1)
+        } else {
+            0
+        };
         Bookmark {
             page: last_page,
             line: last_line,
@@ -190,30 +218,37 @@ impl Story {
             letter: last_letter,
         }
     }
-
+    // This *might* no longer be what I want now that I've added sections
+    // This checks to see if the current section is over
+    // I *don't* want sections to automatically roll over to the next one,
+    // so I *think* this *is* what I want.
     pub fn is_over(&self) -> bool {
-        /*
-        self.place.page >= self.pages.len()
-            || self.pages[self.place.page].start_idx + self.place.word >= self.contents.len()
-         */
         self.place >= self.end()
     }
+    pub fn curr_sect(&self) -> &Section {
+        &self.sections[self.curr_sect_idx]
+    }
     pub fn get(&self, place: Bookmark) -> &Unit {
-        &self.contents[self.pages[place.page].lines[place.line].start_idx + place.word]
+        let sect = self.curr_sect();
+        &self.contents[sect.pages[place.page].lines[place.line].start_idx + place.word]
     }
     pub fn get_curr(&self) -> &Unit {
         self.get(self.place)
     }
     pub fn advance(&mut self, disp_by: DisplayUnit) -> Span {
+        // Would rather call self.curr_sect(), but then the complier seems to think
+        // I'm borrowing all of self and not just one field, since things are happening
+        // across function boundaries (at least, I think this is the issue)
+        let sect = &self.sections[self.curr_sect_idx];
         let unit = self.get(self.place).clone(); // I really hate these clone's
         if disp_by == DisplayUnit::Word || !unit.is_word() {
             // There's probably a more concise way to write this, but this works
             self.place.letter = 0;
             self.place.word += 1;
-            if self.place.word == self.pages[self.place.page].lines[self.place.line].len {
+            if self.place.word == sect.pages[self.place.page].lines[self.place.line].len {
                 self.place.word = 0;
                 self.place.line += 1;
-                if self.place.line == self.pages[self.place.page].lines.len() {
+                if self.place.line == sect.pages[self.place.page].lines.len() {
                     self.place.line = 0;
                     self.place.page += 1;
                     Span::PAGE
@@ -235,8 +270,8 @@ impl Story {
         }
     }
     #[allow(dead_code)]
-    pub fn num_pages(&self) -> usize {
-        self.pages.len()
+    pub fn num_sections(&self) -> usize {
+        self.sections.len()
     }
     pub fn get_place(&self) -> Bookmark {
         self.place
