@@ -1,5 +1,6 @@
 use std::io::{stdin, Read, Write};
 use std::os::unix::io::AsRawFd;
+use std::process::Command;
 use std::{env, fs};
 
 use globset::{Glob, GlobSetBuilder};
@@ -33,6 +34,15 @@ pub fn get_kb() -> Option<u8> {
 // Don't tell anyone I wrote a spinlock, ok?
 pub fn wait_for_kb() {
     while get_kb() == None {}
+}
+
+pub fn get_user() -> Option<String> {
+    Command::new("sh")
+        .arg("-c")
+        .arg("id -un")
+        .output()
+        .ok()
+        .and_then(|out| String::from_utf8(out.stdout).ok())
 }
 
 pub fn clear_screen() {

@@ -5,6 +5,7 @@
             ms: 743,
         ),
         disp_by: Word,
+        stories_directory: "stories",
     ),
     file_ignore_patterns: [
         "*~",

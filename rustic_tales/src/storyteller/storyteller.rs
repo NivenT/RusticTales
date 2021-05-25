@@ -11,7 +11,7 @@ use crate::commands::prompts::*;
 use crate::commands::*;
 use crate::err::{RTError, Result};
 use crate::options::{DisplayUnit, STOptions, ScrollRate};
-use crate::utils::{get_kb, wait_for_enter, wait_for_kb};
+use crate::utils::{get_kb, get_user, wait_for_enter, wait_for_kb};
 
 use super::story::{Span, Story};
 use super::unit::Unit;
@@ -59,7 +59,7 @@ impl<'a> StoryTeller<'a> {
         // This placement is awkward, but can't put it before calls to
         // "env.insert" since this closure mutably borrows env
         let mut add = |k: &str, v: &str| {
-            env.insert(k.to_string(), v.to_string());
+            env.insert(k.to_owned(), v.to_owned());
         };
 
         add("DEFCOL_FG", "\x1b[39m");
@@ -71,6 +71,10 @@ impl<'a> StoryTeller<'a> {
         add("UNDERLINE", "\x1b[4m");
         add("BLINK", "\x1b[5m");
         add("NORMAL", "\x1b[0m");
+
+        if let Some(user) = get_user() {
+            env.insert("USER_NAME".to_owned(), user);
+        }
 
         env
     }
