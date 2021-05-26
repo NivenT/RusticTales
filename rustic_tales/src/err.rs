@@ -9,6 +9,7 @@ pub enum RTError {
     ImgError(image::ImageError),
     RonError(ron::Error),
     GlobError(globset::Error),
+    DurError(humantime::DurationError),
 
     InvalidInput(String),
     UnrecognizedCommand(String),
@@ -26,6 +27,7 @@ impl fmt::Display for RTError {
             ImgError(e) => write!(f, "Image error: {}", e),
             RonError(e) => write!(f, "RON error: {}", e),
             GlobError(e) => write!(f, "Glob error: {}", e),
+            DurError(e) => write!(f, "Parse duration error: {}", e),
             InvalidInput(r) => write!(f, "Invalid input: {}", r),
             UnrecognizedCommand(c) => write!(f, "Unrecognized command: {}", c),
             NotYetImplemented(r) => write!(f, "{} is not yet implemented", r),
@@ -62,5 +64,11 @@ impl From<ron::Error> for RTError {
 impl From<globset::Error> for RTError {
     fn from(e: globset::Error) -> Self {
         RTError::GlobError(e)
+    }
+}
+
+impl From<humantime::DurationError> for RTError {
+    fn from(e: humantime::DurationError) -> Self {
+        RTError::DurError(e)
     }
 }

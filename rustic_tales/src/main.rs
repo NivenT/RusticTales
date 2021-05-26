@@ -1,4 +1,5 @@
 extern crate globset;
+extern crate humantime;
 extern crate image;
 extern crate regex;
 extern crate ron;

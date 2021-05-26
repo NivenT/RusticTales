@@ -4,6 +4,8 @@ use std::io::{stdout, Write};
 use std::path::Path;
 use std::{thread::sleep, time::Duration};
 
+use humantime::parse_duration;
+
 use script::token::{tokenize, Token};
 
 use crate::ansi::TermAction;
@@ -324,6 +326,17 @@ impl<'a> StoryTeller<'a> {
                         self.story.jump_to_section(args.get(3))
                     };
                     if jump_happened { /* TODO */ }
+                    Ok(())
+                }
+            }
+            "pause" => {
+                if args.len() != 1 {
+                    let msg = "'pause' takes exactly 1 argument".to_owned();
+                    let e = RTError::InvalidInput(msg);
+                    Err(e)
+                } else {
+                    let dur = parse_duration(&args[0])?;
+                    sleep(dur);
                     Ok(())
                 }
             }
