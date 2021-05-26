@@ -19,13 +19,13 @@ Maybe I'll add something later... For now, just look at the tests in the [script
 
 Again, I'll type up something more helpful when I feel like it. For now, see the [commands folder](https://github.com/NivenT/RusticTales/tree/master/rustic_tales/src/commands), and maybe also the relevant function in `storyteller.rs`.
 
-# TODO
+# TODO (In no particular order)
 
 - [X] Make a TODO List
-- [ ] Pagination
+- [X] Pagination
   - [X] Hit enter to go to next page
   - [X] Pagination takes into account newlines
-  - [ ] Other stuff... It's been too long since I worked on this. I don't remember what I need to do
+  - [X] Other stuff... It's been too long since I worked on this. I don't remember what I need to do
 - [X] Config file
   - [X] Story directory
   - [X] Word every x seconds vs. word on enter
@@ -34,8 +34,11 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
 - [ ] Figure out a way to do branching
   - [ ] Stories across multiple files?
   - [X] Label sections?
-- [ ] Pagination again, but for sections
-- [ ] Add debug features?
+- [X] Pagination again, but for sections
+- [X] Add debug features?
+- [ ] State machine
+  - [ ] backspace one character at a time
+  - [ ] Other things
 - [ ] Write stories
   - [ ] Add features to the scrip?
   - [ ] Think of a creative use of the terminal?

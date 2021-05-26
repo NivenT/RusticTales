@@ -188,7 +188,7 @@ impl FromStr for Story {
         let contents: Vec<_> = tkns
             .into_iter()
             // Oh, so I had heard of flat map? (see 4f03ae49273ff751a6f4603bd3194d16d65448ec)
-            .flat_map(|t| Unit::from_token(&t))
+            .flat_map(|t| Unit::from_token(t))
             .collect();
 
         let mut sects = Vec::new();

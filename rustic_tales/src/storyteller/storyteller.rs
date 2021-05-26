@@ -107,13 +107,11 @@ impl<'a> StoryTeller<'a> {
                             .nth(self.story.get_place().letter)
                             .expect("story.place should be a valid index")
                     );
-                    if self.story.get_place().letter + 1 == w.chars().count() {
-                        print!(" ");
-                    }
                 } else {
-                    print!("{} ", w);
+                    print!("{}", w);
                 }
             }
+            Unit::WhiteSpace(w) => print!("{}", w),
             Unit::Special(t) => {
                 debug_assert!(!t.is_text() && !t.is_page_end() && !t.is_sect_start());
                 match t {
