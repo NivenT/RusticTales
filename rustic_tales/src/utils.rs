@@ -3,6 +3,8 @@ use std::os::unix::io::AsRawFd;
 use std::process::Command;
 use std::{env, fs};
 
+use terminal_size::{terminal_size, Height, Width};
+
 use globset::{Glob, GlobSetBuilder};
 
 use crate::ansi::TermAction;
@@ -13,6 +15,14 @@ pub fn wait_for_enter(prompt: &str) {
     let _ = std::io::stdout().flush();
     let mut temp = String::new();
     let _ = std::io::stdin().read_line(&mut temp);
+}
+
+pub fn terminal_dims() -> (u16, u16) {
+    if let Some((Width(w), Height(h))) = terminal_size() {
+        (w, h)
+    } else {
+        (80, 25)
+    }
 }
 
 // This works on unix-like systems only
@@ -43,6 +53,7 @@ pub fn get_user() -> Option<String> {
         .output()
         .ok()
         .and_then(|out| String::from_utf8(out.stdout).ok())
+        .map(|name| name.trim().to_owned())
 }
 
 pub fn clear_screen() {

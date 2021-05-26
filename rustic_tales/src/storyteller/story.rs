@@ -126,17 +126,17 @@ impl Section {
         };
         (sect, idx)
     }
-    #[allow(dead_code)]
-    pub fn num_pages(&self) -> usize {
-        self.pages.len()
-    }
-    #[allow(dead_code)]
-    pub fn start_idx(&self) -> Option<usize> {
-        self.pages
-            .first()
-            .and_then(|page| page.lines.first())
-            .map(|line| line.start_idx)
-    }
+    /*
+        pub fn num_pages(&self) -> usize {
+            self.pages.len()
+        }
+        pub fn start_idx(&self) -> Option<usize> {
+            self.pages
+                .first()
+                .and_then(|page| page.lines.first())
+                .map(|line| line.start_idx)
+        }
+    */
 }
 
 // Ord defaults to lexicographic order based on top-down declaration of members
@@ -253,10 +253,11 @@ impl Story {
         let sect = self.curr_sect();
         &self.contents[sect.pages[place.page].lines[place.line].start_idx + place.word]
     }
-    #[allow(dead_code)]
-    pub fn get_by_absolute_idx(&self, idx: usize) -> &Unit {
-        &self.contents[idx]
-    }
+    /*
+        pub fn get_by_absolute_idx(&self, idx: usize) -> &Unit {
+            &self.contents[idx]
+        }
+    */
     pub fn get_curr(&self) -> &Unit {
         self.get(self.place)
     }
@@ -318,15 +319,13 @@ impl Story {
         }
         self.flags.just_changed_section
     }
-    #[allow(dead_code)]
-    pub fn num_sections(&self) -> usize {
-        self.sections.len()
-    }
-    #[allow(dead_code)]
-    pub fn get_sections(&self) -> &[Section] {
-        &self.sections
-    }
     pub fn get_place(&self) -> Bookmark {
         self.place
+    }
+}
+
+impl Story {
+    pub fn get_contents(&self) -> &Vec<Unit> {
+        &self.contents
     }
 }

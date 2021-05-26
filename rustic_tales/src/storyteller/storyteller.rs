@@ -87,14 +87,7 @@ impl<'a> StoryTeller<'a> {
 
     pub fn new<P: AsRef<Path>>(story: P) -> Result<Self> {
         let story: Story = fs::read_to_string(story)?.parse()?;
-        /*
-        println!("This is the complete story (spoiler warning):\n{:?}", story);
-        println!("The first unit of every section is...");
-        for sect in story.get_sections().iter() {
-            println!("{:?}", story.get_by_absolute_idx(sect.start_idx().unwrap()));
-        }
-        wait_for_enter("...");
-        */
+
         Ok(StoryTeller {
             story,
             options: None,
@@ -122,9 +115,9 @@ impl<'a> StoryTeller<'a> {
                 }
             }
             Unit::Special(t) => {
-                assert!(!t.is_text() && !t.is_page_end());
+                debug_assert!(!t.is_text() && !t.is_page_end() && !t.is_sect_start());
                 match t {
-                    Token::Variable(s) => print!("{}", self.get_val(&s)),
+                    Token::Variable(s) => print!("'{}'", self.get_val(&s)),
                     Token::Command(func, args) => {
                         if let Err(e) = self.eval_command(&func, &args) {
                             eprintln!("\nError: {}", e)
@@ -342,5 +335,15 @@ impl<'a> StoryTeller<'a> {
             }
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),
         }
+    }
+}
+
+// Felt like separating out debug stuff
+impl<'a> StoryTeller<'a> {
+    pub fn get_tokens(story: &str) -> Result<Vec<Token>> {
+        Ok(tokenize(&fs::read_to_string(story)?))
+    }
+    pub fn get_story(&self) -> &Story {
+        &self.story
     }
 }
