@@ -188,8 +188,9 @@ impl FromStr for Story {
         let contents: Vec<_> = tkns
             .into_iter()
             // Oh, so I had heard of flat map? (see 4f03ae49273ff751a6f4603bd3194d16d65448ec)
-            .flat_map(|t| Unit::from_token(t))
+            .flat_map(Unit::from_token)
             .collect();
+        let contents = Story::prepare_contents(contents);
 
         let mut sects = Vec::new();
         let mut idx = 0;
@@ -321,6 +322,19 @@ impl Story {
     }
     pub fn get_place(&self) -> Bookmark {
         self.place
+    }
+
+    fn prepare_contents(mut contents: Vec<Unit>) -> Vec<Unit> {
+        let bad_idxes: Vec<_> = (0..contents.len() - 1)
+            .filter(|&i| {
+                matches!(contents[i], Unit::WhiteSpace(..))
+                    && matches!(contents[i + 1], Unit::Special(Token::Command(..)))
+            })
+            .collect();
+        for i in bad_idxes.into_iter().rev() {
+            contents.remove(i);
+        }
+        contents
     }
 }
 

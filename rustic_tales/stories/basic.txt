@@ -1,5 +1,5 @@
 Once upon a time, there was a large and terrifying credit card bill.
-{{ backspace : 19 |,| chars |,| one_by_one }}
+{{ backspace : 17 |,| chars |,| one_by_one }}
 ${{RED_LFG}}OVERDUE Credit Card Bill!
 {{ display_img : images/past_due.png }}
 ${{NORMAL}}Or maybe it looked more like this?

@@ -1,5 +1,7 @@
 use regex::Regex;
 
+//use either::Either;
+
 use script::token::Token;
 
 #[derive(Debug, Clone)]
@@ -11,22 +13,23 @@ pub enum Unit {
 }
 
 impl Unit {
-    pub fn from_token(tkn: Token) -> Vec<Unit> {
+    // TODO: Figure out how to return an impl Iterator<Item=Unit>
+    pub fn from_token<'a>(tkn: Token) -> Vec<Unit> {
         use Unit::*;
         match tkn {
             Token::Text(s) => {
                 let re = Regex::new("[[:space:]]+").expect("Typo if this does not work");
-                let mut word_start = 0;
-                let mut ret = Vec::new();
-                for mat in re.find_iter(&s) {
-                    let word = &s[word_start..mat.start()];
-                    if !word.is_empty() {
-                        ret.push(Word(word.to_owned()));
-                    }
-                    ret.push(WhiteSpace(mat.as_str().to_owned()));
-                    word_start = mat.end();
-                }
-                ret
+                re.find_iter(&s)
+                    .scan(0, |word_start, mat| {
+                        let unit1 = Word(s[*word_start..mat.start()].to_owned());
+                        let unit2 = WhiteSpace(mat.as_str().to_owned());
+                        *word_start = mat.end();
+                        // there's a better way to do this. I just don't know it...
+                        let iter = std::iter::once(unit1).chain(std::iter::once(unit2));
+                        Some(iter)
+                    })
+                    .flatten()
+                    .collect()
             }
             Token::Char(c) => vec![Char(c)],
             t => vec![Special(t)],

@@ -115,7 +115,7 @@ impl<'a> StoryTeller<'a> {
             Unit::Special(t) => {
                 debug_assert!(!t.is_text() && !t.is_page_end() && !t.is_sect_start());
                 match t {
-                    Token::Variable(s) => print!("'{}'", self.get_val(&s)),
+                    Token::Variable(s) => print!("{}", self.get_val(&s)),
                     Token::Command(func, args) => {
                         if let Err(e) = self.eval_command(&func, &args) {
                             eprintln!("\nError: {}", e)
