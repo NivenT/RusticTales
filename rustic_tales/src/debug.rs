@@ -5,10 +5,18 @@ use crate::utils::*;
 
 pub fn debug_menu(opts: &Options) -> Result<bool> {
     let mut all_according_to_plan = false;
-    let debug_fns = [tokenize_story, parse_story];
-    match menu(&["Tokenize Story", "Parse Story"], None, true) {
+    let debug_fns = [tokenize_story, parse_story, get_pagination_info];
+    match menu(
+        &[
+            "Tokenize Story",
+            "Separate Story into Units",
+            "Pagination Info for Story",
+        ],
+        None,
+        true,
+    ) {
         Err(e) => println!("Something went wrong: '{}'", e),
-        Ok(n) if (0..=1).contains(&n) => {
+        Ok(n) if (0..=2).contains(&n) => {
             match choose_story(opts.get_ignored(), opts.get_story_folder()) {
                 Ok(story) => match StoryTeller::new(&story) {
                     Ok(st) => {
@@ -57,4 +65,28 @@ fn parse_story(_story: String, teller: StoryTeller) {
         }
     }
     wait_for_enter("That's all... (hit enter)");
+}
+
+fn get_pagination_info(story: String, teller: StoryTeller) {
+    let sections = teller.get_story().get_sections();
+
+    println!("'{}' has {} section(s)", story, sections.len());
+    for (i, sect) in sections.iter().enumerate() {
+        let pages = sect.get_pages();
+        println!("SECTION {} ({})", i, sect.get_name());
+        println!("* Starts at index {}", sect.start_idx().unwrap());
+        println!("* There are {} pages", pages.len());
+        for (j, page) in pages.iter().enumerate() {
+            let lines = page.get_lines();
+            println!("* PAGE {}", j);
+            println!("* * Starts at index {}", page.start_idx().unwrap());
+            println!("* * There {} lines", lines.len());
+            for (k, line) in lines.iter().enumerate() {
+                println!("* * Line {}", k);
+                println!("* * * Starts at index {}", line.get_start());
+                println!("* * * Ends with index {}", line.get_end());
+            }
+        }
+    }
+    wait_for_enter("Press enter to continue...");
 }

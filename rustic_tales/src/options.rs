@@ -54,7 +54,7 @@ impl Default for STOptions {
     fn default() -> Self {
         use ScrollRate::*;
         STOptions {
-            scroll_rate: Millis { num: 5, ms: 743 },
+            scroll_rate: Lines(2),
             disp_by: DisplayUnit::Word,
             stories_directory: "stories".to_owned(),
         }
@@ -71,7 +71,7 @@ impl Default for Options {
     fn default() -> Self {
         Options {
             st_opts: STOptions::default(),
-            file_ignore_patterns: vec!["*~".to_owned()],
+            file_ignore_patterns: vec!["*~".to_owned(), "#*#".to_owned()],
         }
     }
 }

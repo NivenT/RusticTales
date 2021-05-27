@@ -74,6 +74,14 @@ impl Unit {
             },
         }
     }
+    // This is kinda dumb
+    pub fn is_newline(&self) -> bool {
+        match self {
+            Unit::Char('\n') => true,
+            Unit::Word(w) | Unit::WhiteSpace(w) => w == "\n",
+            _ => false,
+        }
+    }
     pub fn is_empty(&self) -> bool {
         match self {
             Unit::Char('\0') => true,

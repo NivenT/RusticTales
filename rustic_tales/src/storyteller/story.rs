@@ -32,6 +32,15 @@ impl Line {
     }
 }
 
+impl Line {
+    pub fn get_start(&self) -> usize {
+        self.start_idx
+    }
+    pub fn get_end(&self) -> usize {
+        self.start_idx + self.len - 1
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Page {
     lines: Vec<Line>,
@@ -66,8 +75,16 @@ impl Page {
             curr_line.len = units[idx..]
                 .iter()
                 .scan(0, |len, next| {
+                    /*
+                    if *len > Line::max_line_len() {
+                        None
+                    } else
+                     */
                     if next.is_page_end() || next.is_sect_start() {
                         None
+                    } else if next.is_newline() {
+                        *len += Page::area_to_len(next.area());
+                        Some(next)
                     } else {
                         let unit_size = Page::area_to_len(next.area());
                         if *len + unit_size > Line::max_line_len() {
@@ -95,6 +112,15 @@ impl Page {
             }
         }
         (page, idx)
+    }
+}
+
+impl Page {
+    pub fn get_lines(&self) -> &Vec<Line> {
+        &self.lines
+    }
+    pub fn start_idx(&self) -> Option<usize> {
+        self.lines.first().map(|line| line.start_idx)
     }
 }
 
@@ -126,17 +152,21 @@ impl Section {
         };
         (sect, idx)
     }
-    /*
-        pub fn num_pages(&self) -> usize {
-            self.pages.len()
-        }
-        pub fn start_idx(&self) -> Option<usize> {
-            self.pages
-                .first()
-                .and_then(|page| page.lines.first())
-                .map(|line| line.start_idx)
-        }
-    */
+}
+
+impl Section {
+    pub fn get_pages(&self) -> &Vec<Page> {
+        &self.pages
+    }
+    pub fn get_name(&self) -> &String {
+        &self.name
+    }
+    pub fn start_idx(&self) -> Option<usize> {
+        self.pages
+            .first()
+            .and_then(|page| page.lines.first())
+            .map(|line| line.start_idx)
+    }
 }
 
 // Ord defaults to lexicographic order based on top-down declaration of members
@@ -341,5 +371,8 @@ impl Story {
 impl Story {
     pub fn get_contents(&self) -> &Vec<Unit> {
         &self.contents
+    }
+    pub fn get_sections(&self) -> &Vec<Section> {
+        &self.sections
     }
 }
