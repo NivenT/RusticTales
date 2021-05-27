@@ -2,13 +2,13 @@ use regex::Regex;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
-    Text(String),                 // blah
-    Command(String, Vec<String>), // {{ cmd : arg1 |,| arg2 |,| ... }}
-    Variable(String),             // ${{var}}
-    Symbol(String),               // $sym$
-    PageEnd,                      // /PAGE/
-    Char(char),                   // {c}
-    SectionStart(String),         // #=$ SECTION_NAME $=#
+    Text(String),                       // blah
+    Command(String, Vec<String>, bool), // {{ cmd : arg1 |,| arg2 |,| ... : wait_for_kb? }}
+    Variable(String),                   // ${{var}}
+    Symbol(String),                     // $sym$
+    PageEnd,                            // /PAGE/
+    Char(char),                         // {c}
+    SectionStart(String),               // #=$ section_name $=#
 }
 
 impl Token {
@@ -24,7 +24,7 @@ impl Token {
     pub fn is_empty(&self) -> bool {
         match self {
             Token::Text(s) => s.is_empty(),
-            Token::Command(c, _) => c.is_empty(),
+            Token::Command(c, ..) => c.is_empty(),
             Token::Variable(v) => v.is_empty(),
             Token::Symbol(s) => s.is_empty(),
             Token::PageEnd => false,
@@ -45,10 +45,9 @@ fn parse_symbol(stream: &str) -> Option<(Token, usize)> {
 // A command should take up an entire line
 fn parse_command(stream: &str) -> Option<(Token, usize)> {
     // regex are completely incomprehensible (it doesn't help that I suck at writing them)
-    //let re = Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:(.*)\}\}[[:space:]]*(\n|$)")
-    //.expect("If this is invalid, there is a bug");
-    let re = Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:(.*)\}\}(\n|$)")
-        .expect("If this is invalid, there is a bug");
+    let re =
+        Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:([^:]*)(: wait_for_kb )?\}\}(\n|$)")
+            .expect("If this is invalid, there is a bug");
     re.captures(stream).map(|cap| {
         let name = cap[1].to_string();
         let arg_list = &cap[2];
@@ -60,7 +59,11 @@ fn parse_command(stream: &str) -> Option<(Token, usize)> {
                 .map(|s| s.trim().to_string())
                 .collect()
         };
-        (Token::Command(name, arg_list), cap[0].len())
+        let wait = cap.get(3).map_or("", |mat| mat.as_str());
+        (
+            Token::Command(name, arg_list, !wait.is_empty()),
+            cap[0].len(),
+        )
     })
 }
 
@@ -133,12 +136,10 @@ pub fn tokenize(stream: &str) -> Vec<Token> {
                 search_pos += 1;
             }
         } else {
-            //ret.push(Token::Text(stream[beg..].trim_start().to_string()));
             ret.push(Token::Text(stream[beg..].to_owned()));
             beg = stream.len();
         }
     }
-
     ret.into_iter().filter(|t| !t.is_empty()).collect()
 }
 
@@ -170,7 +171,7 @@ mod tests {
         assert_eq!(
             parse_command("{{ one : arg }}"),
             Some((
-                Token::Command("one".to_string(), vec!["arg".to_string()]),
+                Token::Command("one".to_string(), vec!["arg".to_string()], false),
                 15
             ))
         );
@@ -179,7 +180,8 @@ mod tests {
             Some((
                 Token::Command(
                     "properly".to_string(),
-                    vec!["formatted".to_string(), "command".to_string()]
+                    vec!["formatted".to_string(), "command".to_string()],
+                    false
                 ),
                 38
             ))
@@ -189,7 +191,8 @@ mod tests {
             Some((
                 Token::Command(
                     "seems".to_string(),
-                    vec!["legal".to_string(), "enough".to_string()]
+                    vec!["legal".to_string(), "enough".to_string()],
+                    false
                 ),
                 24
             ))
@@ -199,7 +202,8 @@ mod tests {
             Some((
                 Token::Command(
                     "trailing".to_string(),
-                    vec!["comma".to_string(), String::new()]
+                    vec!["comma".to_string(), String::new()],
+                    false
                 ),
                 24
             ))
@@ -216,7 +220,8 @@ mod tests {
             Some((
                 Token::Command(
                     "command".to_string(),
-                    vec!["is".to_string(), "entire".to_string(), "line".to_string()]
+                    vec!["is".to_string(), "entire".to_string(), "line".to_string()],
+                    false
                 ),
                 39
             ))
@@ -224,7 +229,11 @@ mod tests {
         assert_eq!(
             parse_command("{{ space_at_end_is_fine : ok}}"),
             Some((
-                Token::Command("space_at_end_is_fine".to_string(), vec!["ok".to_string()]),
+                Token::Command(
+                    "space_at_end_is_fine".to_string(),
+                    vec!["ok".to_string()],
+                    false
+                ),
                 30
             ))
         );
@@ -232,13 +241,28 @@ mod tests {
         assert_eq!(
             parse_command("{{ empty_arg : }}"),
             Some((
-                Token::Command("empty_arg".to_string(), vec!["".to_string()]),
+                Token::Command("empty_arg".to_string(), vec!["".to_string()], false),
                 17
             ))
         );
         assert_eq!(
             parse_command("{{ no_arg :}}"),
-            Some((Token::Command("no_arg".to_string(), vec![]), 13))
+            Some((Token::Command("no_arg".to_string(), vec![], false), 13))
+        );
+        assert_eq!(
+            parse_command("{{ cmd : arg1 |,| arg2 : wait_for_kb }}"),
+            Some((
+                Token::Command(
+                    "cmd".to_owned(),
+                    vec!["arg1".to_owned(), "arg2".to_owned()],
+                    true
+                ),
+                39
+            ))
+        );
+        assert_eq!(
+            parse_command("{{ cmd : arg : last part, if present, must be 'wait_for_kb' }}"),
+            None
         );
     }
     #[test]

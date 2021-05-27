@@ -18,7 +18,10 @@ impl Unit {
         use Unit::*;
         match tkn {
             Token::Text(s) => {
-                let re = Regex::new("[[:space:]]+").expect("Typo if this does not work");
+                // This Regex explictly checks for a newline for dumb reasons
+                // Basically, extrace_page assumes that each Unit fits on a single line,
+                // so it really doesn't like something like WhiteSpace("\n\n")
+                let re = Regex::new("(\n|[[:space:]]+)").expect("Typo if this does not work");
                 re.find_iter(&s)
                     .scan(0, |word_start, mat| {
                         let unit1 = Word(s[*word_start..mat.start()].to_owned());
@@ -49,7 +52,7 @@ impl Unit {
             }),
             Unit::Special(t) => match t {
                 // might need to depend on the command in the future
-                Token::Command(_, _) => (0, 0),
+                Token::Command(..) => (0, 0),
                 // can't know variable length a priori so just guess
                 // ^^^^^^^ This is dumb. I should make pagination more dynamic at some point
                 Token::Variable(_) => (7, 0),
@@ -75,7 +78,7 @@ impl Unit {
     pub fn is_word(&self) -> bool {
         matches!(self, Unit::Word(_))
     }
-    pub fn is_command(&self) -> bool {
-        matches!(self, Unit::Special(Token::Command(_, _)))
+    pub fn is_blocking_command(&self) -> bool {
+        matches!(self, Unit::Special(Token::Command(.., true)))
     }
 }

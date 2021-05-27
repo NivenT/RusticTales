@@ -9,7 +9,7 @@ mod tests {
     fn basic_tokenization() {
         let test = "\
           Once upon a time, there was a large and terrifying ${{RED_LFG}} credit card bill!\n\
-          {{ backspace : 10 |,| chars |,| one_by_one }}\n\
+          {{ backspace : 10 |,| chars |,| one_by_one : wait_for_kb }}\n\
           OVERDUE Credit Card Bill!\
         ";
         let tkns = tokenize(&test);
@@ -25,7 +25,8 @@ mod tests {
                         "10".to_string(),
                         "chars".to_string(),
                         "one_by_one".to_string()
-                    ]
+                    ],
+                    true
                 ),
                 Token::Text("OVERDUE Credit Card Bill!".to_string())
             ]
@@ -45,7 +46,11 @@ mod tests {
                 Token::Text("Your total comes out to ".to_string()),
                 Token::Variable("BLUE_DBG".to_string()),
                 Token::Text(" $5.98. Is that ok?\n".to_string()),
-                Token::Command("user_input".to_string(), vec!["$response$".to_string()]),
+                Token::Command(
+                    "user_input".to_string(),
+                    vec!["$response$".to_string()],
+                    false
+                ),
                 Token::Text("You answered '".to_string()),
                 Token::Variable("response".to_string()),
                 Token::Text("'.".to_string())
@@ -174,7 +179,8 @@ mod tests {
                 Token::Text("Stuff and things and things and stuff\n".to_owned()),
                 Token::Command(
                     "command_do_something".to_owned(),
-                    vec!["one".to_owned(), "two".to_owned(), "3".to_owned()]
+                    vec!["one".to_owned(), "two".to_owned(), "3".to_owned()],
+                    false
                 ),
                 Token::Text("\nThe end".to_owned())
             ]

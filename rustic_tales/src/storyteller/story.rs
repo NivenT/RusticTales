@@ -154,15 +154,14 @@ impl Bookmark {
     }
 }
 
-// This is an awful name, but naming things is hard...
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Span {
-    PAGE,
-    LINE,
-    WORD,
-    CHAR,
-    COMMAND,
-    SECTION,
+    Page,
+    Line,
+    Word,
+    Char,
+    Section,
+    BlockingCommand,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -266,7 +265,7 @@ impl Story {
     pub fn advance(&mut self, disp_by: DisplayUnit) -> Span {
         if self.flags.just_changed_section {
             self.flags.just_changed_section = false;
-            return Span::SECTION;
+            return Span::Section;
         }
         // Would rather call self.curr_sect(), but then the complier seems to think
         // I'm borrowing all of self and not just one field, since things are happening
@@ -283,19 +282,19 @@ impl Story {
                 if self.place.line == sect.pages[self.place.page].lines.len() {
                     self.place.line = 0;
                     self.place.page += 1;
-                    Span::PAGE
+                    Span::Page
                 } else {
-                    Span::LINE
+                    Span::Line
                 }
             } else {
-                Span::WORD
+                Span::Word
             }
         } else if let Unit::Word(w) = unit {
             self.place.letter += 1;
             if self.place.letter == w.chars().count() {
                 self.advance(DisplayUnit::Word)
             } else {
-                Span::CHAR
+                Span::Char
             }
         } else {
             unreachable!("unit is a word or is not a word")

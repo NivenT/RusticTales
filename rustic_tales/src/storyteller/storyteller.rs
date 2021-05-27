@@ -28,7 +28,10 @@ enum SnippetInfo {
 impl SnippetInfo {
     fn should_wait_for_kb(&self) -> bool {
         use SnippetInfo::*;
-        matches!(self, EndedWith(Span::LINE) | EndedWith(Span::COMMAND))
+        matches!(
+            self,
+            EndedWith(Span::Line) | EndedWith(Span::BlockingCommand)
+        )
     }
     fn story_ended(&self) -> bool {
         use SnippetInfo::*;
@@ -116,7 +119,7 @@ impl<'a> StoryTeller<'a> {
                 debug_assert!(!t.is_text() && !t.is_page_end() && !t.is_sect_start());
                 match t {
                     Token::Variable(s) => print!("{}", self.get_val(&s)),
-                    Token::Command(func, args) => {
+                    Token::Command(func, args, _) => {
                         if let Err(e) = self.eval_command(&func, &args) {
                             eprintln!("\nError: {}", e)
                         }
@@ -130,7 +133,7 @@ impl<'a> StoryTeller<'a> {
         self.write();
         let the_story_goes_on = !self.story.is_over();
         let ret = self.story.advance(disp_by);
-        if ret == Span::PAGE && !self.story.is_over() {
+        if ret == Span::Page && !self.story.is_over() {
             self.turn_page();
         }
         the_story_goes_on.then(|| ret)
@@ -142,8 +145,8 @@ impl<'a> StoryTeller<'a> {
             if span == None {
                 info = SnippetInfo::StoryOver;
                 break;
-            } else if self.story.get_curr().is_command() {
-                info = SnippetInfo::EndedWith(Span::COMMAND);
+            } else if self.story.get_curr().is_blocking_command() {
+                info = SnippetInfo::EndedWith(Span::BlockingCommand);
                 break;
             }
         }
@@ -152,18 +155,18 @@ impl<'a> StoryTeller<'a> {
         info
     }
     fn tell_lines(&mut self, num: usize) -> SnippetInfo {
-        let mut last_span = Span::LINE;
+        let mut last_span = Span::Line;
         // There's gotta be a better way to write this
         let mut span = match self.write_and_advance(DisplayUnit::Word) {
             Some(span) => span,
             None => return SnippetInfo::StoryOver,
         };
         'outer: for _ in 0..num {
-            while span != Span::LINE {
-                if self.story.get_curr().is_command() {
-                    last_span = Span::COMMAND;
+            while span != Span::Line {
+                if self.story.get_curr().is_blocking_command() {
+                    last_span = Span::BlockingCommand;
                     break 'outer;
-                } else if span == Span::PAGE {
+                } else if span == Span::Page {
                     last_span = span;
                     break 'outer;
                 }
@@ -177,14 +180,14 @@ impl<'a> StoryTeller<'a> {
         SnippetInfo::EndedWith(last_span)
     }
     fn tell_onepage(&mut self) -> SnippetInfo {
-        let mut last_span = Span::PAGE;
+        let mut last_span = Span::Page;
         let mut span = match self.write_and_advance(DisplayUnit::Word) {
             Some(span) => span,
             None => return SnippetInfo::StoryOver,
         };
-        while span != Span::PAGE {
-            if self.story.get_curr().is_command() {
-                last_span = Span::COMMAND;
+        while span != Span::Page {
+            if self.story.get_curr().is_blocking_command() {
+                last_span = Span::BlockingCommand;
                 break;
             }
             span = match self.write_and_advance(DisplayUnit::Word) {

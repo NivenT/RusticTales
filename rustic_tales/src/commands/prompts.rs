@@ -1,7 +1,7 @@
 use std::io::{stdin, stdout, Write};
 
 pub fn prompt_yesno(def: Option<String>) -> String {
-    print!("(y/n) ");
+    print!(" (y/n) ");
     let _ = stdout().flush();
     let mut temp = String::new();
     let _ = stdin().read_line(&mut temp);
