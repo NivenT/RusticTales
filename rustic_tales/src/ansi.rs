@@ -7,6 +7,7 @@ pub enum TermAction {
     EraseLineFromCursor,
     EraseLineToCursor,
     EraseCharsOnLine(usize),
+    EraseLines(usize),
     MoveCursor(isize, isize),
     SetCursor(usize, usize),
     ClearScreen,
@@ -21,6 +22,12 @@ impl fmt::Display for TermAction {
             EraseLineFromCursor => write!(f, "\x1b[0K"),
             EraseLineToCursor => write!(f, "\x1b[1K"),
             EraseCharsOnLine(num) => write!(f, "\x1b[{}D\x1b[0K", num),
+            EraseLines(num) => {
+                for _ in 0..*num {
+                    write!(f, "\x1b[2K\x1b[1A")?
+                }
+                Ok(())
+            }
             MoveCursor(x, y) => {
                 if *x != 0 {
                     let fb = if *x > 0 { 'C' } else { 'D' };

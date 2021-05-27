@@ -39,7 +39,7 @@ fn main() -> Result<()> {
             wait_for_enter("Press enter to continue...");
         }
         skip_enter = false;
-        match menu(&["Tell me a story", "Debug Stuff", "Goodbye"], None) {
+        match menu(&["Tell me a story", "Debug Stuff", "Goodbye"], None, true) {
             Err(e) => println!(
                 "I did not understand your choice.\n{}\nPlease try again.\n",
                 e

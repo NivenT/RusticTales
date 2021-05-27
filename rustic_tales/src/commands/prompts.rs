@@ -18,6 +18,7 @@ pub fn prompt_yesno(def: Option<String>) -> String {
     }
 }
 
+// This function could probably use some comments/documentation
 pub fn force_input(input: &str) -> Result<()> {
     use termios::*;
     const SLOW_ERASE_THRESHOLD: Duration = Duration::from_millis(1000);
@@ -83,6 +84,13 @@ pub fn force_input(input: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn choice_menu(choices: &[impl AsRef<str>]) -> String {
-    String::new()
+pub fn choice_menu(choices: &[impl AsRef<str>]) -> Result<String> {
+    println!();
+    let mut choice = menu(choices, None, false);
+    while choice.is_err() {
+        TermAction::EraseLines(choices.len() + 2).execute();
+        choice = menu(choices, None, false);
+    }
+    TermAction::EraseLines(choices.len() + 2).execute();
+    Ok(choices[choice.unwrap()].as_ref().to_owned())
 }

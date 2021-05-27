@@ -6,7 +6,7 @@ use crate::utils::*;
 pub fn debug_menu(opts: &Options) -> Result<bool> {
     let mut all_according_to_plan = false;
     let debug_fns = [tokenize_story, parse_story];
-    match menu(&["Tokenize Story", "Parse Story"], None) {
+    match menu(&["Tokenize Story", "Parse Story"], None, true) {
         Err(e) => println!("Something went wrong: '{}'", e),
         Ok(n) if (0..=1).contains(&n) => {
             match choose_story(opts.get_ignored(), opts.get_story_folder()) {

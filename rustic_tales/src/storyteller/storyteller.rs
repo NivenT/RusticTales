@@ -354,7 +354,7 @@ impl<'a> StoryTeller<'a> {
                 } else {
                     // This should probably check that args[0] is a Token::Symbol, but what kinda
                     // person has the patience to write correct code?
-                    self.set_val(self.parse_arg(&args[0])?, choice_menu(&args[1..]));
+                    self.set_val(self.parse_arg(&args[0])?, choice_menu(&args[1..])?);
                     Ok(())
                 }
             }

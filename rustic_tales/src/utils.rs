@@ -63,8 +63,14 @@ pub fn clear_screen() {
         .execute();
 }
 
-pub fn menu(items: &[impl AsRef<str>], ignore_patterns: Option<&[String]>) -> Result<usize> {
-    clear_screen();
+pub fn menu(
+    items: &[impl AsRef<str>],
+    ignore_patterns: Option<&[String]>,
+    clear: bool,
+) -> Result<usize> {
+    if clear {
+        clear_screen();
+    }
     let globs = ignore_patterns.and_then(|patts| {
         patts
             .iter()
@@ -121,6 +127,6 @@ pub fn choose_story(ignore_patterns: &[String], folder: &str) -> Result<String> 
         })
         .filter_map(|e| e.file_name().into_string().ok())
         .collect();
-    let file_name = &stories[menu(&stories, Some(ignore_patterns))?];
+    let file_name = &stories[menu(&stories, Some(ignore_patterns), true)?];
     Ok(format!("{}/{}", folder, file_name))
 }
