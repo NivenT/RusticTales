@@ -58,6 +58,14 @@ impl Unit {
             },
         }
     }
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Unit::Char('\0') => true,
+            Unit::Word(w) | Unit::WhiteSpace(w) => w.is_empty(),
+            Unit::Special(t) => t.is_empty(),
+            _ => false,
+        }
+    }
     pub fn is_page_end(&self) -> bool {
         matches!(self, Unit::Special(Token::PageEnd))
     }

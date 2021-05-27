@@ -296,6 +296,8 @@ impl<'a> StoryTeller<'a> {
                     let e = RTError::InvalidInput("'prompt_yesno' requires an argument".to_owned());
                     Err(e)
                 } else {
+                    // This should probably check that args[0] is a Token::Symbol, but what kinda
+                    // person has the patience to write correct code?
                     self.set_val(
                         self.parse_arg(&args[0])?,
                         prompt_yesno(args.get(1).cloned()),

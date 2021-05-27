@@ -75,7 +75,7 @@ mod tests {
     fn tokenize_gutenberg() -> reqwest::Result<()> {
         extern crate reqwest;
 
-        const BOOKS: [&'static str; 5] = [
+        const BOOKS: [&str; 7] = [
             // Soup and Soup Making
             "https://www.gutenberg.org/files/64140/64140-0.txt",
             // The Price of Things
@@ -86,6 +86,10 @@ mod tests {
             "https://www.gutenberg.org/cache/epub/22291/pg22291.txt",
             // Death, the Knight, and the Lady
             "https://www.gutenberg.org/cache/epub/55708/pg55708.txt",
+            // Learning to Spell
+            "https://www.gutenberg.org/files/65441/65441-0.txt",
+            // Diseases of the Horse's Foot
+            "https://www.gutenberg.org/files/65441/65441-0.txt",
         ];
         for &book in &BOOKS {
             let test = reqwest::blocking::get(book)?.text()?;
@@ -154,6 +158,25 @@ mod tests {
                 Token::Text("more content\n".to_owned()),
                 Token::SectionStart("section 2".to_owned()),
                 Token::Text("other content".to_owned()),
+            ]
+        );
+    }
+
+    #[test]
+    fn tokenization_newline_after_command() {
+        let test = "Stuff and things and things and stuff\n\
+                          {{ command_do_something : one |,| two |,| 3 }}\n\
+                          \n\
+                          The end";
+        assert_eq!(
+            tokenize(&test),
+            vec![
+                Token::Text("Stuff and things and things and stuff\n".to_owned()),
+                Token::Command(
+                    "command_do_something".to_owned(),
+                    vec!["one".to_owned(), "two".to_owned(), "3".to_owned()]
+                ),
+                Token::Text("\nThe end".to_owned())
             ]
         );
     }

@@ -45,7 +45,9 @@ fn parse_symbol(stream: &str) -> Option<(Token, usize)> {
 // A command should take up an entire line
 fn parse_command(stream: &str) -> Option<(Token, usize)> {
     // regex are completely incomprehensible (it doesn't help that I suck at writing them)
-    let re = Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:(.*)\}\}[[:space:]]*(\n|$)")
+    //let re = Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:(.*)\}\}[[:space:]]*(\n|$)")
+    //.expect("If this is invalid, there is a bug");
+    let re = Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:(.*)\}\}(\n|$)")
         .expect("If this is invalid, there is a bug");
     re.captures(stream).map(|cap| {
         let name = cap[1].to_string();
@@ -131,7 +133,8 @@ pub fn tokenize(stream: &str) -> Vec<Token> {
                 search_pos += 1;
             }
         } else {
-            ret.push(Token::Text(stream[beg..].trim_start().to_string()));
+            //ret.push(Token::Text(stream[beg..].trim_start().to_string()));
+            ret.push(Token::Text(stream[beg..].to_owned()));
             beg = stream.len();
         }
     }

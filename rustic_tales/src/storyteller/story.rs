@@ -189,6 +189,7 @@ impl FromStr for Story {
             .into_iter()
             // Oh, so I had heard of flat map? (see 4f03ae49273ff751a6f4603bd3194d16d65448ec)
             .flat_map(Unit::from_token)
+            .filter(|u| !u.is_empty())
             .collect();
         let contents = Story::prepare_contents(contents);
 
