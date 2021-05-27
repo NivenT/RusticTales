@@ -1,6 +1,6 @@
 use regex::Regex;
 
-//use either::Either;
+use either::Either;
 
 use script::token::Token;
 
@@ -14,7 +14,7 @@ pub enum Unit {
 
 impl Unit {
     // TODO: Figure out how to return an impl Iterator<Item=Unit>
-    pub fn from_token<'a>(tkn: Token) -> Vec<Unit> {
+    pub fn from_token(tkn: Token) -> Vec<Unit> {
         use Unit::*;
         match tkn {
             Token::Text(s) => {
@@ -22,14 +22,27 @@ impl Unit {
                 // Basically, extrace_page assumes that each Unit fits on a single line,
                 // so it really doesn't like something like WhiteSpace("\n\n")
                 let re = Regex::new("(\n|[[:space:]]+)").expect("Typo if this does not work");
+                // Could I have made this any worse?
                 re.find_iter(&s)
+                    .map(|mat| (mat.start(), mat.end(), mat.as_str()))
+                    .chain(std::iter::once((0, 0, "SENTINEL")))
                     .scan(0, |word_start, mat| {
-                        let unit1 = Word(s[*word_start..mat.start()].to_owned());
-                        let unit2 = WhiteSpace(mat.as_str().to_owned());
-                        *word_start = mat.end();
-                        // there's a better way to do this. I just don't know it...
-                        let iter = std::iter::once(unit1).chain(std::iter::once(unit2));
-                        Some(iter)
+                        if (mat.1 - mat.0) != mat.2.len() {
+                            if *word_start < s.len() {
+                                Some(Either::Left(std::iter::once(Word(
+                                    s[*word_start..].to_owned(),
+                                ))))
+                            } else {
+                                None
+                            }
+                        } else {
+                            let unit1 = Word(s[*word_start..mat.0].to_owned());
+                            let unit2 = WhiteSpace(mat.2.to_owned());
+                            *word_start = mat.1;
+                            // there's a better way to do this. I just don't know it...
+                            let iter = std::iter::once(unit1).chain(std::iter::once(unit2));
+                            Some(Either::Right(iter))
+                        }
                     })
                     .flatten()
                     .collect()

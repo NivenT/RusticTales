@@ -119,6 +119,7 @@ impl<'a> StoryTeller<'a> {
                 debug_assert!(!t.is_text() && !t.is_page_end() && !t.is_sect_start());
                 match t {
                     Token::Variable(s) => print!("{}", self.get_val(&s)),
+                    Token::Symbol(s) => print!("${}$", s),
                     Token::Command(func, args, _) => {
                         if let Err(e) = self.eval_command(&func, &args) {
                             eprintln!("\nError: {}", e)
@@ -333,6 +334,27 @@ impl<'a> StoryTeller<'a> {
                 } else {
                     let dur = parse_duration(&args[0])?;
                     sleep(dur);
+                    Ok(())
+                }
+            }
+            "force_input" => {
+                if args.len() != 1 {
+                    let msg = "'force_input' takes exactly 1 argument".to_owned();
+                    let e = RTError::InvalidInput(msg);
+                    Err(e)
+                } else {
+                    force_input(&self.parse_arg(&args[0])?)
+                }
+            }
+            "choice_menu" => {
+                if args.len() < 2 {
+                    let msg = "'choice_menu' requires at least 1 choice".to_owned();
+                    let e = RTError::InvalidInput(msg);
+                    Err(e)
+                } else {
+                    // This should probably check that args[0] is a Token::Symbol, but what kinda
+                    // person has the patience to write correct code?
+                    self.set_val(self.parse_arg(&args[0])?, choice_menu(&args[1..]));
                     Ok(())
                 }
             }

@@ -3,14 +3,18 @@ use crate::options::Options;
 use crate::storyteller::StoryTeller;
 use crate::utils::*;
 
-pub fn debug_menu(opts: &Options) -> Result<()> {
+pub fn debug_menu(opts: &Options) -> Result<bool> {
+    let mut all_according_to_plan = false;
     let debug_fns = [tokenize_story, parse_story];
     match menu(&["Tokenize Story", "Parse Story"], None) {
         Err(e) => println!("Something went wrong: '{}'", e),
         Ok(n) if (0..=1).contains(&n) => {
             match choose_story(opts.get_ignored(), opts.get_story_folder()) {
                 Ok(story) => match StoryTeller::new(&story) {
-                    Ok(st) => debug_fns[n](story, st),
+                    Ok(st) => {
+                        all_according_to_plan = true;
+                        debug_fns[n](story, st)
+                    }
                     Err(e) => println!("Could not parse story because '{}'", e),
                 },
                 Err(e) => println!("Something went wrong: '{}'", e),
@@ -18,7 +22,7 @@ pub fn debug_menu(opts: &Options) -> Result<()> {
         }
         Ok(_) => unreachable!("Menu only returns valid choices"),
     }
-    Ok(())
+    Ok(all_according_to_plan)
 }
 
 fn tokenize_story(story: String, _teller: StoryTeller) {
