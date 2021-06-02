@@ -1,0 +1,150 @@
+Ukuth had been wandering this cave for longer than he cared to remember. The more time passed, the more intensly he experienced a confusing mixture of familiarity and dread. The sturdy walls provided much-needed support to lean when overcome with tiredness, and the distant sound of running water helped to calm him and to cut through the monotony of his journey.{ }
+Most of all though, the occasional signs of past wanderers slowly made Ukuth feel like he was part of a community. The cartoonish drawings sporadically illuminated by his torch provided him, and doubtlessly provided his predeccesors as well, a momentary smile or chuckle; the snacks and first aid supplies stuffed away in naturally occuring pockets in the cave rock sustained him through hard nights; and the names carved on the ceiling were a constant signal that the task ahead was not impossible, it had been done before.{ }
+{{ wait_kb :}}
+Combined, all of this gave Ukuth the sense that he was not alone.
+{{ pause : 1500ms }}
+{{ backspace : 6 |,| chars }}
+{{ pause : 800ms }}
+{{ backspace : 4 |,| chars }}
+{{ pause : 800ms }}
+{{ backspace : 4 |,| chars }}
+{{ pause : 800ms }}
+{{ backspace : 3 |,| chars }}
+{{ pause : 800ms }}
+{{ backspace : 48 |,| chars }}
+{{ pause : 1sec }}
+
+But Ukuth ${{UNDERLINE}}was alone${{NORMAL}}. He had not always been alone, though. No, not long ago Ukuth had but one ally: his brother, Iskhith. The two of them survived together in this world; after escaping captivity in their village, they deigned to setup a life in the wilds. Doing so came at a cost. Monsters, which had tormented them in their youth returned with a renewed fervor, no longer staved off by the protection of a surrounding village. Dealing with these monsters was a constant source of stress for Ukuth and Iskhith, but, they thought, this was still preferable to that ${{UNDERLINE}}horrid${{NORMAL}} village.{ }
+That village which never accepted them,{ }
+{{ wait_kb :}}
+which forced them away from others,
+{{ wait_kb :}}
+${{RED_LFG}} which took away their FREEDOM,
+{{ wait_kb :}}
+${{RED_DFG}} and which tried to ${{UNDERLINE}}SEPARATE THEM!
+{{ wait_kb :}}
+${{NORMAL}} In the end, however, it was the monsters, not the village, which did the most damage. It was by their hands that Iskhith lost his life, chased off the edge of a cliff with nothing to catch him but harsh waves and jagged rocks.
+{{ wait_kb :}}
+
+
+Rocks
+{{ pause : 500ms }}
+{.}
+{{ pause : 500ms }}
+{.}
+{{ pause : 500ms }}
+{.}
+{{ pause : 500ms }}
+ Ah, right. Rocks. We were following Ukuth through the cave, were we not? It seems he is about to reach his goal, so this is as good a time as any to rejoin him.
+
+
+It would appear that this journey has done more than it's fair share of damage to Ukuth. As the path to the sacred chamber opens up, he stumbles through it awkwardly, his stride ragged, almost feral. Since Iskhith's passing, Ukuth's sole desire had been bringing him back, to not be left alone in this world with no one but the monsters or the villagers.{ }
+It was this pure desparation that drove Ukuth to journey to this ancient place, despite the costs, the tales, and the pain. However, this is to be expected, as no sane soul would dare to seek ${{BOLD}}my${{NORMAL}} aid.
+{{ wait_kb :}}
+/PAGE/
+
+"..
+{{ pause : 500ms }}
+...
+{{ pause : 650ms }}
+ Bring back...
+{{ pause : 750ms }}
+ Iskhith!"
+{{ wait_kb :}}
+
+
+
+${{BOLD}}Oh? I see you misplaced your manners on your journey here. Do not forget to whom you speak, Ukuth.
+
+
+${{NORMAL}}"I know well...
+{{ pause : 700ms }}
+ who you are, Creature."
+
+
+${{BOLD}}So you say, and yet you speak with such insolence. I suggest you change your tone, Ukuth, if you do not wish to leave this place empty-handed.
+
+
+${{NORMAL}}"Your empty threats mean nothing to me..
+{{ pause : 600ms }}
+ I know all the tales, and my patience is thin.
+{{ pause : 550ms }}
+ If you had not already decided to grant my request, you never would have let me into this place. Now, bring back Iskhith!"
+
+
+${{BOLD}}{.}{.}{.} Indeed you are right, but surely you know I will not revive him for free. Tell me, what can you offer in exchange for Iskhith's life?
+
+
+${{NORMAL}}"I told you, Creature, I know all the tales. You watched me as I suffered in your damned cave, peered into my soul as I forced myself to fight the urge to give up. You have already seen the depth of my desired, and know well I am willing to give up whatever it is you want. Do not waste my time by making me guess; tell me the price I must pay to revive my brother, and it is yours."
+
+
+${{BOLD}}Those are bold words coming from such a pathetic sight, but as you wish. Iskhith means the world to you, so before bringing about his return, I will take away your reality. In exchange for restoring your brother's life, everyone in your village will die. There will be no one else; the two of you will be left alone in a world of your own making. Do you accept this price?
+
+
+${{NORMAL}}.
+{{ pause : 500ms }}
+.
+{{ pause : 500ms }}
+.
+{{ pause : 500ms }}
+{{ backspace : 3 |,| chars }}
+.
+{{ pause : 500ms }}
+.
+{{ pause : 500ms }}
+.
+{{ pause : 500ms }}
+{{ backspace : 3 |,| chars }}
+.
+{{ pause : 500ms }}
+.
+{{ pause : 500ms }}
+.
+{{ pause : 500ms }}
+{{ backspace : 3 |,| chars }}
+"${{BLINK}}Ha ha ha!
+{{ pause : 4200ms }}
+{{ backspace : 9 |,| chars }}
+${{NORMAL}}Ha ha ha! Surely you must be joking, Creature. You would revive my brother, and kill the villagers who have tormented me so? This is no price, but a two-fold gift. While you're at it, why not get rid of pesky monsters too? Of course, I accept!"
+
+
+${{BOLD}}Tormented you, huh? I suppose you believe this to be true, but let me warn you. Do not mistake the nature of my offer, Ukuth. Tempting as it may sound, I call it a 'price' for a reason. And if you truly want to be rid of those "pesky monsters," why not leave this place and return to your village? It was only there that you ever avoided them, no?
+
+
+${{NORMAL}}"I do not know what game you are playing at, Creature. It is true the monsters left Iskhith and I alone while we were in the village, but only after we were locked away. They simply could not make their way into our cage. And luckily so. Our captors kept us sedated; we would not have had the strength to fight back had they invaded. We were trapped in that village, waiting for the day the monsters finally broke in while we were powerless to defend ourselves. 'Tormented us?' you ask? I can't imagine there's a better word for it."
+
+
+${{BOLD}}Is that how it was? I wonder... Well, I digress. You have heard my price and my warning. All that remains is to see if you will accept my offer. So, what do you say?
+
+
+${{NORMAL}}"My answer remains the same, I accept. Now, for the last time, Creature, ${{RED_DFG}}BRING BACK ISKHITH!"
+
+
+${{NORMAL}}${{BOLD}}Silence, Ukuth.{ }
+{{ wait_kb :}}
+I was not asking you. I have someone else in mind whom I want to make this decision. I ask again, what do you say? ${{UNDERLINE}}You, ${{USER_NAME}}, who has been eavesdropping this whole time${{NORMAL}}${{BOLD}}. Shall I give Ukuth what he wants, and revive Iskhith in exchange for lives of the villagers who tormented them?
+
+
+${{NORMAL}}"I see no one else here, but if you are out there, take his offer. If you cost me my one chance of reuniting with Iskhith, ${{RED_DFG}}I swear I will use my remaining breaths to hunt you down and make you pay!${{NORMAL}}"
+{{ wait_kb :}}
+
+
+[Type "save the villagers" or "save Iskhith"]{ }
+{{ force_input : save Iskhith }}
+{{ backspace : 59 |,| chars }}
+${{YELLOW_FG}}${{DIM}}save Iskhith
+
+
+${{NORMAL}}${{BOLD}}So be it.
+/PAGE/
+${{NORMAL}}The next morning, Iskhith awoke in his modest shelter tucked away in the wilds. He barely had time to sort out his memories of how he got there before he was greeted with a familiar face.
+
+${{MAGENTA_LFG}}"Ukuth, is it really you? The last thing I remember..."
+
+
+${{NORMAL}}"Say no more, brother. All that matters is we're together."
+
+
+Their reunion was the happiest moment of Ukuth's life, but it did not last long.{ }
+{{ wait_kb :}}
+With each passing year, their monsters only grew more numerous and more ferocious. Eventually, the anguish and fatigue they brought swelled passed the point Ukuth and Iskhith's relationship could handle. The brother's began to detest and distrust each other. Before long, neither could stand the sigt of the other, and the two brothers parted way. They were now each isolated in the world with no companions aside from the ever-present monsters. Iskhith hated the brother who brought him back just to prolong his anguish. Ukuth longed for the relatively safe days of captivity in his village. He resented the Creature who put him on this path, and tried on many occassions to return to the cave in order to reclaim his sanity. But alas, it is not a place one can enter twice so easily. In the end, any semblence of peace the brother's had ever known was lost to them, overtaken by the might of the monsters.
