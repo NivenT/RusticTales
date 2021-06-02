@@ -1,6 +1,6 @@
-${{BOLD}}bold text${{NORMAL}}
-${{DIM}}dim text${{NORMAL}}
-${{BLINK}}blinking text${{NORMAL}}
-${{UNDERLINE}}underlined text${{NORMAL}}
-${{NORMAL}}normal text${{NORMAL}}
+${{BOLD}}bold text${{NORMAL}}{ }
+${{DIM}}dim text${{NORMAL}}{ }
+${{BLINK}}blinking text${{NORMAL}}{ }
+${{UNDERLINE}}underlined text${{NORMAL}}{ }
+${{NORMAL}}normal text${{NORMAL}}{ }
 ${{YELLOW_LFG}}${{MAGENTA_DBG}}yellow on magenta${{NORMAL}}

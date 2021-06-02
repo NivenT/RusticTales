@@ -39,6 +39,7 @@ impl DisplayUnit {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ScrollRate {
     Millis { num: usize, ms: u64 }, // num symbols every ms milliseconds
+    Words(usize),                   // display ??? words at a time
     Lines(usize),                   // display ??? lines at a time
     OnePage,                        // display 1 page at a time
 }
@@ -48,15 +49,17 @@ pub struct STOptions {
     pub scroll_rate: ScrollRate,
     pub disp_by: DisplayUnit,
     pub stories_directory: String,
+    pub prompt_when_wait: Option<char>,
 }
 
 impl Default for STOptions {
     fn default() -> Self {
         use ScrollRate::*;
         STOptions {
-            scroll_rate: Lines(2),
+            scroll_rate: Millis { num: 5, ms: 720 },
             disp_by: DisplayUnit::Word,
-            stories_directory: "stories".to_owned(),
+            stories_directory: "rustic_tales/stories".to_owned(),
+            prompt_when_wait: Some('>'),
         }
     }
 }

@@ -13,7 +13,7 @@ use crate::commands::prompts::*;
 use crate::commands::*;
 use crate::err::{RTError, Result};
 use crate::options::{DisplayUnit, STOptions, ScrollRate};
-use crate::utils::{get_kb, get_user, wait_for_enter, wait_for_kb};
+use crate::utils::*;
 
 use super::story::{Span, Story};
 use super::unit::Unit;
@@ -121,6 +121,8 @@ impl<'a> StoryTeller<'a> {
                     Token::Variable(s) => print!("{}", self.get_val(&s)),
                     Token::Symbol(s) => print!("${}$", s),
                     Token::Command(func, args, _) => {
+                        // Do I want this?
+                        let _ = std::io::stdout().flush();
                         if let Err(e) = self.eval_command(&func, &args) {
                             eprintln!("\nError: {}", e)
                         }
@@ -155,14 +157,38 @@ impl<'a> StoryTeller<'a> {
         sleep(Duration::from_millis(ms));
         info
     }
+    fn tell_words(&mut self, num: usize) -> SnippetInfo {
+        let mut last_span = Span::Word;
+        'outer: for _ in 0..num {
+            loop {
+                // There's gotta be a better way to write this
+                let span = match self.write_and_advance(DisplayUnit::Word) {
+                    Some(span) => span,
+                    None => return SnippetInfo::StoryOver,
+                };
+                if self.story.get_curr().is_blocking_command() {
+                    last_span = Span::BlockingCommand;
+                    break 'outer;
+                } else if matches!(span, Span::Page | Span::Line) {
+                    last_span = span;
+                    break 'outer;
+                } else if !matches!(span, Span::WhiteSpace) {
+                    break;
+                }
+            }
+        }
+        let _ = stdout().flush();
+        self.wait_kb();
+        SnippetInfo::EndedWith(last_span)
+    }
     fn tell_lines(&mut self, num: usize) -> SnippetInfo {
         let mut last_span = Span::Line;
-        // There's gotta be a better way to write this
-        let mut span = match self.write_and_advance(DisplayUnit::Word) {
-            Some(span) => span,
-            None => return SnippetInfo::StoryOver,
-        };
         'outer: for _ in 0..num {
+            // There's gotta be a better way to write this
+            let mut span = match self.write_and_advance(DisplayUnit::Word) {
+                Some(span) => span,
+                None => return SnippetInfo::StoryOver,
+            };
             while span != Span::Line {
                 if self.story.get_curr().is_blocking_command() {
                     last_span = Span::BlockingCommand;
@@ -205,16 +231,17 @@ impl<'a> StoryTeller<'a> {
         loop {
             let snippet_info = match self.opts().scroll_rate {
                 ScrollRate::Millis { num, ms } => self.tell_millis(num, ms),
+                ScrollRate::Words(num) => self.tell_words(num),
                 ScrollRate::Lines(num) => self.tell_lines(num),
                 ScrollRate::OnePage => self.tell_onepage(),
             };
             //println!("snippet info: {:?}", snippet_info);
             if snippet_info.should_wait_for_kb() {
-                wait_for_kb();
+                self.wait_kb();
                 // only waits for one byte, but some keys (e.g. arrow keys) generate multiple bytes
-                // we want to exhause all of those so the next call actually waits for a new
+                // we want to exhaust all of those so the next call actually waits for a new
                 // keypress. This is not the nicest way to do it, but meh
-                while get_kb() != None {}
+                exhaust_kb();
             } else if snippet_info.story_ended() {
                 break;
             }
@@ -241,6 +268,13 @@ impl<'a> StoryTeller<'a> {
             .then(TermAction::SetCursor(0, 0))
             .then(TermAction::ResetColor)
             .execute();
+    }
+    fn wait_kb(&self) {
+        if let Some(c) = self.opts().prompt_when_wait {
+            wait_for_kb_with_prompt(c);
+        } else {
+            wait_for_kb()
+        }
     }
 
     fn get_full_path(&self, p: &str) -> String {
@@ -333,7 +367,12 @@ impl<'a> StoryTeller<'a> {
                     Err(e)
                 } else {
                     let dur = parse_duration(&args[0])?;
+                    let _ = std::io::stdout().flush();
+                    let orig = no_term_echo();
                     sleep(dur);
+                    restore_term(orig);
+                    // Ignore all keys user pressed while paused
+                    exhaust_kb();
                     Ok(())
                 }
             }
@@ -358,6 +397,7 @@ impl<'a> StoryTeller<'a> {
                     Ok(())
                 }
             }
+            "wait_kb" => Ok(self.wait_kb()),
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),
         }
     }

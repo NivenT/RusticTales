@@ -191,6 +191,7 @@ pub enum Span {
     Word,
     Char,
     Section,
+    WhiteSpace,
     BlockingCommand,
 }
 
@@ -316,6 +317,8 @@ impl Story {
                 } else {
                     Span::Line
                 }
+            } else if unit.is_whitespace() {
+                Span::WhiteSpace
             } else {
                 Span::Word
             }
@@ -357,8 +360,17 @@ impl Story {
     fn prepare_contents(mut contents: Vec<Unit>) -> Vec<Unit> {
         let bad_idxes: Vec<_> = (0..contents.len() - 1)
             .filter(|&i| {
+                let not_double = contents[i].is_newline() && !contents[i + 1].is_newline();
+                if not_double && i > 0 {
+                    // commands are a little special.
+                    !contents[i - 1].is_command()
+                } else {
+                    not_double
+                }
+                /*
                 matches!(contents[i], Unit::WhiteSpace(..))
                     && matches!(contents[i + 1], Unit::Special(Token::Command(..)))
+                */
             })
             .collect();
         for i in bad_idxes.into_iter().rev() {

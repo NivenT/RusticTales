@@ -20,8 +20,8 @@ impl Unit {
             Token::Text(s) => {
                 // This Regex explictly checks for a newline for dumb reasons
                 // Basically, extrace_page assumes that each Unit fits on a single line,
-                // so it really doesn't like something like WhiteSpace("\n\n")
-                let re = Regex::new("(\n|[[:space:]]+)").expect("Typo if this does not work");
+                // so it really doesn't like something like WhiteSpace("\n\n") or WhiteSpace(" \n")
+                let re = Regex::new("(\n|[[\t ]]+)").expect("Typo if this does not work");
                 // Could I have made this any worse?
                 re.find_iter(&s)
                     .map(|mat| (mat.start(), mat.end(), mat.as_str()))
@@ -99,7 +99,13 @@ impl Unit {
     pub fn is_word(&self) -> bool {
         matches!(self, Unit::Word(_))
     }
+    pub fn is_command(&self) -> bool {
+        matches!(self, Unit::Special(Token::Command(..)))
+    }
     pub fn is_blocking_command(&self) -> bool {
         matches!(self, Unit::Special(Token::Command(.., true)))
+    }
+    pub fn is_whitespace(&self) -> bool {
+        matches!(self, Unit::WhiteSpace(..))
     }
 }

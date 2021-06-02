@@ -264,6 +264,9 @@ mod tests {
             parse_command("{{ cmd : arg : last part, if present, must be 'wait_for_kb' }}"),
             None
         );
+        assert_eq!(parse_command("{{ must_have_first_colon }}"), None);
+        // Should I allow this?
+        assert_eq!(parse_command("{{ :: wait_for_kb }}"), None);
     }
     #[test]
     fn test_variable_parsing() {

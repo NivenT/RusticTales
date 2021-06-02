@@ -40,7 +40,8 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [ ] backspace one character at a time
   - [ ] Other things
 - [ ] Write stories
-  - [ ] Add features to the scrip?
+  - [ ] Add features to the script?
+    - [ ] story markers
   - [ ] Think of a creative use of the terminal?
   - [ ] Abandon this project before getting anything worth making public?
   - [ ] Put off doing this until the very end of time?

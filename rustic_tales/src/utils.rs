@@ -25,6 +25,29 @@ pub fn terminal_dims() -> (u16, u16) {
     }
 }
 
+pub fn no_term_echo() -> Option<termios::Termios> {
+    use termios::*;
+    let stdin_fd = stdin().as_raw_fd();
+    let orig_termios = Termios::from_fd(stdin_fd).ok()?;
+
+    let mut new_termios = orig_termios;
+    new_termios.c_lflag &= !(ICANON | ECHO);
+    /*
+    new_termios.c_cc[VMIN] = 0;
+    new_termios.c_cc[VTIME] = 0;
+    */
+    tcsetattr(stdin_fd, TCSANOW, &new_termios).ok()?;
+    Some(orig_termios)
+}
+
+pub fn restore_term(settings: Option<termios::Termios>) {
+    use termios::*;
+    if let Some(termios) = settings {
+        let stdin_fd = stdin().as_raw_fd();
+        let _ = tcsetattr(stdin_fd, TCSANOW, &termios);
+    }
+}
+
 // This works on unix-like systems only
 pub fn get_kb() -> Option<u8> {
     use termios::*;
@@ -44,6 +67,17 @@ pub fn get_kb() -> Option<u8> {
 // Don't tell anyone I wrote a spinlock, ok?
 pub fn wait_for_kb() {
     while get_kb() == None {}
+}
+
+pub fn wait_for_kb_with_prompt(prompt: char) {
+    print!("{}", prompt);
+    let _ = std::io::stdout().flush();
+    wait_for_kb();
+    TermAction::EraseCharsOnLine(1).execute();
+}
+
+pub fn exhaust_kb() {
+    while get_kb() != None {}
 }
 
 pub fn get_user() -> Option<String> {

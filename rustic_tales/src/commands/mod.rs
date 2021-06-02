@@ -13,6 +13,7 @@ use crate::utils::wait_for_kb;
 
 pub mod prompts;
 
+// TODO: Implement the rest of this
 pub fn backspace(len: isize, unit: DisplayUnit) {
     if unit.is_char() {
         TermAction::MoveCursor(-len, 0)

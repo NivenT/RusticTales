@@ -1,9 +1,6 @@
 (
     st_opts: (
-        scroll_rate: Millis(
-            num: 5,
-            ms: 743,
-        ),
+        scroll_rate: OnePage,
         disp_by: Word,
         stories_directory: "stories",
     ),

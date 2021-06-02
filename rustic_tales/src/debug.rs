@@ -23,6 +23,7 @@ pub fn debug_menu(opts: &Options) -> Result<bool> {
                         all_according_to_plan = true;
                         debug_fns[n](story, st)
                     }
+
                     Err(e) => println!("Could not parse story because '{}'", e),
                 },
                 Err(e) => println!("Something went wrong: '{}'", e),
@@ -68,23 +69,34 @@ fn parse_story(_story: String, teller: StoryTeller) {
 }
 
 fn get_pagination_info(story: String, teller: StoryTeller) {
-    let sections = teller.get_story().get_sections();
+    let s = teller.get_story();
+    let contents = s.get_contents();
+    let sections = s.get_sections();
 
     println!("'{}' has {} section(s)", story, sections.len());
+    println!("It has a total of {} unit(s)", contents.len());
     for (i, sect) in sections.iter().enumerate() {
         let pages = sect.get_pages();
         println!("SECTION {} ({})", i, sect.get_name());
         println!("* Starts at index {}", sect.start_idx().unwrap());
-        println!("* There are {} pages", pages.len());
+        println!("* There are {} page(s)", pages.len());
         for (j, page) in pages.iter().enumerate() {
             let lines = page.get_lines();
             println!("* PAGE {}", j);
             println!("* * Starts at index {}", page.start_idx().unwrap());
-            println!("* * There {} lines", lines.len());
+            println!("* * There {} line(s)", lines.len());
             for (k, line) in lines.iter().enumerate() {
                 println!("* * Line {}", k);
-                println!("* * * Starts at index {}", line.get_start());
-                println!("* * * Ends with index {}", line.get_end());
+                println!(
+                    "* * * Starts at index {} (with {:?})",
+                    line.get_start(),
+                    contents[line.get_start()]
+                );
+                println!(
+                    "* * * Ends with index {} (with {:?})",
+                    line.get_end(),
+                    contents[line.get_end()]
+                );
             }
         }
     }
