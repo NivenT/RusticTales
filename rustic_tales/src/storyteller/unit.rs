@@ -66,9 +66,9 @@ impl Unit {
             Unit::Special(t) => match t {
                 // might need to depend on the command in the future
                 Token::Command(..) => (0, 0),
+                Token::Variable(_) => (3, 0),
                 // can't know variable length a priori so just guess
                 // ^^^^^^^ This is dumb. I should make pagination more dynamic at some point
-                Token::Variable(_) => (7, 0),
                 Token::Symbol(s) => (s.len() + 2, 0),
                 _ => unreachable!(),
             },

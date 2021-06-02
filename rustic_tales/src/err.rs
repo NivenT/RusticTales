@@ -13,6 +13,7 @@ pub enum RTError {
 
     InvalidInput(String),
     UnrecognizedCommand(String),
+    WrongNumArguments(&'static str, &'static str, usize),
     #[allow(dead_code)]
     NotYetImplemented(String),
     Internal(&'static str),
@@ -30,6 +31,9 @@ impl fmt::Display for RTError {
             DurError(e) => write!(f, "Parse duration error: {}", e),
             InvalidInput(r) => write!(f, "Invalid input: {}", r),
             UnrecognizedCommand(c) => write!(f, "Unrecognized command: {}", c),
+            WrongNumArguments(name, exp, got) => {
+                write!(f, "'{}' expected {} arguments, but got {}", name, exp, got)
+            }
             NotYetImplemented(r) => write!(f, "{} is not yet implemented", r),
             Internal(e) => write!(f, "Internal error: {}", e),
         }

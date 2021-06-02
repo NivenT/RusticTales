@@ -1,8 +1,11 @@
-Ukuth had been wandering this cave for longer than he cared to remember. The more time passed, the more intensly he experienced a confusing mixture of familiarity and dread. The sturdy walls provided much-needed support to lean when overcome with tiredness, and the distant sound of running water helped to calm him and to cut through the monotony of his journey.{ }
-Most of all though, the occasional signs of past wanderers slowly made Ukuth feel like he was part of a community. The cartoonish drawings sporadically illuminated by his torch provided him, and doubtlessly provided his predeccesors as well, a momentary smile or chuckle; the snacks and first aid supplies stuffed away in naturally occuring pockets in the cave rock sustained him through hard nights; and the names carved on the ceiling were a constant signal that the task ahead was not impossible, it had been done before.{ }
-{{ wait_kb :}}
+Ukuth had been wandering this cave for far longer than he cared to remember. The more time passed, the more intensly he experienced a confusing mixture of familiarity and dread. In his efforts to eke out whatever comfort he could, Ukuth had come to learn that the cave's sturdy walls provided much-needed support when his legs could not; that focusing on the distant sound of running water helped ease his anxiety; and that the occasional feeble stalagmite made an excellent skewer for catching grub.{ }
+Slowly, Ukuth was understanding the cave enough to carve out a routine for his days. This was a necessary part of keeping himself under control. With each passing day in the cave, Ukuth grew more tempted. Tempted to leave, to give up his foolhardy errand, and to choose peace over suffering. Thinking about his routine stopped him from thinking about his temptation.
+
+Wander. Rest. Water. Bugs. Repeat. Like this, Ukuth spent countless days in the caves, and like this, he was prepared to spend countless more. Eventually, he believed, the cave's master would offer to hear his request, and then Ukuth could restore his world.
+/PAGE/
+Sprinkled on top of the monotonity of daily life in the cave were sporadic moments of variety. These mainly came in the form of signs of past wanderers. Ukuth was hardly the first person to brave the cave's ordeal in order to fulfill a wish, and many of his predessors had opted to leave their mark in their temporary dungeon. Lining certain sections of the wall were cartoonish doodlings, usually drawn in a mixture of mud and blood. Most of them were surprisingly amusing, providing Ukuth with the rare chuckle. In some of cave's naturally occuring "pockets," Ukuth found first-aid supplies (bandages, oitment, and the like) which came in handy on more than one occasion. The rarest, and most encouraging, signs Ukuth encoutered, however, were the few times he noticed names carved into the ceiling far above him. These served as a reminder that the task ahead was not impossible; it had been done before.{ }
 Combined, all of this gave Ukuth the sense that he was not alone.
-{{ pause : 1500ms }}
+{{ pause : 1500ms : wait_for_kb }}
 {{ backspace : 6 |,| chars }}
 {{ pause : 800ms }}
 {{ backspace : 4 |,| chars }}
@@ -14,7 +17,7 @@ Combined, all of this gave Ukuth the sense that he was not alone.
 {{ backspace : 48 |,| chars }}
 {{ pause : 1sec }}
 
-But Ukuth ${{UNDERLINE}}was alone${{NORMAL}}. He had not always been alone, though. No, not long ago Ukuth had but one ally: his brother, Iskhith. The two of them survived together in this world; after escaping captivity in their village, they deigned to setup a life in the wilds. Doing so came at a cost. Monsters, which had tormented them in their youth returned with a renewed fervor, no longer staved off by the protection of a surrounding village. Dealing with these monsters was a constant source of stress for Ukuth and Iskhith, but, they thought, this was still preferable to that ${{UNDERLINE}}horrid${{NORMAL}} village.{ }
+But Ukuth ${{UNDERLINE}}was alone${{NORMAL}}. He had not always been alone, though. No, not long ago Ukuth had but one ally: his brother, Iskhith. The two of them survived together in this world; after escaping captivity in their village, they deigned to setup a life in the wilds. Doing so came at a cost. Monsters, which had tormented them in their youth, returned with a renewed fervor, no longer staved off by the protection of a surrounding village. Dealing with these monsters was a constant source of stress for Ukuth and Iskhith, but, they thought, this was still preferable to that ${{UNDERLINE}}horrid${{NORMAL}} village.{ }
 That village which never accepted them,{ }
 {{ wait_kb :}}
 which forced them away from others,
@@ -35,10 +38,15 @@ Rocks
 {{ pause : 500ms }}
 {.}
 {{ pause : 500ms }}
- Ah, right. Rocks. We were following Ukuth through the cave, were we not? It seems he is about to reach his goal, so this is as good a time as any to rejoin him.
+ Ah, right. Rocks. We were following Ukuth through the cave, were we not? It seems he is about to reach his goal, so this is as good a time as any to rejoin him. This journey has done more than it's fair share of damage to Ukuth, but alas, it will soon be worth it...
+{{ wait_kb :}}
 
 
-It would appear that this journey has done more than it's fair share of damage to Ukuth. As the path to the sacred chamber opens up, he stumbles through it awkwardly, his stride ragged, almost feral. Since Iskhith's passing, Ukuth's sole desire had been bringing him back, to not be left alone in this world with no one but the monsters or the villagers.{ }
+${{BLINK}}Wander. Rest. Water. Bugs.
+{{ pause : 8sec }}
+{{ move_cursor_back : 26 : wait_for_kb }}
+${{NORMAL}}Wander. Rest. Water. Bugs. Wander. Re-... No rest today. In front of Ukuth, something begins to move. The rocks shift away from each, and a warm light descends upon Ukuth. A moment earlier, Ukuth's legs felt ready to collapse on themselves, but this is it. He must move them now.{ }
+As the path to the sacred chamber finishes opening up, Ukuth stumbles through it awkwardly, his stride ragged, almost feral. Since Iskhith's passing, Ukuth's sole desire had been bringing him back, to not be left alone in this world with no one but the monsters or the villagers.{ }
 It was this pure desparation that drove Ukuth to journey to this ancient place, despite the costs, the tales, and the pain. However, this is to be expected, as no sane soul would dare to seek ${{BOLD}}my${{NORMAL}} aid.
 {{ wait_kb :}}
 /PAGE/
@@ -79,6 +87,8 @@ ${{NORMAL}}"I told you, Creature, I know all the tales. You watched me as I suff
 
 
 ${{BOLD}}Those are bold words coming from such a pathetic sight, but as you wish. Iskhith means the world to you, so before bringing about his return, I will take away your reality. In exchange for restoring your brother's life, everyone in your village will die. There will be no one else; the two of you will be left alone in a world of your own making. Do you accept this price?
+{{ wait_kb :}}
+
 
 
 ${{NORMAL}}.
@@ -136,8 +146,12 @@ ${{YELLOW_FG}}${{DIM}}save Iskhith
 
 
 ${{NORMAL}}${{BOLD}}So be it.
+
+
+${{NORMAL}}Upon the utterance of those words, Ukuth say the Creature don a distrubing smile, heard a distance chiseling sound, and then before he could say anything else, everything went black.
 /PAGE/
-${{NORMAL}}The next morning, Iskhith awoke in his modest shelter tucked away in the wilds. He barely had time to sort out his memories of how he got there before he was greeted with a familiar face.
+{{ pause : 1600ms}}
+The next morning, Iskhith awoke in his modest shelter tucked away in the wilds. He barely had time to sort out his memories of how he got there before he was greeted with a familiar face.
 
 ${{MAGENTA_LFG}}"Ukuth, is it really you? The last thing I remember..."
 

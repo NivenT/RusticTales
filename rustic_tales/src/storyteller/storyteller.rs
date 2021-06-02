@@ -398,6 +398,18 @@ impl<'a> StoryTeller<'a> {
                 }
             }
             "wait_kb" => Ok(self.wait_kb()),
+            "move_cursor_back" => {
+                if args.len() != 1 {
+                    Err(RTError::WrongNumArguments(
+                        "move_cursor_back",
+                        "1",
+                        args.len(),
+                    ))
+                } else {
+                    TermAction::MoveCursor(-args[0].parse()?, 0).execute();
+                    Ok(())
+                }
+            }
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),
         }
     }
