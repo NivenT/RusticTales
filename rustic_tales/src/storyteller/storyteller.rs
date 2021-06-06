@@ -238,10 +238,6 @@ impl<'a> StoryTeller<'a> {
             //println!("snippet info: {:?}", snippet_info);
             if snippet_info.should_wait_for_kb() {
                 self.wait_kb();
-                // only waits for one byte, but some keys (e.g. arrow keys) generate multiple bytes
-                // we want to exhaust all of those so the next call actually waits for a new
-                // keypress. This is not the nicest way to do it, but meh
-                exhaust_kb();
             } else if snippet_info.story_ended() {
                 break;
             }
@@ -275,6 +271,10 @@ impl<'a> StoryTeller<'a> {
         } else {
             wait_for_kb()
         }
+        // only waits for one byte, but some keys (e.g. arrow keys) generate multiple bytes
+        // we want to exhaust all of those so the next call actually waits for a new
+        // keypress. This is not the nicest way to do it, but meh
+        exhaust_kb();
     }
 
     fn get_full_path(&self, p: &str) -> String {

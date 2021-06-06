@@ -39,10 +39,13 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
 - [ ] State machine
   - [ ] backspace one character at a time
   - [ ] Other things
+  - [ ] Pause story
+  - [ ] End story when pressed Esc
 - [ ] Write stories
   - [ ] Add features to script?
     - [ ] story markers
   - [ ] Figure out a way to do scrolling that's not absolute trash?
+    - [ ] Text wrapping (e.g. set max row length)
   - [ ] Think of a creative use of the terminal?
   - [ ] Abandon this project before getting anything worth making public?
   - [ ] Put off doing this until the very end of time?
