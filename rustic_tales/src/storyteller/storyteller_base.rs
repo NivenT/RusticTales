@@ -41,13 +41,15 @@ impl SnippetInfo {
 
 // TODO: Make state machine (e.g. so can backspace over time)
 #[derive(Debug, Clone)]
-pub struct StoryTeller<'a> {
-    story: Story,
-    options: Option<&'a STOptions>,
-    env: HashMap<String, String>,
+pub struct StoryTeller<'a, S> {
+    pub(super) story: Story,
+    pub(super) options: Option<&'a STOptions>,
+    pub(super) env: HashMap<String, String>,
+    pub(super) state: S,
 }
 
-impl<'a> StoryTeller<'a> {
+// Shared functionality
+impl<'a, S> StoryTeller<'a, S> {
     fn prepare_builtins() -> HashMap<String, String> {
         let mut env = HashMap::new();
 
@@ -88,15 +90,6 @@ impl<'a> StoryTeller<'a> {
             .expect("opts should only be called after setup")
     }
 
-    pub fn new<P: AsRef<Path>>(story: P) -> Result<Self> {
-        let story: Story = fs::read_to_string(story)?.parse()?;
-
-        Ok(StoryTeller {
-            story,
-            options: None,
-            env: StoryTeller::prepare_builtins(),
-        })
-    }
     fn write(&mut self) {
         // self.eval_command mutably borrows self, so need to clone or something
         let unit = self.story.get_curr().clone();
@@ -415,12 +408,15 @@ impl<'a> StoryTeller<'a> {
     }
 }
 
-// Felt like separating out debug stuff
-impl<'a> StoryTeller<'a> {
-    pub fn get_tokens(story: &str) -> Result<Vec<Token>> {
-        Ok(tokenize(&fs::read_to_string(story)?))
-    }
-    pub fn get_story(&self) -> &Story {
-        &self.story
+impl<'a, S: Default> StoryTeller<'a, S> {
+    pub fn new<P: AsRef<Path>>(story: P) -> Result<Self> {
+        let story: Story = fs::read_to_string(story)?.parse()?;
+
+        Ok(StoryTeller {
+            story,
+            options: None,
+            env: StoryTeller::<S>::prepare_builtins(),
+            state: Default::default(),
+        })
     }
 }

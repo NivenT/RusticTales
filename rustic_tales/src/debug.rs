@@ -1,6 +1,6 @@
 use crate::err::Result;
 use crate::options::Options;
-use crate::storyteller::StoryTeller;
+use crate::storyteller::{Debug, StoryTeller};
 use crate::utils::*;
 
 pub fn debug_menu(opts: &Options) -> Result<bool> {
@@ -34,7 +34,7 @@ pub fn debug_menu(opts: &Options) -> Result<bool> {
     Ok(all_according_to_plan)
 }
 
-fn tokenize_story(story: String, _teller: StoryTeller) {
+fn tokenize_story(story: String, _teller: StoryTeller<Debug>) {
     let tkns = StoryTeller::get_tokens(&story).expect(
         "It's already been tokenized once. If this would fail, it would have failed earlier",
     );
@@ -51,7 +51,7 @@ fn tokenize_story(story: String, _teller: StoryTeller) {
     wait_for_enter("That's all... (hit enter)");
 }
 
-fn parse_story(_story: String, teller: StoryTeller) {
+fn parse_story(_story: String, teller: StoryTeller<Debug>) {
     let chunk_size = terminal_dims().1 as usize - 2;
     let story = teller.get_story();
     let contents = story.get_contents();
@@ -68,7 +68,7 @@ fn parse_story(_story: String, teller: StoryTeller) {
     wait_for_enter("That's all... (hit enter)");
 }
 
-fn get_pagination_info(story: String, teller: StoryTeller) {
+fn get_pagination_info(story: String, teller: StoryTeller<Debug>) {
     let s = teller.get_story();
     let contents = s.get_contents();
     let sections = s.get_sections();

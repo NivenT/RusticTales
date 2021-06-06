@@ -20,7 +20,7 @@ mod utils;
 use debug::debug_menu;
 use err::Result;
 use options::Options;
-use storyteller::StoryTeller;
+use storyteller::{StoryTeller, Telling};
 use utils::{choose_story, clear_screen, menu, wait_for_enter};
 
 fn main() -> Result<()> {
@@ -44,9 +44,8 @@ fn main() -> Result<()> {
                 "I did not understand your choice.\n{}\nPlease try again.\n",
                 e
             ),
-
             Ok(0) => match choose_story(options.get_ignored(), options.get_story_folder()) {
-                Ok(story) => match StoryTeller::new(&story) {
+                Ok(story) => match StoryTeller::<Telling>::new(&story) {
                     Ok(mut st) => {
                         skip_enter = true;
                         st.tell(options.get_story_opts())
