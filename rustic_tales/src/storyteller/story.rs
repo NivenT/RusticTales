@@ -217,7 +217,7 @@ impl FromStr for Story {
         let tkns = tokenize(s);
         let contents: Vec<_> = tkns
             .into_iter()
-            // Oh, so I had heard of flat map? (see 4f03ae49273ff751a6f4603bd3194d16d65448ec)
+            // This is embaressing. It was `filter_map`, not `flat_map` (see 0f14fcf6473f458a919c0876e13e3972f0726b0f)
             .flat_map(Unit::from_token)
             .filter(|u| !u.is_empty())
             .collect();
