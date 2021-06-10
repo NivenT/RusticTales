@@ -1,4 +1,4 @@
-Ukuth had been wandering this cave for far longer than he cared to remember. The more time passed, the more intensly he experienced a confusing mixture of familiarity and dread. In his efforts to eke out whatever comfort he could, Ukuth had come to learn that the cave's sturdy walls provided much-needed support when his legs could not; that focusing on the distant sound of running water helped ease his anxiety; and that the occasional feeble stalagmite made an excellent skewer for catching grub.{ }
+Ukuth had been wandering this cave for far longer than he cared to remember. The more time that passed, the more intensly he experienced a confusing mixture of familiarity and dread. In his efforts to eke out whatever comfort he could, Ukuth had come to learn that the cave's sturdy walls provided much-needed support when his legs could not; that focusing on the distant sound of running water helped ease his anxiety; and that the occasional feeble stalagmite made an excellent skewer for catching grub.{ }
 Slowly, Ukuth was understanding the cave enough to carve out a routine for his days. This was a necessary part of keeping himself under control. With each passing day in the cave, Ukuth grew more tempted. Tempted to leave, to give up his foolhardy errand, and to choose peace over suffering. Thinking about his routine stopped him from thinking about his temptation.
 
 Wander. Rest. Water. Bugs. Repeat. Like this, Ukuth spent countless days in the caves, and like this, he was prepared to spend countless more. Eventually, he believed, the cave's master would offer to hear his request, and then Ukuth could restore his world.
@@ -40,6 +40,7 @@ Rocks
 {{ pause : 500ms }}
  Ah, right. Rocks. We were following Ukuth through the cave, were we not? It seems he is about to reach his goal, so this is as good a time as any to rejoin him. This journey has done more than it's fair share of damage to Ukuth, but alas, it will soon be worth it...
 {{ wait_kb :}}
+
 
 
 ${{BLINK}}Wander. Rest. Water. Bugs.

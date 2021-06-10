@@ -43,6 +43,8 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
     - [ ] Indicate when story paused
   - [ ] End story when pressed `Esc`
   - [X] End story when `q` is pressed
+  - [ ] Move command implementations into various states so they can interop better with the rest of the program
+    - [ ] e.g. should be able to pause/quit mid-command
 - [ ] Internal story buffer thingy
   - [ ] Don't just immedately print to terminal
   - [ ] Keep track of cursor position

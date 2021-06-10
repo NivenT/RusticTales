@@ -2,9 +2,11 @@
     st_opts: (
         scroll_rate: OnePage,
         disp_by: Word,
-        stories_directory: "stories",
+        stories_directory: "rustic_tales/stories",
+        prompt_when_wait: Some('>'),
     ),
     file_ignore_patterns: [
         "*~",
+        "#*#",
     ],
 )
