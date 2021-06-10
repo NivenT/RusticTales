@@ -22,6 +22,18 @@ pub struct Debug;
 #[derive(Default)]
 pub struct Telling;
 pub struct Paused;
+pub struct Quit;
+
+impl<'a, S> StoryTeller<'a, S> {
+    fn quit(self) -> StoryTeller<'a, Quit> {
+        StoryTeller {
+            story: self.story,
+            options: self.options,
+            env: self.env,
+            state: Quit,
+        }
+    }
+}
 
 impl<'a> StoryTeller<'a, Telling> {
     fn write(&mut self) {
@@ -323,6 +335,7 @@ impl<'a> StoryTeller<'a, Debug> {
 pub enum StatefulStoryTeller<'a> {
     Telling(StoryTeller<'a, Telling>),
     Paused(StoryTeller<'a, Paused>),
+    Quit(StoryTeller<'a, Quit>),
 }
 
 impl<'a> StatefulStoryTeller<'a> {
@@ -334,6 +347,7 @@ impl<'a> StatefulStoryTeller<'a> {
         match self {
             Telling(st) => st.setup(opts),
             Paused(st) => st.setup(opts),
+            Quit(st) => st.setup(opts),
         }
     }
     pub fn step(&mut self) -> SnippetInfo {
@@ -352,26 +366,24 @@ impl<'a> StatefulStoryTeller<'a> {
                 }
                 snippet_info
             }
-            _ => SnippetInfo::Nothing,
+            Paused(..) => SnippetInfo::Nothing,
+            Quit(..) => SnippetInfo::StoryOver,
         }
     }
     pub fn transition(self) -> Self {
         use StatefulStoryTeller::*;
-        match self {
-            Telling(st) => {
-                if let Some(b'p') = get_kb() {
-                    Paused(st.pause())
-                } else {
-                    Telling(st)
-                }
-            }
-            Paused(st) => {
-                if let Some(b'p') = get_kb() {
-                    Telling(st.resume())
-                } else {
-                    Paused(st)
-                }
-            }
+        match get_kb() {
+            Some(b'p') => match self {
+                Telling(st) => Paused(st.pause()),
+                Paused(st) => Telling(st.resume()),
+                _ => self,
+            },
+            Some(b'q') => match self {
+                Telling(st) => Quit(st.quit()),
+                Paused(st) => Quit(st.quit()),
+                Quit(..) => self,
+            },
+            _ => self,
         }
     }
     pub fn cleanup(&self) {
@@ -379,6 +391,7 @@ impl<'a> StatefulStoryTeller<'a> {
         match self {
             Telling(st) => st.cleanup(),
             Paused(st) => st.cleanup(),
+            Quit(st) => st.cleanup(),
         }
     }
 }

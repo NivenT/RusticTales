@@ -17,7 +17,7 @@ Maybe I'll add something later... For now, just look at the tests in the [script
 
 ## Commands
 
-Again, I'll type up something more helpful when I feel like it. For now, see the [commands folder](https://github.com/NivenT/RusticTales/tree/master/rustic_tales/src/commands), and maybe also the relevant function in [storyteller.rs](https://github.com/NivenT/RusticTales/tree/master/rustic_tales/src/storyteller/storyteller.rs).
+Again, I'll type up something more helpful when I feel like it. For now, see the [commands folder](https://github.com/NivenT/RusticTales/tree/master/rustic_tales/src/commands), and maybe also the relevant function in [storyteller_states.rs](https://github.com/NivenT/RusticTales/tree/master/rustic_tales/src/storyteller/storyteller_states.rs).
 
 # TODO (In no particular order)
 
@@ -39,13 +39,21 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
 - [ ] State machine
   - [ ] backspace one character at a time
   - [ ] Other things
-  - [ ] Pause story
-  - [ ] End story when pressed Esc
+  - [X] Pause story (press `p` to pause/resume)
+    - [ ] Indicate when story paused
+  - [ ] End story when pressed `Esc`
+  - [X] End story when `q` is pressed
+- [ ] Internal story buffer thingy
+  - [ ] Don't just immedately print to terminal
+  - [ ] Keep track of cursor position
+    - [ ] (Realiably) erase characters not on the current line
+  - [ ] Text wrapping (e.g. set max row length)
 - [ ] Write stories
   - [ ] Add features to script?
     - [ ] story markers
-  - [ ] Figure out a way to do scrolling that's not absolute trash?
-    - [ ] Text wrapping (e.g. set max row length)
   - [ ] Think of a creative use of the terminal?
   - [ ] Abandon this project before getting anything worth making public?
   - [ ] Put off doing this until the very end of time?
+- [ ] Windows support
+  - [ ] Wrap all terminal stuff in convient functions that work for either windows or unix
+- [ ] Write a decent README

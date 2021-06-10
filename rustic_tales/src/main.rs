@@ -21,9 +21,10 @@ use debug::debug_menu;
 use err::Result;
 use options::{Options, STOptions};
 use storyteller::{StatefulStoryTeller, StoryTeller, Telling};
-use utils::{choose_story, clear_screen, menu, wait_for_enter};
+use utils::{choose_story, clear_screen, menu, no_term_echo, restore_term, wait_for_enter};
 
 fn tell_story<'a>(st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
+    let orig_term_settings = no_term_echo();
     let mut narrator = StatefulStoryTeller::from_telling(st);
     narrator.setup(opts);
     loop {
@@ -33,6 +34,7 @@ fn tell_story<'a>(st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
         narrator = narrator.transition();
     }
     narrator.cleanup();
+    restore_term(orig_term_settings);
 }
 
 fn main() -> Result<()> {
