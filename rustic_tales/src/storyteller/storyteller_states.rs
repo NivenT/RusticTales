@@ -10,27 +10,71 @@ use crate::ansi::TermAction;
 use crate::commands::prompts::*;
 use crate::commands::*;
 use crate::err::{RTError, Result};
-use crate::options::{DisplayUnit, STOptions, ScrollRate};
+use crate::options::{DisplayUnit, ScrollRate};
 use crate::utils::*;
 
 use super::story::{Span, Story};
 use super::storyteller_base::*;
 use super::unit::Unit;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Debug;
-#[derive(Default)]
-pub struct Telling;
-pub struct Paused;
+#[derive(Default, Debug)]
+pub struct Telling {
+    to: TransitionInfo,
+}
+#[derive(Default, Debug)]
+pub struct Paused {
+    from: TransitionInfo,
+}
+#[derive(Debug)]
 pub struct Quit;
+#[derive(Debug, Clone, Copy)]
+pub struct Backspacing {
+    unit: DisplayUnit,
+    num: usize,
+}
+#[derive(Debug)]
+enum TransitionInfo {
+    Backspacing(Backspacing),
+    Nothing,
+}
+
+impl Default for TransitionInfo {
+    fn default() -> Self {
+        TransitionInfo::Nothing
+    }
+}
+
+impl TransitionInfo {
+    fn is_nothing(&self) -> bool {
+        matches!(self, TransitionInfo::Nothing)
+    }
+}
 
 impl<'a, S> StoryTeller<'a, S> {
+    fn to_telling(self) -> StoryTeller<'a, Telling> {
+        StoryTeller {
+            story: self.story,
+            options: self.options,
+            env: self.env,
+            state: Telling::default(),
+        }
+    }
     fn quit(self) -> StoryTeller<'a, Quit> {
         StoryTeller {
             story: self.story,
             options: self.options,
             env: self.env,
             state: Quit,
+        }
+    }
+    fn to_state<SS>(self, state: SS) -> StoryTeller<'a, SS> {
+        StoryTeller {
+            story: self.story,
+            options: self.options,
+            env: self.env,
+            state,
         }
     }
 }
@@ -90,6 +134,9 @@ impl<'a> StoryTeller<'a, Telling> {
             } else if self.story.get_curr().is_blocking_command() {
                 info = SnippetInfo::EndedWith(Span::BlockingCommand);
                 break;
+            } else if !self.state.to.is_nothing() {
+                info = SnippetInfo::Transitioning;
+                break;
             }
         }
         let _ = stdout().flush();
@@ -97,7 +144,7 @@ impl<'a> StoryTeller<'a, Telling> {
         info
     }
     fn tell_words(&mut self, num: usize) -> SnippetInfo {
-        let mut last_span = Span::Word;
+        let mut info = SnippetInfo::EndedWith(Span::Word);
         'outer: for _ in 0..num {
             loop {
                 // There's gotta be a better way to write this
@@ -106,10 +153,13 @@ impl<'a> StoryTeller<'a, Telling> {
                     None => return SnippetInfo::StoryOver,
                 };
                 if self.story.get_curr().is_blocking_command() {
-                    last_span = Span::BlockingCommand;
+                    info = SnippetInfo::EndedWith(Span::BlockingCommand);
+                    break 'outer;
+                } else if !self.state.to.is_nothing() {
+                    info = SnippetInfo::Transitioning;
                     break 'outer;
                 } else if matches!(span, Span::Page | Span::Line) {
-                    last_span = span;
+                    info = SnippetInfo::EndedWith(span);
                     break 'outer;
                 } else if !matches!(span, Span::WhiteSpace) {
                     break;
@@ -118,10 +168,10 @@ impl<'a> StoryTeller<'a, Telling> {
         }
         let _ = stdout().flush();
         self.wait_kb();
-        SnippetInfo::EndedWith(last_span)
+        info
     }
     fn tell_lines(&mut self, num: usize) -> SnippetInfo {
-        let mut last_span = Span::Line;
+        let mut info = SnippetInfo::EndedWith(Span::Line);
         'outer: for _ in 0..num {
             // There's gotta be a better way to write this
             let mut span = match self.write_and_advance(DisplayUnit::Word) {
@@ -130,10 +180,13 @@ impl<'a> StoryTeller<'a, Telling> {
             };
             while span != Span::Line {
                 if self.story.get_curr().is_blocking_command() {
-                    last_span = Span::BlockingCommand;
+                    info = SnippetInfo::EndedWith(Span::BlockingCommand);
+                    break 'outer;
+                } else if !self.state.to.is_nothing() {
+                    info = SnippetInfo::Transitioning;
                     break 'outer;
                 } else if span == Span::Page {
-                    last_span = span;
+                    info = SnippetInfo::EndedWith(span);
                     break 'outer;
                 }
                 span = match self.write_and_advance(DisplayUnit::Word) {
@@ -143,17 +196,20 @@ impl<'a> StoryTeller<'a, Telling> {
             }
         }
         let _ = stdout().flush();
-        SnippetInfo::EndedWith(last_span)
+        info
     }
     fn tell_onepage(&mut self) -> SnippetInfo {
-        let mut last_span = Span::Page;
+        let mut info = SnippetInfo::EndedWith(Span::Page);
         let mut span = match self.write_and_advance(DisplayUnit::Word) {
             Some(span) => span,
             None => return SnippetInfo::StoryOver,
         };
         while span != Span::Page {
             if self.story.get_curr().is_blocking_command() {
-                last_span = Span::BlockingCommand;
+                info = SnippetInfo::EndedWith(Span::BlockingCommand);
+                break;
+            } else if !self.state.to.is_nothing() {
+                info = SnippetInfo::Transitioning;
                 break;
             }
             span = match self.write_and_advance(DisplayUnit::Word) {
@@ -162,7 +218,7 @@ impl<'a> StoryTeller<'a, Telling> {
             };
         }
         let _ = stdout().flush();
-        SnippetInfo::EndedWith(last_span)
+        info
     }
 
     fn turn_page(&self) {
@@ -199,8 +255,16 @@ impl<'a> StoryTeller<'a, Telling> {
                     Err(RTError::InvalidInput(
                         "'backspace' requires two arguments".to_string(),
                     ))
-                } else {
+                } else if args.len() == 2 || args[2] != "one_by_one" {
+                    //                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    // Really hope Rust does short circuiting
                     backspace(args[0].parse()?, args[1].parse()?);
+                    Ok(())
+                } else {
+                    self.state.to = TransitionInfo::Backspacing(Backspacing {
+                        unit: args[1].parse()?,
+                        num: args[0].parse()?,
+                    });
                     Ok(())
                 }
             }
@@ -300,24 +364,40 @@ impl<'a> StoryTeller<'a, Telling> {
         }
     }
 
-    // low-key I should just mem::transmute and hope Rust has enough guarantees that things just work
     fn pause(self) -> StoryTeller<'a, Paused> {
         StoryTeller {
             story: self.story,
             options: self.options,
             env: self.env,
-            state: Paused,
+            state: Paused::default(),
+        }
+    }
+    fn transition(self) -> StatefulStoryTeller<'a> {
+        match self.state.to {
+            TransitionInfo::Backspacing(bs) => StatefulStoryTeller::Backspacing(self.to_state(bs)),
+            TransitionInfo::Nothing => StatefulStoryTeller::Telling(self),
         }
     }
 }
 
 impl<'a> StoryTeller<'a, Paused> {
-    fn resume(self) -> StoryTeller<'a, Telling> {
+    fn resume(self) -> StatefulStoryTeller<'a> {
+        match self.state.from {
+            TransitionInfo::Backspacing(bs) => StatefulStoryTeller::Backspacing(self.to_state(bs)),
+            TransitionInfo::Nothing => StatefulStoryTeller::Telling(self.to_telling()),
+        }
+    }
+}
+
+impl<'a> StoryTeller<'a, Backspacing> {
+    fn pause(self) -> StoryTeller<'a, Paused> {
         StoryTeller {
             story: self.story,
             options: self.options,
             env: self.env,
-            state: Telling,
+            state: Paused {
+                from: TransitionInfo::Backspacing(self.state),
+            },
         }
     }
 }
@@ -332,24 +412,30 @@ impl<'a> StoryTeller<'a, Debug> {
     }
 }
 
+#[derive(Debug)]
 pub enum StatefulStoryTeller<'a> {
     Telling(StoryTeller<'a, Telling>),
     Paused(StoryTeller<'a, Paused>),
     Quit(StoryTeller<'a, Quit>),
+    Backspacing(StoryTeller<'a, Backspacing>),
 }
 
 impl<'a> StatefulStoryTeller<'a> {
     pub fn from_telling(st: StoryTeller<'a, Telling>) -> Self {
         StatefulStoryTeller::Telling(st)
     }
+    /*
     pub fn setup(&mut self, opts: &'a STOptions) {
         use StatefulStoryTeller::*;
+        // This is only ever gonna get called with Telling, so maybe I should only handle that case?
         match self {
             Telling(st) => st.setup(opts),
             Paused(st) => st.setup(opts),
             Quit(st) => st.setup(opts),
+            Backspacing(st) => st.setup(opts),
         }
     }
+     */
     pub fn step(&mut self) -> SnippetInfo {
         use StatefulStoryTeller::*;
         match self {
@@ -360,7 +446,6 @@ impl<'a> StatefulStoryTeller<'a> {
                     ScrollRate::Lines(num) => st.tell_lines(num),
                     ScrollRate::OnePage => st.tell_onepage(),
                 };
-                //println!("snippet info: {:?}", snippet_info);
                 if snippet_info.should_wait_for_kb() {
                     st.wait_kb();
                 }
@@ -368,6 +453,20 @@ impl<'a> StatefulStoryTeller<'a> {
             }
             Paused(..) => SnippetInfo::Nothing,
             Quit(..) => SnippetInfo::StoryOver,
+            Backspacing(st) => {
+                if st.state.num > 0 {
+                    if st.state.unit.is_char() {
+                        TermAction::EraseCharsOnLine(1).execute();
+                        st.state.num -= 1;
+                        let _ = stdout().flush();
+                        // This number should be somehow custimizable
+                        std::thread::sleep(Duration::from_millis(250));
+                    } else {
+                        unimplemented!()
+                    }
+                }
+                SnippetInfo::Nothing
+            }
         }
     }
     pub fn transition(self) -> Self {
@@ -375,15 +474,21 @@ impl<'a> StatefulStoryTeller<'a> {
         match get_kb() {
             Some(b'p') => match self {
                 Telling(st) => Paused(st.pause()),
-                Paused(st) => Telling(st.resume()),
-                _ => self,
+                Paused(st) => st.resume(),
+                Backspacing(st) => Paused(st.pause()),
+                Quit(..) => self,
             },
             Some(b'q') => match self {
                 Telling(st) => Quit(st.quit()),
                 Paused(st) => Quit(st.quit()),
+                Backspacing(st) => Quit(st.quit()),
                 Quit(..) => self,
             },
-            _ => self,
+            _ => match self {
+                Backspacing(st) if st.state.num == 0 => Telling(st.to_telling()),
+                Telling(st) => st.transition(),
+                _ => self,
+            },
         }
     }
     pub fn cleanup(&self) {
@@ -391,6 +496,7 @@ impl<'a> StatefulStoryTeller<'a> {
         match self {
             Telling(st) => st.cleanup(),
             Paused(st) => st.cleanup(),
+            Backspacing(st) => st.cleanup(),
             Quit(st) => st.cleanup(),
         }
     }

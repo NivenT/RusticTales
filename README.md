@@ -37,7 +37,7 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
 - [X] Pagination again, but for sections
 - [X] Add debug features?
 - [ ] State machine
-  - [ ] backspace one character at a time
+  - [X] backspace one character at a time
   - [ ] Other things
   - [X] Pause story (press `p` to pause/resume)
     - [ ] Indicate when story paused

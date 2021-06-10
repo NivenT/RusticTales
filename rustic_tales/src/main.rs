@@ -23,10 +23,11 @@ use options::{Options, STOptions};
 use storyteller::{StatefulStoryTeller, StoryTeller, Telling};
 use utils::{choose_story, clear_screen, menu, no_term_echo, restore_term, wait_for_enter};
 
-fn tell_story<'a>(st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
+fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
     let orig_term_settings = no_term_echo();
+
+    st.setup(opts);
     let mut narrator = StatefulStoryTeller::from_telling(st);
-    narrator.setup(opts);
     loop {
         if narrator.step().story_ended() {
             break;

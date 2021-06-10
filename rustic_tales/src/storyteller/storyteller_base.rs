@@ -13,6 +13,7 @@ use super::story::{Span, Story};
 pub enum SnippetInfo {
     Nothing,
     EndedWith(Span),
+    Transitioning,
     StoryOver,
 }
 
@@ -30,9 +31,9 @@ impl SnippetInfo {
     }
 }
 
-// TODO: Make state machine (e.g. so can backspace over time)
 #[derive(Debug, Clone)]
 pub struct StoryTeller<'a, S> {
+    // These first three members maybe should just be in their own struct
     pub(super) story: Story,
     pub(super) options: Option<&'a STOptions>,
     pub(super) env: HashMap<String, String>,
@@ -76,7 +77,7 @@ impl<'a, S> StoryTeller<'a, S> {
 
         env
     }
-    pub(super) fn setup(&mut self, opts: &'a STOptions) {
+    pub fn setup(&mut self, opts: &'a STOptions) {
         self.options = Some(opts);
         TermAction::ClearScreen
             .then(TermAction::SetCursor(0, 0))
