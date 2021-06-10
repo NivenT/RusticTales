@@ -20,19 +20,17 @@ mod utils;
 use debug::debug_menu;
 use err::Result;
 use options::{Options, STOptions};
-use storyteller::{InProgressStory, StoryTeller, Telling};
+use storyteller::{StatefulStoryTeller, StoryTeller, Telling};
 use utils::{choose_story, clear_screen, menu, wait_for_enter};
 
-fn tell_story<'a, T>(st: StoryTeller<'a, T>, opts: &'a STOptions)
-where
-    StoryTeller<'a, T>: InProgressStory<'a>,
-{
-    let mut narrator: Box<dyn InProgressStory> = Box::new(st);
+fn tell_story<'a>(st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
+    let mut narrator = StatefulStoryTeller::from_telling(st);
     narrator.setup(opts);
     loop {
         if narrator.step().story_ended() {
             break;
         }
+        narrator = narrator.transition();
     }
     narrator.cleanup();
 }
@@ -63,7 +61,6 @@ fn main() -> Result<()> {
                     Ok(st) => {
                         skip_enter = true;
                         tell_story(st, options.get_story_opts());
-                        //st.tell(options.get_story_opts())
                     }
                     Err(e) => println!("Could not parse story because '{}'", e),
                 },

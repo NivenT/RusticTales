@@ -153,25 +153,6 @@ impl<'a> StoryTeller<'a, Telling> {
         SnippetInfo::EndedWith(last_span)
     }
 
-    pub fn tell(&mut self, opts: &'a STOptions) {
-        self.setup(opts);
-        loop {
-            let snippet_info = match self.opts().scroll_rate {
-                ScrollRate::Millis { num, ms } => self.tell_millis(num, ms),
-                ScrollRate::Words(num) => self.tell_words(num),
-                ScrollRate::Lines(num) => self.tell_lines(num),
-                ScrollRate::OnePage => self.tell_onepage(),
-            };
-            //println!("snippet info: {:?}", snippet_info);
-            if snippet_info.should_wait_for_kb() {
-                self.wait_kb();
-            } else if snippet_info.story_ended() {
-                break;
-            }
-        }
-        self.cleanup();
-    }
-
     fn turn_page(&self) {
         wait_for_enter("\nNext page...");
         TermAction::ClearScreen
@@ -306,40 +287,26 @@ impl<'a> StoryTeller<'a, Telling> {
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),
         }
     }
-}
 
-impl<'a> InProgressStory<'a> for StoryTeller<'a, Telling> {
-    fn setup(&mut self, opts: &'a STOptions) {
-        self.setup(opts);
-    }
-    fn step(&mut self) -> SnippetInfo {
-        let snippet_info = match self.opts().scroll_rate {
-            ScrollRate::Millis { num, ms } => self.tell_millis(num, ms),
-            ScrollRate::Words(num) => self.tell_words(num),
-            ScrollRate::Lines(num) => self.tell_lines(num),
-            ScrollRate::OnePage => self.tell_onepage(),
-        };
-        //println!("snippet info: {:?}", snippet_info);
-        if snippet_info.should_wait_for_kb() {
-            self.wait_kb();
+    // low-key I should just mem::transmute and hope Rust has enough guarantees that things just work
+    fn pause(self) -> StoryTeller<'a, Paused> {
+        StoryTeller {
+            story: self.story,
+            options: self.options,
+            env: self.env,
+            state: Paused,
         }
-        snippet_info
-    }
-    fn cleanup(&self) {
-        self.cleanup();
     }
 }
 
-impl<'a> InProgressStory<'a> for StoryTeller<'a, Paused> {
-    fn setup(&mut self, opts: &'a STOptions) {
-        self.setup(opts);
-    }
-    fn step(&mut self) -> SnippetInfo {
-        // Check for unpause
-        SnippetInfo::Nothing
-    }
-    fn cleanup(&self) {
-        self.cleanup();
+impl<'a> StoryTeller<'a, Paused> {
+    fn resume(self) -> StoryTeller<'a, Telling> {
+        StoryTeller {
+            story: self.story,
+            options: self.options,
+            env: self.env,
+            state: Telling,
+        }
     }
 }
 
@@ -350,5 +317,68 @@ impl<'a> StoryTeller<'a, Debug> {
     }
     pub fn get_story(&self) -> &Story {
         &self.story
+    }
+}
+
+pub enum StatefulStoryTeller<'a> {
+    Telling(StoryTeller<'a, Telling>),
+    Paused(StoryTeller<'a, Paused>),
+}
+
+impl<'a> StatefulStoryTeller<'a> {
+    pub fn from_telling(st: StoryTeller<'a, Telling>) -> Self {
+        StatefulStoryTeller::Telling(st)
+    }
+    pub fn setup(&mut self, opts: &'a STOptions) {
+        use StatefulStoryTeller::*;
+        match self {
+            Telling(st) => st.setup(opts),
+            Paused(st) => st.setup(opts),
+        }
+    }
+    pub fn step(&mut self) -> SnippetInfo {
+        use StatefulStoryTeller::*;
+        match self {
+            Telling(st) => {
+                let snippet_info = match st.opts().scroll_rate {
+                    ScrollRate::Millis { num, ms } => st.tell_millis(num, ms),
+                    ScrollRate::Words(num) => st.tell_words(num),
+                    ScrollRate::Lines(num) => st.tell_lines(num),
+                    ScrollRate::OnePage => st.tell_onepage(),
+                };
+                //println!("snippet info: {:?}", snippet_info);
+                if snippet_info.should_wait_for_kb() {
+                    st.wait_kb();
+                }
+                snippet_info
+            }
+            _ => SnippetInfo::Nothing,
+        }
+    }
+    pub fn transition(self) -> Self {
+        use StatefulStoryTeller::*;
+        match self {
+            Telling(st) => {
+                if let Some(b'p') = get_kb() {
+                    Paused(st.pause())
+                } else {
+                    Telling(st)
+                }
+            }
+            Paused(st) => {
+                if let Some(b'p') = get_kb() {
+                    Telling(st.resume())
+                } else {
+                    Paused(st)
+                }
+            }
+        }
+    }
+    pub fn cleanup(&self) {
+        use StatefulStoryTeller::*;
+        match self {
+            Telling(st) => st.cleanup(),
+            Paused(st) => st.cleanup(),
+        }
     }
 }

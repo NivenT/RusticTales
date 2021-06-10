@@ -56,7 +56,7 @@ impl Default for STOptions {
     fn default() -> Self {
         use ScrollRate::*;
         STOptions {
-            scroll_rate: Millis { num: 5, ms: 720 },
+            scroll_rate: OnePage,
             disp_by: DisplayUnit::Word,
             stories_directory: "rustic_tales/stories".to_owned(),
             prompt_when_wait: Some('>'),

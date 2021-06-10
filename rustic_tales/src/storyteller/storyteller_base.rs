@@ -127,9 +127,3 @@ impl<'a, S: Default> StoryTeller<'a, S> {
         })
     }
 }
-
-pub trait InProgressStory<'a> {
-    fn setup(&mut self, opts: &'a STOptions);
-    fn step(&mut self) -> SnippetInfo;
-    fn cleanup(&self);
-}
