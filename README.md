@@ -48,7 +48,7 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
 - [ ] Internal story buffer thingy
   - [ ] Don't just immedately print to terminal
   - [ ] Keep track of cursor position
-    - [ ] (Realiably) erase characters not on the current line
+    - [ ] (Reliably) erase characters not on the current line
   - [ ] Text wrapping (e.g. set max row length)
 - [ ] Write stories
   - [ ] Add features to script?
