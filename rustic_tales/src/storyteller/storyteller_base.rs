@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+use crate::ansi::TermAction;
 use crate::err::Result;
 use crate::options::STOptions;
 use crate::utils::*;
@@ -9,21 +10,21 @@ use crate::utils::*;
 use super::story::{Span, Story};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum SnippetInfo {
+pub enum SnippetInfo {
     Nothing,
     EndedWith(Span),
     StoryOver,
 }
 
 impl SnippetInfo {
-    pub(super) fn should_wait_for_kb(&self) -> bool {
+    pub fn should_wait_for_kb(&self) -> bool {
         use SnippetInfo::*;
         matches!(
             self,
             EndedWith(Span::Line) | EndedWith(Span::BlockingCommand)
         )
     }
-    pub(super) fn story_ended(&self) -> bool {
+    pub fn story_ended(&self) -> bool {
         use SnippetInfo::*;
         matches!(self, StoryOver)
     }
@@ -75,6 +76,19 @@ impl<'a, S> StoryTeller<'a, S> {
 
         env
     }
+    pub(super) fn setup(&mut self, opts: &'a STOptions) {
+        self.options = Some(opts);
+        TermAction::ClearScreen
+            .then(TermAction::SetCursor(0, 0))
+            .then(TermAction::ResetColor)
+            .execute();
+    }
+    pub(super) fn cleanup(&self) {
+        wait_for_enter(&format!("{}\nThe end...", self.get_val("NORMAL")));
+        TermAction::ClearScreen
+            .then(TermAction::SetCursor(0, 0))
+            .execute();
+    }
     pub(super) fn opts(&self) -> &STOptions {
         self.options
             .expect("opts should only be called after setup")
@@ -112,4 +126,10 @@ impl<'a, S: Default> StoryTeller<'a, S> {
             state: Default::default(),
         })
     }
+}
+
+pub trait InProgressStory<'a> {
+    fn setup(&mut self, opts: &'a STOptions);
+    fn step(&mut self) -> SnippetInfo;
+    fn cleanup(&self);
 }

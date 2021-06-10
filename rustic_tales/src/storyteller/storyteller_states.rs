@@ -21,6 +21,7 @@ use super::unit::Unit;
 pub struct Debug;
 #[derive(Default)]
 pub struct Telling;
+pub struct Paused;
 
 impl<'a> StoryTeller<'a, Telling> {
     fn write(&mut self) {
@@ -171,19 +172,6 @@ impl<'a> StoryTeller<'a, Telling> {
         self.cleanup();
     }
 
-    fn setup(&mut self, opts: &'a STOptions) {
-        self.options = Some(opts);
-        TermAction::ClearScreen
-            .then(TermAction::SetCursor(0, 0))
-            .then(TermAction::ResetColor)
-            .execute();
-    }
-    fn cleanup(&self) {
-        wait_for_enter(&format!("{}\nThe end...", self.get_val("NORMAL")));
-        TermAction::ClearScreen
-            .then(TermAction::SetCursor(0, 0))
-            .execute();
-    }
     fn turn_page(&self) {
         wait_for_enter("\nNext page...");
         TermAction::ClearScreen
@@ -317,6 +305,41 @@ impl<'a> StoryTeller<'a, Telling> {
             }
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),
         }
+    }
+}
+
+impl<'a> InProgressStory<'a> for StoryTeller<'a, Telling> {
+    fn setup(&mut self, opts: &'a STOptions) {
+        self.setup(opts);
+    }
+    fn step(&mut self) -> SnippetInfo {
+        let snippet_info = match self.opts().scroll_rate {
+            ScrollRate::Millis { num, ms } => self.tell_millis(num, ms),
+            ScrollRate::Words(num) => self.tell_words(num),
+            ScrollRate::Lines(num) => self.tell_lines(num),
+            ScrollRate::OnePage => self.tell_onepage(),
+        };
+        //println!("snippet info: {:?}", snippet_info);
+        if snippet_info.should_wait_for_kb() {
+            self.wait_kb();
+        }
+        snippet_info
+    }
+    fn cleanup(&self) {
+        self.cleanup();
+    }
+}
+
+impl<'a> InProgressStory<'a> for StoryTeller<'a, Paused> {
+    fn setup(&mut self, opts: &'a STOptions) {
+        self.setup(opts);
+    }
+    fn step(&mut self) -> SnippetInfo {
+        // Check for unpause
+        SnippetInfo::Nothing
+    }
+    fn cleanup(&self) {
+        self.cleanup();
     }
 }
 
