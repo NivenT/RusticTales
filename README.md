@@ -30,14 +30,16 @@ At the end, you'll need to pick a Linux distro to use. The instructions below as
 sudo apt update
 sudo apt install build-essential
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source .cargo/env
 ```
-If the last command above doesn't work, do whatever it says [here](https://www.rust-lang.org/learn/get-started).
 
 Now you can `git clone` and do whatever else it says under the 'How to Run' header.
 
 ## Possible Issues getting WSL working
-* `wsl --set-default-version 2` not working? (e.g. it just display help information)
-
+* `wsl --set-default-version 2` not working? (e.g. it just display help information)  
+  * The likely cause here is you need to update Windows. You can check your version by `WinKey+R` and then typing `winver`. This'll give you your version number in the form [MAJOR NUMBER].[MINOR NUMBER] in order to use WSL 2, you need MAJOR_NUMBER >= 18362 *and* MINOR_NUMBER >= 1049 (e.g. if you're on version 18363.752, then your MINOR_NUMBER is too low). [Step 2 of the manual WSL instructions](https://docs.microsoft.com/en-us/windows/wsl/install-win10#manual-installation-steps) mention ways to update your Windows version. If you ask me, the easiest thing to do would be to get the relevant update straight from the [Microsoft Update Catalog](https://www.catalog.update.microsoft.com/Search.aspx?q=KB4566116). In any case, after updating Windows, you should be able to get WSL 2 without any trouble.
+* The `curl` command not working?
+  * The likely cause here is that my instructions are out of date. To get Rust, do whatever it says  [here](https://www.rust-lang.org/learn/get-started). You'll still want to get separately `build-essential` though.
 
 # Script
 
@@ -94,4 +96,6 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [ ] Put off doing this until the very end of time?
 - [ ] Windows support
   - [ ] Wrap all terminal stuff in convient functions that work for either windows or unix
+  - [ ] Quasi-Windows support vis WSL
 - [ ] Write a decent README
+  - [ ] Make the TODO list coherent
