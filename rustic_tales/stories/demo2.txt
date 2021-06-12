@@ -1,0 +1,412 @@
+This is not part of the story, just a heads-up. You'll want to maximize your terminal window before the first time the story prompts you to press a button. The story will start on the next page. Enjoy.
+/PAGE/
+What's taking him so long? I didn't wake up at 2am just to wait in my car all day. I feel like it shouldn't take him this long to get ready; I should see if he's sent an update.
+
+{{ display_img : images/phone.png : wait_for_kb }}
+{{ clear_screen :}}
+"A minute," he says? I gotta stop expecting this guy to be on time; I could have gotten in a bit more sleep. Sleep. I should not be thinking about that right. I gotta long day ahead.{ }
+{{wait_kb :}}
+Ug
+{{ repeat : h |,| 15 |,| 225ms }}
+, I gotta long life ahead of me. Fuck, it's too early for me to be wallowing in this shit. I need a distraction. Wayne, where you at?
+/PAGE/
+${{BOLD}}2:34am${{NORMAL}}
+
+${{GREEN_LFG}}*Yaw
+{{ repeat : w |,| 10 |,| 225ms }}
+{{ backspace: 10 |,| chars |,| one_by_one |,| 225ms }}
+n* "Sup, Felix. I'm up. Let's do this."
+
+
+${{BLUE_LFG}}"Great, I was getting worried you had fallen back asleep. You look like you still might."
+
+
+${{GREEN_LFG}}"You're not wrong about that. I wasn't designed to be up this early in the morning."
+
+
+${{BLUE_LFG}}"And yet here you are. Look at you, breaking barriers."
+
+
+${{GREEN_LFG}}"Funny. Glad you got jokes. Must mean you're awake enough to drive."
+
+
+${{BLUE_LFG}}"Just barely, but I'll manage. Though with the roads so clear this early in the morning, I could probably get on highway, point the car west, and just conk out for a couple hours until our first exit."
+
+
+${{GREEN_LFG}}"Ha ha, let's not do that. When I agreed to see you off, dying in a sleep-induced car crash is not what I had in mind."
+
+
+${{BLUE_LFG}}"It's not? Damn, that's a shame cause that's exactly what I had planned for today. What'd you think we were doing?"
+
+
+${{GREEN_LFG}}"Well, seeing as how you got that fancy new job out West and a trunk full of all your stuff, I thought I was helping you move in to a new place. But I guess I was wrong, so ummm, you can just go ahead and drop me back at my place, and let me get back to my Zs. Good seeing you and knowing you."
+
+
+${{BLUE_LFG}}"Oh fuck, I did get that job, didn't I? Nevermind, I don't have time to get in a car crash, and I don't have time to take you home. I'm too busy starting my life as a big shot. Guess you'll be helping me move in after all."
+
+
+${{GREEN_LFG}}"You sure? I'd hate to make you switch up your plans mid-drive. If you wanna stick with that first thing, you can even drop me off right here. I'll Uber back and then sleep."
+
+
+${{BLUE_LFG}}"Damn, you really care more about your sleep than my well-being, huh? Tell me again, why am I friends with you?"
+
+
+${{GREEN_LFG}}"Cause no one else would be willing to drive 16+ hours with you just so they could carry a bunch of boxes from your car to your apartment."
+
+
+${{BLUE_LFG}}"You make it sound like this trip isn't giving anything back to you. You're getting quality time with a great guy, and then moving boxes is free exercise. What more could you want?"
+
+
+${{GREEN_LFG}}"A bit of shut eye. Speaking of which, I'm sorry, but I really gotta rest for a bit. I'll be back awake to keep you company in a couple hours."
+
+
+${{BLUE_LFG}}"Already? We just made it to the highway. Stay awake for a bit more; I can't let you sleep yet."
+
+
+${{GREEN_LFG}}"Can't let me? I don't think you can stop me. Night, man"
+{{wait_kb :}}
+
+
+
+${{DEFCOL_FG}}${{BOLD}}BRrRRrrrrrRRrrRRRrrrrrRRRRrRRrrrRRrrRRRrRRrrrRrrrrrrRRRrrrRRRRrrrRRRRrrrrrrrR!${{NORMAL}}
+
+
+${{GREEN_LFG}}"AH! What the fuck?"
+
+
+${{BLUE_LFG}}"Lol, I wish you could see your face right now."
+
+
+${{GREEN_LFG}}"Did you just drive along the rumble strip?"
+
+
+${{BLUE_LFG}}"Yeah. I told you, I couldn't let you sleep yet"
+
+
+${{GREEN_LFG}}"..."
+
+
+${{BLUE_LFG}}"Though seeing your reaction just now filled me with plenty of energy. I'm probably good to drive solo for a bit now."
+
+
+${{GREEN_LFG}}"Fuck you. Goodnight"
+
+
+${{BLUE_LFG}}"Night. See you in a couple hours I guess..."${{NORMAL}}
+/PAGE/
+${{BOLD}}5:27am${{NORMAL}}
+
+Looks like Wayne's still asleep. Three hours down, only a bajillion more to go. I can't believe I used to be jealous of Dad during road trips. He always looked so cool and focussed in the front of the car, like he was on some kind of super important mission. Now that I find myself in his shoes, I imagine he was mostly just fighting the urge to fall asleep and praying that he didn't miss an exit. Driving seemed so much more glamorous from the back seat; I guess lots of things seem glamorous from afar.{ }
+Some of them actually are, though, right? Like my fancy new job. I've wanted it for so long, and now that I have it, it's gonna be great. It has to be great. It will be great. I'm gonna be writing code that'll run in space. That's honestly pretty rad; not many people can say their work has made it to the final frontier. Plus, I'll have top-notch coworkers, I'll be close to the beach, and also - um, I don't know - some third good thing; I don't need a complete list. No one can here this.{ }
+The point is: things are looking up. What more could I want...
+
+Maybe 'a bit of shut eye' like sleeping beauty over here. Gosh, I don't know why he insisted on coming on this trip if he's just gonna be asleep the whole time. I told him I didn't mind doing the drive alone. Oh well, at least I can rope him into driving whenever he's finally awake.
+/PAGE/
+${{BOLD}}6:55am${{NORMAL}}
+
+'Gas station up ahead.' That sounds like a good idea. I've been driving 4 hours nonstop; I could unwind for a bit.
+
+
+------
+
+
+${{YELLOW_LFG}}"That'll be $3.57"
+
+
+${{BLUE_LFG}}"Ok."
+
+
+${{YELLOW_LFG}}"Have a good day."
+
+
+${{BLUE_LFG}}"You too."${{NORMAL}}
+
+
+Well well. Who's that stretching by my car?
+
+
+${{BLUE_LFG}}"He lives. You almost had me worried there."
+
+
+${{GREEN_LFG}}"Likewise. I thought you had run off and abandoned me for a second there."
+
+
+${{BLUE_LFG}}"And left you with my car?"
+
+
+${{GREEN_LFG}}"Yeah, you know, as like a parting gift or something."
+
+
+${{BLUE_LFG}}"Sure, that makes a ton of sense, but you weren't that wrong actually. I do have a gift for you."
+
+
+${{GREEN_LFG}}"Oh yeah, what's that?"
+
+
+${{BLUE_LFG}}"You get the the gift of driving."
+
+
+${{GREEN_LFG}}"Wow, I don't kno-"
+
+
+${{BLUE_LFG}}"And a hot dog."
+
+
+${{GREEN_LFG}}"What?"
+
+
+${{BLUE_LFG}}"You get to drive, and I got you a hot dog. You're welcome."
+
+
+${{GREEN_LFG}}"Thanks, you shouldn't have."${{NORMAL}}
+/PAGE/
+${{BOLD}}7:47am${{NORMAL}}
+
+${{GREEN_LFG}}"Are you seriously not gonna sleep yet? You should rest up; you don't have to keep me company."
+
+
+${{BLUE_LFG}}"Don't worry. With all the coffee I just drank, I couldn't sleep now even if I wanted to."
+
+
+${{GREEN_LFG}}"If you say so."${{NORMAL}}
+
+...
+
+${{GREEN_LFG}}"So, how are we gonna pass the time?"
+
+
+${{BLUE_LFG}}"Wanna play the alphabet game?"
+
+
+${{GREEN_LFG}}"Nope."
+
+
+${{BLUE_LFG}}"Wanna play 'I Spy'?"
+
+
+${{GREEN_LFG}}"Also nope."
+
+
+${{BLUE_LFG}}"Tough crowd. Ummmm, did you dream?"
+
+
+${{GREEN_LFG}}"What?"
+
+
+${{BLUE_LFG}}"When you were asleep before, did you dream?"
+
+
+${{GREEN_LFG}}"Oh yeah, I did. It was a strangley vivid dream too."
+
+
+${{BLUE_LFG}}"Sweet, tell me about it. That oughta kill some time."
+
+
+${{GREEN_LFG}}"Alright. So it started with me arriving at some fancy event. A grand hall, suits, ties, hors d'oeuvres, a schedule... you get the picture. I have no idea what the event is for or who most of the people there are, but I looked good, I felt good, and I was very hungry. So I strut on in, headed straight for the snacks, and ate some pigs in a blanket."
+
+
+${{BLUE_LFG}}"Hold up. You can feel hunger in your dreams?"
+
+
+${{GREEN_LFG}}"I can."
+
+
+${{BLUE_LFG}}"Fair enough. Continue. You were scarfing down some pigs, and then what happened?"
+
+
+${{GREEN_LFG}}"That's not quite how I'd put it, but whatever. So after I had my fill, I figured I should talk to someone and see what was going on. But no one was all that helpful. They kept on giving me generic responses like 'So good to see you' or 'You must be really excited' or 'I can't wait to see how it turns out.' And a lot of people kept asking me if I had seen you yet, but you were no where to be found."
+
+
+${{BLUE_LFG}}"That's... unsatisfying. So basically you ate some food at an event, but you didn't know what it was for? Not the most exciting story."
+
+
+${{GREEN_LFG}}"Woah hold on. There's still more. Since no one there seemed helpful, I decided I might as well head out, but the door leading outside was lock. Not only that, but when I tried opening it, suddenly all the lights in the hall went out. I turned around, and the room was illuminated again, but it was completely different. It had transformed into a theatre, and in the front was a massive stage with two spotlights shining on it, the only source of life in the whole room
+
+{{ display_img : images/stage.png : wait_for_kb }}
+
+
+${{BLUE_LFG}}"So what'd you do then?"
+
+
+${{GREEN_LFG}}"The only thing I could do: I found a seat and waited for the show to start. Before long, you appeared from behind the curtain, wheeling along a cart holding some mystery object that had a cloth draped over it. You then started delivering some grand speech welcoming everyone to this 'monumental celebration' and talking about some 'destiny in the stars' and other such stuff. It was hard to follow, and at some point during it, a large rocket suddenly appeared behind you."
+
+
+${{BLUE_LFG}}"A wild rocket just appeared? Where'd it come from?"
+
+
+${{GREEN_LFG}}"No idea. I just looked up, and there it was. Anyways, after your speech, one of the spotlights started pointing at me, and everyone in attendence was yelling for me to join you on stage. At this point, you gave a second, more coherent, speech, and I finally understood what was going on. Apparently, you had convinced the JPL to commision one of my artworks to put in their latest intersteller satellite, and this even was event was a big PR thing to promote JPL's artistic collaboration."
+
+
+${{BLUE_LFG}}"That's not what I expected, but cool. What was your artwork of, what masterpiece did you paint to send into space?"
+
+
+${{GREEN_LFG}}"I wish I knew. I wondered the same thing, but the moment I lifted the cloth, dream over. I woke up."
+
+
+${{BLUE_LFG}}"That's a tad disappointing. What do you think it means?"
+
+
+${{GREEN_LFG}}"That should be obvious. It means you gotta talk with your bosses. First spacecraft you work on, I want a chamber specifically for my artwork. I'll be famous."
+
+
+${{BLUE_LFG}}"Ha ha. Sadly, I don't think I have that kinda pull. I won't really deal with payloads, I just help program that different components making up our builds."
+
+
+${{GREEN_LFG}}"So you're useless to me?"
+
+
+${{BLUE_LFG}}"Guess so."
+
+
+${{GREEN_LFG}}"Great."${{NORMAL}}
+/PAGE/
+${{BOLD}}9:48am${{NORMAL}}
+
+${{GREEN_LFG}}"Y'know, thinking about this dream has got me excited. Like, my friend, Felix, is gonna be working for NASA's Jet Propulsion Lab. Just saying it aloud makes me feel super legit by association. I can't even imagine what it must feel like for you."
+
+
+${{BLUE_LFG}}"It's exciting alright, but if I'm being honest, it's also terrifying."
+
+
+${{GREEN_LFG}}"How so? You've been talking about this for years, and I can't think of anyone more qualified for the job, so what's there to be terrified about?"
+
+
+${{BLUE_LFG}}"Well, you're probably right that I'll be able to do the job just fine. I can't say I have no doubts about that, but it's not what's got me most worried. The real issue is the ${{ITALIC}}life${{NORMAL}}${{BLUE_LFG}} that taking this job will leave me with. Things in Colorado were nice. I wasn't work on satellites and such, but my job was interesting enough nonetheless; I had a bunch of friends near by; I had family close to me, but not too close; and I knew where to go and what to do to maintain my hobbies.{ }
+I was happy there. And now? Now, I'm throwing all that away to chase some stupid childhood dream. I can't help but partially feel like I've made a huge mistake."
+
+
+${{GREEN_LFG}}"You know you're being overly dramatic, right? I can't speak for the other losers you hang out with back home, but we're not gonna stop being friends just cause we're no longer in the same place. I mean, I didn't agree to come on this long-ass trip with you just to peace out forever at the end."
+
+
+${{BLUE_LFG}}"Yeah, I know, but it's the day-to-day. We'll still be friends, my family will still be my family, my hobbies will still be my hobbies, etc. but these things are all - I don't know - 'grand' or something? Like, when we finish moving me in and you head back, I won't know anyone. I'll wake up every morning in an unknown area without easy access to people I've come to call my own. It'll-"
+
+
+${{GREEN_LFG}}"You know you can call or text, right?"
+
+
+${{BLUE_LFG}}"And you know that's not the same, right? Plus it somehow requires extra energy/effort to push a button on a phone instead of meeting up at someone's place. Anyways, the point is, I know I won't suddenly change, and I know that at the end of the day, I'll still have the same people in my life. But even all that is not necessarily enough. You can have friends and still be alone."
+
+
+${{GREEN_LFG}}"I hear what you're saying, but your take is too pessimistic. Like, you're right that the first few nights after I head out will probably be hard. Everything you said about being on your own in a new place is valid, but it's only valid in the beginning. Before long, you'll find new friends, you'll be passionate about your projects at works, and you'll get your groove back. The startup cost seems daunting right now because it's upcoming and a little mysterious, but in a month you'll feel silly for worrying about it."
+
+
+${{BLUE_LFG}}"That's great for one-month-later me, but today me still isn't feeling better about this."
+
+
+${{GREEN_LFG}}"Today you probably won't feel better about it no matter what I say. I know you well enough to know you don't like giving yourself a break, but you will give others a break, so try this. Step outside of a yourself for a moment. Forget you're you and just pretend you're some stranger seeing some dude named Felix drive towards the next saga of their life, one they've wanted for a long time. How do you think Felix should feel?"
+
+
+${{CYAN_LFG}}"He should
+{{ repeat : . |,| 8 |,| 450ms : wait_for_kb }}
+ feel like preparing? He knows what he's afraid of. He doesn't want to be alone and become so miserable that he alienates himself and loses the motivation to put energy into his relationships and hobbies. The fact that he can identify his fears should be a little calming, and give enough clarity for him to actively prevent them from being realized."
+
+
+${{GREEN_LFG}}"Not what I expected, but I like this train of thought. Go on, Stranger, how does Felix actively oppose his fears?"
+
+
+${{CYAN_LFG}}"If he doesn't wanna be alone, he should probably make some friends. Could start by getting to know his coworkers, and then something would probably end up coming out of that."
+
+
+${{GREEN_LFG}}"Sounds reasonable, but if I can critique, the Felix I really struggles with new people. Like, his social skills are kinda ass, bu-"
+
+
+${{BLUE_LFG}}"Hold up. Aren't you supposed to be helping right now?"
+
+
+${{GREEN_LFG}}"I'm getting to that; you cut me off. Like I was saying, Felix's social are complete dookie, but - and here's where I drop some insight so listen up and don't interrupt - he's a joy to be around when he's having a good time. So, I don't know if I'd trust him to be consistently open and social with his coworkers from the get go, but I bet if he found like a pickup frisbee group or something, then he could more quickly make friends through that."
+
+
+${{BLUE_LFG}}"Wow, really sub-optimal advice."
+
+
+${{GREEN_LFG}}"Sub-optimal? Is that Felix saying that or the Stranger?"
+
+
+${{BLUE_LFG}}"It's me. I stopped your stranger exercise a while ago."
+
+
+${{GREEN_LFG}}"How was I supposed to know that?"
+
+
+${{BLUE_LFG}}"My voice was different."
+
+
+${{GREEN_LFG}}"I couldn't tell."
+
+
+${{BLUE_LFG}}"Then you should probably clean out your ears when you get a chance. But, getting back on track, what you said about me being more open when I'm having a good time is valid. Doing some sort of pick up sports sounds like a solid suggestion. The stuff about me have bad social skills was uncalled for though, so 3/5 stars for the words of encouragement."
+
+
+${{GREEN_LFG}}"I'll take that. At least, you sound less 'trapped in your head' that you were before which is a good thing, so you're welcome for that."
+
+
+${{BLUE_LFG}}"I do feel a little less overwhelmed, but I'm not giving you credit for that. If anything, it's probably because my caffine's worn off, and now I'm too tired to be distressed. Speaking of, I'm gonna take you up on your earlier offer and go to sleep.
+{{ wait_kb :}}
+ *Yaw
+{{ repeat : w |,| 7 |,| 225ms }}
+{{ backspace: 7 |,| chars |,| one_by_one |,| 225ms }}
+n* I'll take over driving when I wake up, and should be able to finish off the trip."
+
+
+${{GREEN_LFG}}"Sounds good. Night, man"${{NORMAL}}
+/PAGE/
+${{BOLD}}3:11pm${{NORMAL}}
+
+What's going on? Huh, oh right, driving to Pasadena. What time is it, how long was I asleep? About 3'o clock. Damn, I was out for - what - 3ish hours? Not bad. I told Wayne we could switch drives when I awoke, so I should probably grab his attention.
+
+
+${{BLUE_LFG}}"Yo, Wayne. I don't know about you, but I'm starving. Wanna stop for food, and then I'll take over until we make it to the apartment?"
+
+
+${{GREEN_LFG}}"That sounds good to me. What you in the mood for?"
+
+
+${{BLUE_LFG}}"Burgers."
+
+
+${{GREEN_LFG}}"Simple. I like it. Let's eat"
+
+
+----
+
+
+${{GREEN_LFG}}"Can I steal some of your fries? I finished mine."
+
+
+${{BLUE_LFG}}"Sure, why not? Have at them."
+
+
+${{GREEN_LFG}}"Thanks"
+
+...
+
+
+${{GREEN_LFG}}"So, how'd you sleep?"
+
+
+${{BLUE_LFG}}"Well enough, I guess. I'm still a little tired, but I probably just need a while to fully wake up."
+
+
+${{GREEN_LFG}}"That's surprising. You were out for quite a while."
+
+
+${{BLUE_LFG}}"Probably not as long as you think. It took me like an hour to properly fall asleep. I was lying there thinking about our conversation for quite a while."
+
+
+${{GREEN_LFG}}"Really? Have any more insights into what your new life holds?"
+
+
+${{BLUE_LFG}}"Not really anything new. Just dwelling on the thought that things have to suck in the beginning, that there's this seemingly unavoidable adjustment period where I'll be out of my element before getting used to the new place. It really feels like something like this shouldn't be necessary, but I have surefire ideas for how to avoid it."
+
+
+${{GREEN_LFG}}"I wouldn't suggest dwelling on that, obviously. We talked a bit about minimizing this before, but honestly, having a shit initial experience isn't all bad. Think about it as a filter. No matter what, there are only so many chapters to your life; unless you're extradorinarily lucky/fortunate, you can't keep on starting big new life ventures indefinitely. Given this, ideally the chapters you do pursue are ones you find worthwhile and enjoyable. With that in mind, having a bit of a barrier in the beginning means, at the very least, that you only pursure chapters where the payoff is worth the cost of entry.{ }
+This job in Pasadena is worth baggage that comes with moving to an unfamilar place. I know this, and you know it too. If you didn't, we wouldn't be sitting here in some random ass burger joint outside of Las Vegas right now; we'd be back in Colorado doing the same shit we'd been doing for the past few years."
+
+
+${{BLUE_LFG}}"Huh, that actually doesn't sound like a bad way to look at things. I guess you're right. I've wanted this for a long time because it's something I know I'll enjoy. Dealing with a shitty start is a relatively small price to pay."
+
+
+${{GREEN_LFG}}"That's the spirit. Now, I've finished my food, and I finished the rest of your food, so what do you say we knock out the final leg of our journey."
+
+
+${{BLUE_LFG}}"Sounds like the move. Pasadena, here we come."
