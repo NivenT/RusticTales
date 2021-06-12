@@ -30,10 +30,10 @@ At the end, you'll need to pick a Linux distro to use. The instructions below as
 sudo apt update
 sudo apt install build-essential
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source .cargo/env
+source $HOME/.cargo/env
 ```
 
-Now you can `git clone` and do whatever else it says under the 'How to Run' header.
+Now you can `git clone` and do whatever else it says under the 'How to Build' header.
 
 ## Possible Issues getting WSL working
 * `wsl --set-default-version 2` not working? (e.g. it just display help information)  
@@ -88,6 +88,7 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [ ] Keep track of cursor position
     - [ ] (Reliably) erase characters not on the current line
   - [ ] Text wrapping (e.g. set max row length)
+- [ ] Get rid of `wait_for_enter` and only ever use `wait_for_kb`/`wait_for_kb_with_prompt`.
 - [ ] Write stories
   - [ ] Add features to script?
     - [ ] story markers
@@ -96,6 +97,6 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [ ] Put off doing this until the very end of time?
 - [ ] Windows support
   - [ ] Wrap all terminal stuff in convient functions that work for either windows or unix
-  - [ ] Quasi-Windows support vis WSL
+  - [X] Quasi-Windows support vis WSL
 - [ ] Write a decent README
   - [ ] Make the TODO list coherent
