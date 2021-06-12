@@ -88,6 +88,9 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [ ] Keep track of cursor position
     - [ ] (Reliably) erase characters not on the current line
   - [ ] Text wrapping (e.g. set max row length)
+- [ ] Better naviagation
+  - [ ] Move back a page
+  - [ ] General purpose undo?
 - [ ] Get rid of `wait_for_enter` and only ever use `wait_for_kb`/`wait_for_kb_with_prompt`.
 - [ ] Write stories
   - [ ] Add features to script?

@@ -95,6 +95,7 @@ impl<'a, S> StoryTeller<'a, S> {
             .expect("opts should only be called after setup")
     }
     pub(super) fn wait_kb(&self) {
+        exhaust_kb();
         if let Some(c) = self.opts().prompt_when_wait {
             wait_for_kb_with_prompt(c);
         } else {
