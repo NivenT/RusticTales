@@ -23,7 +23,7 @@ Later, when I feel like it, I'll add instructions for changing the options. For 
 
 # Using this on Windows
 
-This code won't run natively on Windows, but luckily it doesn't need to because Windows users can use the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10#manual-installation-steps). If you want to run this on Windows, follow the instructions in that link (I reccommend the manual install). 
+This code won't run natively on Windows, but luckily it doesn't need to because Windows users can use the [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10#manual-installation-steps). If you want to run this on Windows, follow the instructions in that link (I reccommend the manual install). **You need to be running WSL 2 for this program to work**. If you run into issues getting this working (or run into other issues), scroll down a little.
 
 At the end, you'll need to pick a Linux distro to use. The instructions below assume you picked [Ubuntu](https://www.microsoft.com/en-us/p/ubuntu/9nblggh4msv6?activetab=pivot:overviewtab). Once you have an Ubuntu terminal up and running, you'll want to install rust before cloning this repo. To do this, run the following commands. 
 ```bash
@@ -34,6 +34,10 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 If the last command above doesn't work, do whatever it says [here](https://www.rust-lang.org/learn/get-started).
 
 Now you can `git clone` and do whatever else it says under the 'How to Run' header.
+
+## Possible Issues getting WSL working
+* `wsl --set-default-version 2` not working? (e.g. it just display help information)
+
 
 # Script
 
