@@ -75,12 +75,7 @@ impl Page {
             curr_line.len = units[idx..]
                 .iter()
                 .scan(0, |len, next| {
-                    /*
-                    if *len > Line::max_line_len() {
-                        None
-                    } else
-                     */
-                    if next.is_page_end() || next.is_sect_start() {
+                    if *len >= Line::max_line_len() || next.is_page_end() || next.is_sect_start() {
                         None
                     } else if next.is_newline() {
                         *len += Page::area_to_len(next.area());
@@ -367,10 +362,6 @@ impl Story {
                 } else {
                     not_double
                 }
-                /*
-                matches!(contents[i], Unit::WhiteSpace(..))
-                    && matches!(contents[i + 1], Unit::Special(Token::Command(..)))
-                */
             })
             .collect();
         for i in bad_idxes.into_iter().rev() {

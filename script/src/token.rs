@@ -46,7 +46,7 @@ fn parse_symbol(stream: &str) -> Option<(Token, usize)> {
 fn parse_command(stream: &str) -> Option<(Token, usize)> {
     // regex are completely incomprehensible (it doesn't help that I suck at writing them)
     let re =
-        Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:([^:]*)(: wait_for_kb )?\}\}(\n|$)")
+        Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:([^:\}]*)(: wait_for_kb )?\}\}(\n|$)")
             .expect("If this is invalid, there is a bug");
     re.captures(stream).map(|cap| {
         let name = cap[1].to_string();
@@ -267,6 +267,17 @@ mod tests {
         assert_eq!(parse_command("{{ must_have_first_colon }}"), None);
         // Should I allow this?
         assert_eq!(parse_command("{{ :: wait_for_kb }}"), None);
+        assert_eq!(
+            parse_command("{{ repeat : . |,| 8 |,| 450ms : wait_for_kb }}"),
+            Some((
+                Token::Command(
+                    "repeat".to_owned(),
+                    vec![".".to_owned(), "8".to_owned(), "450ms".to_owned()],
+                    true
+                ),
+                46
+            ))
+        );
     }
     #[test]
     fn test_variable_parsing() {

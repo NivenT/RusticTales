@@ -63,12 +63,16 @@ impl<'a, S> StoryTeller<'a, S> {
 
         add("DEFCOL_FG", "\x1b[39m");
         add("DEFCOL_BG", "\x1b[49m");
-        add("RED_LFG", "\x1b[91m");
 
         add("BOLD", "\x1b[1m");
         add("DIM", "\x1b[2m");
+        add("ITALIC", "\x1b[3m");
         add("UNDERLINE", "\x1b[4m");
         add("BLINK", "\x1b[5m");
+        add("SIX_AEC", "\x1b[6m"); // AEC = ANSI Escape Code
+        add("INVERSE", "\x1b[7m");
+        add("EIGHT_AEC", "\x1b[8m");
+        add("STRIKETHROUGH", "\x1b[9m");
         add("NORMAL", "\x1b[0m");
 
         if let Some(user) = get_user() {
@@ -90,21 +94,9 @@ impl<'a, S> StoryTeller<'a, S> {
             .then(TermAction::SetCursor(0, 0))
             .execute();
     }
-    pub(super) fn opts(&self) -> &STOptions {
+    pub fn opts(&self) -> &STOptions {
         self.options
             .expect("opts should only be called after setup")
-    }
-    pub(super) fn wait_kb(&self) {
-        exhaust_kb();
-        if let Some(c) = self.opts().prompt_when_wait {
-            wait_for_kb_with_prompt(c);
-        } else {
-            wait_for_kb()
-        }
-        // only waits for one byte, but some keys (e.g. arrow keys) generate multiple bytes
-        // we want to exhaust all of those so the next call actually waits for a new
-        // keypress. This is not the nicest way to do it, but meh
-        exhaust_kb();
     }
     pub(super) fn get_full_path(&self, p: &str) -> String {
         format!("{}/{}", self.opts().stories_directory, p)

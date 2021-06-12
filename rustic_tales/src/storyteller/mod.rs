@@ -1,4 +1,4 @@
-mod story;
+pub mod story;
 mod storyteller_base;
 mod storyteller_states;
 mod unit;

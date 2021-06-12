@@ -1,26 +1,28 @@
 use crate::err::Result;
 use crate::options::Options;
+use crate::storyteller::story::{Line, Page};
 use crate::storyteller::{Debug, StoryTeller};
 use crate::utils::*;
 
 pub fn debug_menu(opts: &Options) -> Result<bool> {
-    let mut all_according_to_plan = false;
+    let mut should_wait = true;
     let debug_fns = [tokenize_story, parse_story, get_pagination_info];
     match menu(
         &[
             "Tokenize Story",
             "Separate Story into Units",
             "Pagination Info for Story",
+            "Print Some Constants",
         ],
         None,
         true,
     ) {
         Err(e) => println!("Something went wrong: '{}'", e),
-        Ok(n) if (0..=2).contains(&n) => {
+        Ok(n) if (0..debug_fns.len()).contains(&n) => {
             match choose_story(opts.get_ignored(), opts.get_story_folder()) {
                 Ok(story) => match StoryTeller::new(&story) {
                     Ok(st) => {
-                        all_according_to_plan = true;
+                        should_wait = false;
                         debug_fns[n](story, st)
                     }
 
@@ -29,9 +31,13 @@ pub fn debug_menu(opts: &Options) -> Result<bool> {
                 Err(e) => println!("Something went wrong: '{}'", e),
             }
         }
+        Ok(3) => {
+            should_wait = false;
+            print_some_constants(opts)
+        }
         Ok(_) => unreachable!("Menu only returns valid choices"),
     }
-    Ok(all_according_to_plan)
+    Ok(!should_wait)
 }
 
 fn tokenize_story(story: String, _teller: StoryTeller<Debug>) {
@@ -100,5 +106,12 @@ fn get_pagination_info(story: String, teller: StoryTeller<Debug>) {
             }
         }
     }
+    wait_for_enter("Press enter to continue...");
+}
+
+fn print_some_constants(opts: &Options) {
+    println!("max_line_length: {}", Line::max_line_len());
+    println!("max_page_height: {}", Page::max_page_height());
+    println!("Options: {:?}", opts);
     wait_for_enter("Press enter to continue...");
 }

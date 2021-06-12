@@ -25,19 +25,20 @@ pub fn backspace(len: isize, unit: DisplayUnit) {
 }
 
 pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
-    const ASCII_CHARS: [char; 12] = ['@', '#', 'S', '%', '?', '*', '+', ';', ':', ',', '.', ' '];
+    // Adapted from the short sequence here: http://paulbourke.net/dataformats/asciiart/
+    const ASCII_CHARS: &[u8] = " .,:;-=+*#&%@$".as_bytes();
     const NUM_CHARS: usize = ASCII_CHARS.len();
 
     if let Some((Width(w), Height(h))) = terminal_size() {
         let (w, h) = (w as u32, h as u32);
         let img = ImgReader::open(path)?.decode()?;
         println!();
-        img.resize_exact(w, h, imageops::FilterType::CatmullRom)
+        img.resize_exact(w, h, imageops::FilterType::Lanczos3)
             .grayscale()
             .to_bytes()
             .into_iter()
-            .map(|b| ASCII_CHARS[NUM_CHARS - 1 - (NUM_CHARS * (b as usize) / 256)])
-            .for_each(|c| print!("{}", c));
+            .map(|b| ASCII_CHARS[NUM_CHARS * (b as usize) / 256])
+            .for_each(|c| print!("{}", c as char));
         let _ = stdout().flush();
         wait_for_kb();
         Ok(())
@@ -48,7 +49,8 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
 
 pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
     // I thought I stopped having to look at ugly type names when I decided not to use C++
-    const TERM_COLORS: [(&str, [u8; 3]); 14] = [
+    const TERM_COLORS: [(&str, [u8; 3]); 15] = [
+        ("\x1b[0;40m", [0, 0, 0]),   // black
         ("\x1b[0;41m", [128, 0, 0]), // red
         ("\x1b[0;101m", [255, 0, 0]),
         ("\x1b[0;42m", [0, 128, 0]), // green

@@ -83,10 +83,12 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [X] End story when `q` is pressed
   - [ ] Move command implementations into various states so they can interop better with the rest of the program
     - [ ] e.g. should be able to pause/quit mid-command
+    - [X] See e.g. how the `repeat` command is implemented. It's an annoying amount of work, but doing this for every command will make for a better program.
 - [ ] Internal story buffer thingy
   - [ ] Don't just immedately print to terminal
   - [ ] Keep track of cursor position
     - [ ] (Reliably) erase characters not on the current line
+  - [ ] Dynamic pagination?
   - [ ] Text wrapping (e.g. set max row length)
 - [ ] Better naviagation
   - [ ] Move back a page
@@ -103,3 +105,4 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [X] Quasi-Windows support vis WSL
 - [ ] Write a decent README
   - [ ] Make the TODO list coherent
+  - [ ] Reticulate splines
