@@ -491,7 +491,6 @@ impl<'a> StoryTeller<'a, WaitingForKB> {
     }
 }
 
-// Felt like separating out debug stuff
 impl<'a> StoryTeller<'a, Debug> {
     pub fn get_tokens(story: &str) -> Result<Vec<Token>> {
         Ok(tokenize(&fs::read_to_string(story)?))
@@ -562,6 +561,8 @@ impl<'a> StatefulStoryTeller<'a> {
     }
     pub fn transition(self) -> Self {
         use StatefulStoryTeller::*;
+
+        const ESC_KEY: u8 = 27;
         match get_kb() {
             Some(b'p') => match self {
                 Telling(st) => Paused(st.pause()),
@@ -571,6 +572,14 @@ impl<'a> StatefulStoryTeller<'a> {
                 Quit(..) | WaitingForKB(..) => self,
             },
             Some(b'q') => match self {
+                Telling(st) => Quit(st.quit()),
+                Paused(st) => Quit(st.quit()),
+                Backspacing(st) => Quit(st.quit()),
+                Repeating(st) => Quit(st.quit()),
+                WaitingForKB(st) => Telling(st.key_pressed()),
+                Quit(..) => self,
+            },
+            Some(ESC_KEY) => match self {
                 Telling(st) => Quit(st.quit()),
                 Paused(st) => Quit(st.quit()),
                 Backspacing(st) => Quit(st.quit()),
