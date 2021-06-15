@@ -1,4 +1,5 @@
 use std::fs::File;
+use std::num::NonZeroUsize;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -38,10 +39,10 @@ impl DisplayUnit {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ScrollRate {
-    Millis { num: usize, ms: u64 }, // num symbols every ms milliseconds
-    Words(usize),                   // display ??? words at a time
-    Lines(usize),                   // display ??? lines at a time
-    OnePage,                        // display 1 page at a time
+    Millis { num: NonZeroUsize, ms: u64 }, // num symbols every ms milliseconds
+    Words(NonZeroUsize),                   // display ??? words at a time
+    Lines(NonZeroUsize),                   // display ??? lines at a time
+    OnePage,                               // display 1 page at a time
 }
 
 impl ScrollRate {

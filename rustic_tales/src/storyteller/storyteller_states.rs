@@ -2,6 +2,7 @@ use humantime::parse_duration;
 
 use std::fs;
 use std::io::{stdout, Write};
+use std::num::NonZeroUsize;
 use std::{thread::sleep, time::Duration};
 
 use script::token::{tokenize, Token};
@@ -136,9 +137,9 @@ impl<'a> StoryTeller<'a, Telling> {
         }
         the_story_goes_on.then(|| ret)
     }
-    fn tell_millis(&mut self, num: usize, ms: u64) -> SnippetInfo {
+    fn tell_millis(&mut self, num: NonZeroUsize, ms: u64) -> SnippetInfo {
         let mut info = SnippetInfo::Nothing;
-        for _ in 0..num {
+        for _ in 0..num.get() {
             let span = self.write_and_advance(self.opts().disp_by);
             if span == None {
                 info = SnippetInfo::StoryOver;
@@ -155,55 +156,56 @@ impl<'a> StoryTeller<'a, Telling> {
         sleep(Duration::from_millis(ms));
         info
     }
-    fn tell_words(&mut self, num: usize) -> SnippetInfo {
+    fn tell_words(&mut self, num: NonZeroUsize) -> SnippetInfo {
         let mut info = SnippetInfo::EndedWith(Span::Word);
-        'outer: for _ in 0..num {
-            loop {
-                // There's gotta be a better way to write this
-                let span = match self.write_and_advance(DisplayUnit::Word) {
-                    Some(span) => span,
-                    None => return SnippetInfo::StoryOver,
-                };
-                if self.story.get_curr().is_blocking_command() {
-                    info = SnippetInfo::EndedWith(Span::BlockingCommand);
-                    break 'outer;
-                } else if !self.state.to.is_nothing() {
-                    info = SnippetInfo::Transitioning;
-                    break 'outer;
-                } else if matches!(span, Span::Page | Span::Line) {
-                    info = SnippetInfo::EndedWith(span);
-                    break 'outer;
-                } else if !matches!(span, Span::WhiteSpace) {
+        let mut num_words = 0;
+        while num_words < num.get() {
+            let span = match self.write_and_advance(DisplayUnit::Word) {
+                Some(span) => span,
+                None => {
+                    info = SnippetInfo::StoryOver;
                     break;
                 }
+            };
+            if self.story.get_curr().is_blocking_command() {
+                info = SnippetInfo::EndedWith(Span::BlockingCommand);
+                break;
+            } else if !self.state.to.is_nothing() {
+                info = SnippetInfo::Transitioning;
+                break;
+            } else if matches!(span, Span::Page /* | Span::Line */) {
+                info = SnippetInfo::EndedWith(span);
+                break;
+            } else if !matches!(span, Span::WhiteSpace) {
+                num_words += 1;
             }
         }
         let _ = stdout().flush();
         info
     }
-    fn tell_lines(&mut self, num: usize) -> SnippetInfo {
+    fn tell_lines(&mut self, num: NonZeroUsize) -> SnippetInfo {
         let mut info = SnippetInfo::EndedWith(Span::Line);
-        'outer: for _ in 0..num {
+        let mut num_lines = 0;
+        while num_lines < num.get() {
             // There's gotta be a better way to write this
-            let mut span = match self.write_and_advance(DisplayUnit::Word) {
+            let span = match self.write_and_advance(DisplayUnit::Word) {
                 Some(span) => span,
-                None => return SnippetInfo::StoryOver,
-            };
-            while span != Span::Line {
-                if self.story.get_curr().is_blocking_command() {
-                    info = SnippetInfo::EndedWith(Span::BlockingCommand);
-                    break 'outer;
-                } else if !self.state.to.is_nothing() {
-                    info = SnippetInfo::Transitioning;
-                    break 'outer;
-                } else if span == Span::Page {
-                    info = SnippetInfo::EndedWith(span);
-                    break 'outer;
+                None => {
+                    info = SnippetInfo::StoryOver;
+                    break;
                 }
-                span = match self.write_and_advance(DisplayUnit::Word) {
-                    Some(span) => span,
-                    None => return SnippetInfo::StoryOver,
-                };
+            };
+            if self.story.get_curr().is_blocking_command() {
+                info = SnippetInfo::EndedWith(Span::BlockingCommand);
+                break;
+            } else if !self.state.to.is_nothing() {
+                info = SnippetInfo::Transitioning;
+                break;
+            } else if span == Span::Page {
+                info = SnippetInfo::EndedWith(span);
+                break;
+            } else if span == Span::Line {
+                num_lines += 1;
             }
         }
         let _ = stdout().flush();
@@ -528,7 +530,6 @@ impl<'a> StatefulStoryTeller<'a> {
                         TermAction::EraseCharsOnLine(1).execute();
                         st.state.num -= 1;
                         let _ = stdout().flush();
-                        // This number should be somehow custimizable
                         sleep(st.state.pace);
                     } else {
                         unimplemented!()
