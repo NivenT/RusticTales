@@ -179,7 +179,6 @@ impl<'a> StoryTeller<'a, Telling> {
             }
         }
         let _ = stdout().flush();
-        self.wait_kb();
         info
     }
     fn tell_lines(&mut self, num: usize) -> SnippetInfo {
@@ -234,10 +233,9 @@ impl<'a> StoryTeller<'a, Telling> {
     }
 
     fn turn_page(&self) {
-        wait_for_enter("\nNext page...");
+        wait_for_kb_with_prompt("\nNext page...");
         TermAction::ClearScreen
             .then(TermAction::SetCursor(0, 0))
-            //.then(TermAction::ResetColor)
             .execute();
     }
     fn parse_arg(&self, arg: &str) -> Result<String> {
@@ -402,13 +400,6 @@ impl<'a> StoryTeller<'a, Telling> {
         // for this function to return before the user actually performs a new key press.
         exhaust_kb();
         self.state.to = TransitionInfo::WaitingForKB(WaitingForKB(self.opts().prompt_when_wait));
-        /*
-        if let Some(c) = self.opts().prompt_when_wait {
-            wait_for_kb_with_prompt(c);
-        } else {
-            wait_for_kb()
-        }
-        */
     }
 
     fn pause(self) -> StoryTeller<'a, Paused> {
@@ -524,7 +515,7 @@ impl<'a> StatefulStoryTeller<'a> {
                     ScrollRate::Lines(num) => st.tell_lines(num),
                     ScrollRate::OnePage => st.tell_onepage(),
                 };
-                if snippet_info.should_wait_for_kb() {
+                if snippet_info.should_wait_for_kb(&st.opts().scroll_rate) {
                     st.wait_kb();
                 }
                 snippet_info

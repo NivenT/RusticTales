@@ -32,10 +32,6 @@ pub fn no_term_echo() -> Option<termios::Termios> {
 
     let mut new_termios = orig_termios;
     new_termios.c_lflag &= !(ICANON | ECHO);
-    /*
-    new_termios.c_cc[VMIN] = 0;
-    new_termios.c_cc[VTIME] = 0;
-    */
     tcsetattr(stdin_fd, TCSANOW, &new_termios).ok()?;
     Some(orig_termios)
 }
@@ -69,11 +65,10 @@ pub fn wait_for_kb() {
     while get_kb() == None {}
 }
 
-pub fn wait_for_kb_with_prompt(prompt: char) {
+pub fn wait_for_kb_with_prompt(prompt: &str) {
     print!("{}", prompt);
     let _ = std::io::stdout().flush();
     wait_for_kb();
-    TermAction::EraseCharsOnLine(1).execute();
 }
 
 pub fn exhaust_kb() {

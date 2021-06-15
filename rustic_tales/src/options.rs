@@ -44,6 +44,15 @@ pub enum ScrollRate {
     OnePage,                        // display 1 page at a time
 }
 
+impl ScrollRate {
+    pub fn is_lines(&self) -> bool {
+        matches!(self, ScrollRate::Lines(..))
+    }
+    pub fn is_words(&self) -> bool {
+        matches!(self, ScrollRate::Words(..))
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct STOptions {
     pub scroll_rate: ScrollRate,

@@ -280,11 +280,6 @@ impl Story {
         let sect = self.curr_sect();
         &self.contents[sect.pages[place.page].lines[place.line].start_idx + place.word]
     }
-    /*
-        pub fn get_by_absolute_idx(&self, idx: usize) -> &Unit {
-            &self.contents[idx]
-        }
-    */
     pub fn get_curr(&self) -> &Unit {
         self.get(self.place)
     }

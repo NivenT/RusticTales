@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crate::ansi::TermAction;
 use crate::err::Result;
-use crate::options::STOptions;
+use crate::options::{STOptions, ScrollRate};
 use crate::utils::*;
 
 use super::story::{Span, Story};
@@ -18,12 +18,17 @@ pub enum SnippetInfo {
 }
 
 impl SnippetInfo {
-    pub fn should_wait_for_kb(&self) -> bool {
+    pub fn should_wait_for_kb(&self, scroll_rate: &ScrollRate) -> bool {
         use SnippetInfo::*;
-        matches!(
-            self,
-            EndedWith(Span::Line) | EndedWith(Span::BlockingCommand)
-        )
+        if matches!(self, EndedWith(Span::BlockingCommand)) {
+            true
+        } else if scroll_rate.is_lines() {
+            matches!(self, EndedWith(Span::Line))
+        } else if scroll_rate.is_words() {
+            matches!(self, EndedWith(Span::Word))
+        } else {
+            false
+        }
     }
     pub fn story_ended(&self) -> bool {
         use SnippetInfo::*;
@@ -89,7 +94,8 @@ impl<'a, S> StoryTeller<'a, S> {
             .execute();
     }
     pub(super) fn cleanup(&self) {
-        wait_for_enter(&format!("{}\nThe end...", self.get_val("NORMAL")));
+        TermAction::ResetColor.execute();
+        wait_for_kb_with_prompt("The end...");
         TermAction::ClearScreen
             .then(TermAction::SetCursor(0, 0))
             .execute();
