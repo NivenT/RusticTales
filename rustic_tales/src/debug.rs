@@ -1,3 +1,6 @@
+use std::io::Write;
+
+use crate::buffer::*;
 use crate::err::Result;
 use crate::options::Options;
 use crate::storyteller::story::{Line, Page};
@@ -13,6 +16,7 @@ pub fn debug_menu(opts: &Options) -> Result<bool> {
             "Separate Story into Units",
             "Pagination Info for Story",
             "Print Some Constants",
+            "Test the buffer stuff",
         ],
         None,
         true,
@@ -31,10 +35,8 @@ pub fn debug_menu(opts: &Options) -> Result<bool> {
                 Err(e) => println!("Something went wrong: '{}'", e),
             }
         }
-        Ok(3) => {
-            should_wait = false;
-            print_some_constants(opts)
-        }
+        Ok(3) => print_some_constants(opts),
+        Ok(4) => run_buffer_tests(),
         Ok(_) => unreachable!("Menu only returns valid choices"),
     }
     Ok(!should_wait)
@@ -113,5 +115,36 @@ fn print_some_constants(opts: &Options) {
     println!("max_line_length: {}", Line::max_line_len());
     println!("max_page_height: {}", Page::max_page_height());
     println!("Options: {:?}", opts);
-    wait_for_enter("Press enter to continue...");
+}
+
+fn run_buffer_tests() {
+    fn print_and_wait(buf: &mut TermBuffer) {
+        clear_screen();
+        print!("{}", buf);
+        wait_for_kb_with_prompt(">");
+    }
+
+    let mut buf = TermBuffer::default();
+    buf.resize();
+
+    buf.write_text("Test text. Just making sure the basics work...\n");
+    buf.add_fg_color(Color::light(BaseColor::Blue));
+    buf.write_text("Blue text. Fancy, huh?\n");
+    buf.add_text_effect(TextEffect::Inverse);
+    buf.write_text("More text (but now inverted)\n");
+    buf.undo_modifiers();
+    buf.write_text("Normal text and then ");
+    buf.add_bg_color(Color::dark(BaseColor::Red));
+    buf.add_text_effect(TextEffect::Blink);
+    buf.add_text_effect(TextEffect::Bold);
+    buf.write_text("blinking bold text on a red background.\n\n");
+    buf.undo_modifiers();
+
+    buf.write_text("Let's now test some other stuff\n");
+    buf.write_text("For example, we can delete a ton of text");
+    print_and_wait(&mut buf);
+    buf.erase_chars(50);
+    print_and_wait(&mut buf);
+
+    println!();
 }

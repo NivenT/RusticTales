@@ -10,6 +10,7 @@ extern crate terminal_size;
 extern crate termios;
 
 mod ansi;
+mod buffer;
 mod commands;
 mod debug;
 mod err;
