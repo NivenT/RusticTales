@@ -134,6 +134,11 @@ impl TermBuffer {
     pub fn set_cursor(&mut self, r: usize, c: usize) {
         self.curr_idx = c + r * self.cols;
     }
+    pub fn move_cursor(&mut self, dr: isize, dc: isize) {
+        let (r, c) = self.get_cursor();
+        let (r, c) = (r as isize, c as isize);
+        self.set_cursor((r + dr) as usize, (c + dc) as usize);
+    }
     // (row, column)
     pub fn get_cursor(&self) -> (usize, usize) {
         (self.curr_idx / self.cols, self.curr_idx % self.cols)

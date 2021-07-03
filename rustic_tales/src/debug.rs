@@ -146,5 +146,11 @@ fn run_buffer_tests() {
     buf.erase_chars(50);
     print_and_wait(&mut buf);
 
+    buf.write_text("\n\nHow about overwriting text?");
+    print_and_wait(&mut buf);
+    buf.move_cursor(0, -5);
+    buf.write_text("test!\n");
+    print_and_wait(&mut buf);
+
     println!();
 }
