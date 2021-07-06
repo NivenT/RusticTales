@@ -38,6 +38,8 @@ Now you can `git clone` and do whatever else it says under the 'How to Build' he
 ## Possible Issues getting WSL working
 * `wsl --set-default-version 2` not working? (e.g. it just display help information)  
   * The likely cause here is you need to update Windows. You can check your version by `WinKey+R` and then typing `winver`. This'll give you your version number in the form [MAJOR NUMBER].[MINOR NUMBER] in order to use WSL 2, you need MAJOR_NUMBER >= 18362 *and* MINOR_NUMBER >= 1049 (e.g. if you're on version 18363.752, then your MINOR_NUMBER is too low). [Step 2 of the manual WSL instructions](https://docs.microsoft.com/en-us/windows/wsl/install-win10#manual-installation-steps) mention ways to update your Windows version. If you ask me, the easiest thing to do would be to get the relevant update straight from the [Microsoft Update Catalog](https://www.catalog.update.microsoft.com/Search.aspx?q=KB4566116). In any case, after updating Windows, you should be able to get WSL 2 without any trouble.
+* Getting a dialog box saying something like `Update only applies to machines with WSL`?
+  * Restart your computer.  
 * The `curl` command not working?
   * The likely cause here is that my instructions are out of date. To get Rust, do whatever it says  [here](https://www.rust-lang.org/learn/get-started). You'll still want to get separately `build-essential` though.
 
