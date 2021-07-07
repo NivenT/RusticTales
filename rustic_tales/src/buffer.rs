@@ -180,7 +180,7 @@ impl TermBuffer {
     }
     pub fn erase_chars(&mut self, count: usize) {
         let new_idx = self.curr_idx.saturating_sub(count);
-        for i in new_idx + 1..=self.curr_idx {
+        for i in new_idx..=self.curr_idx {
             self.cells[i].clear();
         }
         self.curr_idx = new_idx;
