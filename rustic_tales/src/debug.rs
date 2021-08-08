@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::{thread::sleep, time::Duration};
 
 use crate::buffer::*;
 use crate::err::Result;
@@ -148,9 +149,31 @@ fn run_buffer_tests() {
 
     buf.write_text("\n\nHow about overwriting text?");
     print_and_wait(&mut buf);
-    buf.move_cursor(0, -5);
+    buf.move_cursor(-5);
     buf.write_text("test!\n");
     print_and_wait(&mut buf);
+
+    buf.clear();
+    buf.write_text("Now let's try something more story like.");
+    print_and_wait(&mut buf);
+    buf.write_text("\n");
+    for word in &[
+        "Once",
+        "upon",
+        "a",
+        "time",
+        "something",
+        "happend.",
+        "The",
+        "end.",
+    ] {
+        buf.write_text(word);
+        buf.write_char(' ');
+        clear_screen();
+        print!("{}", buf);
+        let _ = std::io::stdout().flush();
+        sleep(Duration::from_millis(400));
+    }
 
     println!();
 }

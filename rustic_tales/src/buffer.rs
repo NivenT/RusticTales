@@ -101,6 +101,14 @@ impl Cell {
         self.c = '\0';
         self.modifiers.clear();
     }
+    pub fn area(&self) -> (usize, usize) {
+        // tabs don't exist
+        match self.c {
+            '\0' => (0, 0),
+            '\n' => (1, 0),
+            _ => (0, 1),
+        }
+    }
 }
 
 impl fmt::Display for Cell {
@@ -131,30 +139,27 @@ impl TermBuffer {
 
         self.cells.resize(self.rows * self.cols, Cell::default());
     }
-    pub fn set_cursor(&mut self, r: usize, c: usize) {
-        self.curr_idx = c + r * self.cols;
-    }
-    pub fn move_cursor(&mut self, dr: isize, dc: isize) {
-        let (r, c) = self.get_cursor();
-        let (r, c) = (r as isize, c as isize);
-        self.set_cursor((r + dr) as usize, (c + dc) as usize);
+    pub fn move_cursor(&mut self, num_cells: isize) {
+        use std::cmp::{max, min};
+        let naive_new = self.curr_idx as isize + num_cells;
+        self.curr_idx = min(max(naive_new, 0) as usize, self.rows * self.cols - 1);
     }
     // (row, column)
     pub fn get_cursor(&self) -> (usize, usize) {
-        (self.curr_idx / self.cols, self.curr_idx % self.cols)
+        let mut ret = (0, 0);
+        for cell in &self.cells {
+            let (dr, dc) = cell.area();
+            ret.0 += dr;
+            ret.1 += dc;
+        }
+        ret
     }
     pub fn write_char(&mut self, c: char) {
         self.get_curr_mut().c = c;
-        self.advance_cursor();
+        self.advance_idx();
     }
-    pub fn advance_cursor(&mut self) {
+    pub fn advance_idx(&mut self) {
         self.curr_idx += 1;
-        /*
-        if self.cursor.1 == self.cols - 1 {
-            self.cursor.0 = (self.cursor.0 + 1) % self.rows;
-        }
-        self.cursor.1 = (self.cursor.1 + 1) % self.cols;
-        */
     }
     pub fn write_text(&mut self, t: &str) {
         t.chars().for_each(|c| self.write_char(c))
@@ -199,10 +204,4 @@ impl fmt::Display for TermBuffer {
         // return things to normal
         write!(f, "\x1b[0m")
     }
-}
-
-#[allow(dead_code)]
-pub struct Buffers {
-    visible_buffer: TermBuffer,
-    staging_buffer: TermBuffer, // TODO: Come up with a better name
 }
