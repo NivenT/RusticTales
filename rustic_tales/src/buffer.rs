@@ -1,6 +1,8 @@
 use std::collections::LinkedList;
 use std::fmt;
 
+use regex::Regex;
+
 use crate::utils::*;
 
 #[derive(Clone, Copy, Debug)]
@@ -90,6 +92,33 @@ impl fmt::Display for CellModifier {
     }
 }
 
+impl CellModifier {
+    pub fn from_val(val: u8) -> Option<CellModifier> {
+        use std::mem::transmute;
+        match val {
+            // SAFETY: #[repr(u8)] + bounds
+            n @ 0..=9 => Some(CellModifier::Effect(unsafe { transmute(n) })),
+            n @ 30..=37 => Some(CellModifier::FGColor(Color(
+                unsafe { transmute(n - 30) },
+                false,
+            ))),
+            n @ 40..=47 => Some(CellModifier::BGColor(Color(
+                unsafe { transmute(n - 40) },
+                false,
+            ))),
+            n @ 90..=97 => Some(CellModifier::FGColor(Color(
+                unsafe { transmute(n - 90) },
+                true,
+            ))),
+            n @ 100..=107 => Some(CellModifier::BGColor(Color(
+                unsafe { transmute(n - 100) },
+                true,
+            ))),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Cell {
     c: char, // Tried 'character' but that's just long
@@ -162,7 +191,11 @@ impl TermBuffer {
         self.curr_idx += 1;
     }
     pub fn write_text(&mut self, t: &str) {
-        t.chars().for_each(|c| self.write_char(c))
+        if let Some(m) = self.try_parse_modifier(t) {
+            self.add_modifier(m)
+        } else {
+            t.chars().for_each(|c| self.write_char(c))
+        }
     }
     pub fn add_modifier(&mut self, m: CellModifier) {
         self.get_curr_mut().modifiers.push_front(m);
@@ -193,6 +226,19 @@ impl TermBuffer {
 
     fn get_curr_mut(&mut self) -> &mut Cell {
         &mut self.cells[self.curr_idx]
+    }
+    fn try_parse_modifier(&mut self, m: &str) -> Option<CellModifier> {
+        let re = Regex::new(r"^\u{1b}\[(\d+)m$").expect("Typo if this does not work");
+        re.captures(m).and_then(|cap| {
+            let num = cap[1].to_string().parse::<usize>();
+
+            println!("match! {:?}", num);
+            wait_for_kb();
+            match num {
+                Ok(n) if n < 256 => CellModifier::from_val(n as u8),
+                _ => None,
+            }
+        })
     }
 }
 

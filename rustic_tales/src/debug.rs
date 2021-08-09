@@ -135,9 +135,14 @@ fn run_buffer_tests() {
     buf.write_text("More text (but now inverted)\n");
     buf.undo_modifiers();
     buf.write_text("Normal text and then ");
+    /*
     buf.add_bg_color(Color::dark(BaseColor::Red));
     buf.add_text_effect(TextEffect::Blink);
     buf.add_text_effect(TextEffect::Bold);
+     */
+    buf.write_text("\x1b[41m");
+    buf.write_text("\x1b[5m");
+    buf.write_text("\x1b[1m");
     buf.write_text("blinking bold text on a red background.\n\n");
     buf.undo_modifiers();
 

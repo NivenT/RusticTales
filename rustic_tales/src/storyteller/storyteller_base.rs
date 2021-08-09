@@ -3,6 +3,7 @@ use std::fs;
 use std::path::Path;
 
 use crate::ansi::TermAction;
+use crate::buffer::*;
 use crate::err::Result;
 use crate::options::{STOptions, ScrollRate};
 use crate::utils::*;
@@ -38,10 +39,10 @@ impl SnippetInfo {
 
 #[derive(Debug, Clone)]
 pub struct StoryTeller<'a, S> {
-    // These first three members maybe should just be in their own struct
     pub(super) story: Story,
     pub(super) options: Option<&'a STOptions>,
     pub(super) env: HashMap<String, String>,
+    //pub(super) buf: TermBuffer,
     pub(super) state: S,
 }
 
