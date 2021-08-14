@@ -539,7 +539,8 @@ impl<'a> StatefulStoryTeller<'a> {
             Backspacing(st) => {
                 if st.state.num > 0 {
                     if st.state.unit.is_char() {
-                        TermAction::EraseCharsOnLine(1).execute_raw();
+                        //TermAction::EraseCharsOnLine(1).execute_raw();
+                        buf.erase_chars(1);
                         st.state.num -= 1;
                         let _ = stdout().flush();
                         sleep(st.state.pace);
