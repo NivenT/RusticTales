@@ -8,6 +8,7 @@ use std::{thread::sleep, time::Duration};
 use script::token::{tokenize, Token};
 
 use crate::ansi::TermAction;
+use crate::buffer::TermBuffer;
 use crate::commands::prompts::*;
 use crate::commands::*;
 use crate::err::{RTError, Result};
@@ -93,33 +94,41 @@ impl<'a, S> StoryTeller<'a, S> {
 }
 
 impl<'a> StoryTeller<'a, Telling> {
-    fn write(&mut self) {
+    fn write(&mut self, buf: &mut TermBuffer) {
         // self.eval_command mutably borrows self, so need to clone or something
         let unit = self.story.get_curr().clone();
         match unit {
-            Unit::Char(c) => print!("{}", c),
+            Unit::Char(c) => buf.write_char(c), // print!("{}", c),
             Unit::Word(w) => {
                 if self.opts().disp_by == DisplayUnit::Char {
+                    buf.write_char(
+                        w.chars()
+                            .nth(self.story.get_place().letter)
+                            .expect("story.place should be a valid index"),
+                    );
+                    /*
                     print!(
                         "{}",
                         w.chars()
                             .nth(self.story.get_place().letter)
                             .expect("story.place should be a valid index")
                     );
+                    */
                 } else {
-                    print!("{}", w);
+                    buf.write_text(&w);
+                    // print!("{}", w);
                 }
             }
-            Unit::WhiteSpace(w) => print!("{}", w),
+            Unit::WhiteSpace(w) => buf.write_text(&w), // print!("{}", w),
             Unit::Special(t) => {
                 debug_assert!(!t.is_text() && !t.is_page_end() && !t.is_sect_start());
                 match t {
-                    Token::Variable(s) => print!("{}", self.get_val(&s)),
-                    Token::Symbol(s) => print!("${}$", s),
+                    Token::Variable(s) => buf.write_text(&self.get_val(&s)), //print!("{}", self.get_val(&s)),
+                    Token::Symbol(s) => buf.write_text(&format!("${}$", s)), //print!("${}$", s),
                     Token::Command(func, args, _) => {
                         // Do I want this?
                         let _ = std::io::stdout().flush();
-                        if let Err(e) = self.eval_command(&func, &args) {
+                        if let Err(e) = self.eval_command(&func, &args, buf) {
                             eprintln!("\nError: {}", e)
                         }
                     }
@@ -128,19 +137,19 @@ impl<'a> StoryTeller<'a, Telling> {
             }
         }
     }
-    fn write_and_advance(&mut self, disp_by: DisplayUnit) -> Option<Span> {
-        self.write();
+    fn write_and_advance(&mut self, buf: &mut TermBuffer, disp_by: DisplayUnit) -> Option<Span> {
+        self.write(buf);
         let the_story_goes_on = !self.story.is_over();
         let ret = self.story.advance(disp_by);
         if ret == Span::Page && !self.story.is_over() {
-            self.turn_page();
+            self.turn_page(buf);
         }
         the_story_goes_on.then(|| ret)
     }
-    fn tell_millis(&mut self, num: NonZeroUsize, ms: u64) -> SnippetInfo {
+    fn tell_millis(&mut self, buf: &mut TermBuffer, num: NonZeroUsize, ms: u64) -> SnippetInfo {
         let mut info = SnippetInfo::Nothing;
         for _ in 0..num.get() {
-            let span = self.write_and_advance(self.opts().disp_by);
+            let span = self.write_and_advance(buf, self.opts().disp_by);
             if span == None {
                 info = SnippetInfo::StoryOver;
                 break;
@@ -156,11 +165,11 @@ impl<'a> StoryTeller<'a, Telling> {
         sleep(Duration::from_millis(ms));
         info
     }
-    fn tell_words(&mut self, num: NonZeroUsize) -> SnippetInfo {
+    fn tell_words(&mut self, buf: &mut TermBuffer, num: NonZeroUsize) -> SnippetInfo {
         let mut info = SnippetInfo::EndedWith(Span::Word);
         let mut num_words = 0;
         while num_words < num.get() {
-            let span = match self.write_and_advance(DisplayUnit::Word) {
+            let span = match self.write_and_advance(buf, DisplayUnit::Word) {
                 Some(span) => span,
                 None => {
                     info = SnippetInfo::StoryOver;
@@ -183,12 +192,12 @@ impl<'a> StoryTeller<'a, Telling> {
         let _ = stdout().flush();
         info
     }
-    fn tell_lines(&mut self, num: NonZeroUsize) -> SnippetInfo {
+    fn tell_lines(&mut self, buf: &mut TermBuffer, num: NonZeroUsize) -> SnippetInfo {
         let mut info = SnippetInfo::EndedWith(Span::Line);
         let mut num_lines = 0;
         while num_lines < num.get() {
             // There's gotta be a better way to write this
-            let span = match self.write_and_advance(DisplayUnit::Word) {
+            let span = match self.write_and_advance(buf, DisplayUnit::Word) {
                 Some(span) => span,
                 None => {
                     info = SnippetInfo::StoryOver;
@@ -211,9 +220,9 @@ impl<'a> StoryTeller<'a, Telling> {
         let _ = stdout().flush();
         info
     }
-    fn tell_onepage(&mut self) -> SnippetInfo {
+    fn tell_onepage(&mut self, buf: &mut TermBuffer) -> SnippetInfo {
         let mut info = SnippetInfo::EndedWith(Span::Page);
-        let mut span = match self.write_and_advance(DisplayUnit::Word) {
+        let mut span = match self.write_and_advance(buf, DisplayUnit::Word) {
             Some(span) => span,
             None => return SnippetInfo::StoryOver,
         };
@@ -225,7 +234,7 @@ impl<'a> StoryTeller<'a, Telling> {
                 info = SnippetInfo::Transitioning;
                 break;
             }
-            span = match self.write_and_advance(DisplayUnit::Word) {
+            span = match self.write_and_advance(buf, DisplayUnit::Word) {
                 Some(span) => span,
                 None => return SnippetInfo::StoryOver,
             };
@@ -234,11 +243,12 @@ impl<'a> StoryTeller<'a, Telling> {
         info
     }
 
-    fn turn_page(&self) {
+    fn turn_page(&self, buf: &mut TermBuffer) {
         wait_for_kb_with_prompt("\nNext page...");
+        // TODO: Actual page stuff
         TermAction::ClearScreen
             .then(TermAction::SetCursor(0, 0))
-            .execute();
+            .execute(buf);
     }
     fn parse_arg(&self, arg: &str) -> Result<String> {
         use Token::*;
@@ -260,7 +270,7 @@ impl<'a> StoryTeller<'a, Telling> {
             }
         }
     }
-    fn eval_command(&mut self, func: &str, args: &[String]) -> Result<()> {
+    fn eval_command(&mut self, func: &str, args: &[String], buf: &mut TermBuffer) -> Result<()> {
         match func {
             "backspace" => {
                 if args.len() < 2 {
@@ -270,7 +280,7 @@ impl<'a> StoryTeller<'a, Telling> {
                 } else if args.len() == 2 || args[2] != "one_by_one" {
                     //                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
                     // Really hope Rust does short circuiting
-                    backspace(args[0].parse()?, args[1].parse()?);
+                    backspace(args[0].parse()?, args[1].parse()?, buf);
                     Ok(())
                 } else {
                     let pace = if args.len() >= 4 {
@@ -292,9 +302,9 @@ impl<'a> StoryTeller<'a, Telling> {
                         "'display_img' takes 1 or 2 args".to_string(),
                     ))
                 } else if args.len() == 2 && args[1].eq_ignore_ascii_case("term") {
-                    img_to_term(self.get_full_path(&args[0]))
+                    img_to_term(self.get_full_path(&args[0]), buf)
                 } else {
-                    img_to_ascii(self.get_full_path(&args[0]))
+                    img_to_ascii(self.get_full_path(&args[0]), buf)
                 }
             }
             "prompt_yesno" => {
@@ -306,7 +316,7 @@ impl<'a> StoryTeller<'a, Telling> {
                     // person has the patience to write correct code?
                     self.set_val(
                         self.parse_arg(&args[0])?,
-                        prompt_yesno(args.get(1).cloned()),
+                        prompt_yesno(args.get(1).cloned(), buf),
                     );
                     Ok(())
                 }
@@ -350,7 +360,7 @@ impl<'a> StoryTeller<'a, Telling> {
                     let e = RTError::InvalidInput(msg);
                     Err(e)
                 } else {
-                    force_input(&self.parse_arg(&args[0])?)
+                    force_input(&self.parse_arg(&args[0])?, buf)
                 }
             }
             "choice_menu" => {
@@ -361,7 +371,7 @@ impl<'a> StoryTeller<'a, Telling> {
                 } else {
                     // This should probably check that args[0] is a Token::Symbol, but what kinda
                     // person has the patience to write correct code?
-                    self.set_val(self.parse_arg(&args[0])?, choice_menu(&args[1..])?);
+                    self.set_val(self.parse_arg(&args[0])?, choice_menu(&args[1..], buf)?);
                     Ok(())
                 }
             }
@@ -374,7 +384,7 @@ impl<'a> StoryTeller<'a, Telling> {
                         args.len(),
                     ))
                 } else {
-                    TermAction::MoveCursor(-args[0].parse()?, 0).execute();
+                    buf.move_cursor(-args[0].parse()?);
                     Ok(())
                 }
             }
@@ -412,7 +422,7 @@ impl<'a> StoryTeller<'a, Telling> {
             state: Paused::default(),
         }
     }
-    fn transition(self) -> StatefulStoryTeller<'a> {
+    fn transition(self, buf: &mut TermBuffer) -> StatefulStoryTeller<'a> {
         match self.state.to.clone() {
             TransitionInfo::Backspacing(bs) => {
                 StatefulStoryTeller::Backspacing(self.into_state(bs))
@@ -420,7 +430,8 @@ impl<'a> StoryTeller<'a, Telling> {
             TransitionInfo::Repeating(rp) => StatefulStoryTeller::Repeating(self.into_state(rp)),
             TransitionInfo::WaitingForKB(wfkb) => {
                 if let Some(ref c) = wfkb.0 {
-                    print!("{}", c);
+                    //print!("{}", c);
+                    buf.write_char(*c);
                     let _ = stdout().flush();
                 }
                 StatefulStoryTeller::WaitingForKB(self.into_state(wfkb))
@@ -472,9 +483,10 @@ impl<'a> StoryTeller<'a, Repeating> {
 }
 
 impl<'a> StoryTeller<'a, WaitingForKB> {
-    fn key_pressed(self) -> StoryTeller<'a, Telling> {
+    fn key_pressed(self, buf: &mut TermBuffer) -> StoryTeller<'a, Telling> {
         if self.state.0.is_some() {
-            TermAction::EraseCharsOnLine(1).execute();
+            //TermAction::EraseCharsOnLine(1).execute_raw();
+            buf.erase_chars(1);
         }
         // get_kb only gets at most one byte, but some keys (e.g. arrow keys)
         // generate multiple bytes we want to exhaust all of those so the next call actually
@@ -507,15 +519,15 @@ impl<'a> StatefulStoryTeller<'a> {
     pub fn from_telling(st: StoryTeller<'a, Telling>) -> Self {
         StatefulStoryTeller::Telling(st)
     }
-    pub fn step(&mut self) -> SnippetInfo {
+    pub fn step(&mut self, buf: &mut TermBuffer) -> SnippetInfo {
         use StatefulStoryTeller::*;
         match self {
             Telling(st) => {
                 let snippet_info = match st.opts().scroll_rate {
-                    ScrollRate::Millis { num, ms } => st.tell_millis(num, ms),
-                    ScrollRate::Words(num) => st.tell_words(num),
-                    ScrollRate::Lines(num) => st.tell_lines(num),
-                    ScrollRate::OnePage => st.tell_onepage(),
+                    ScrollRate::Millis { num, ms } => st.tell_millis(buf, num, ms),
+                    ScrollRate::Words(num) => st.tell_words(buf, num),
+                    ScrollRate::Lines(num) => st.tell_lines(buf, num),
+                    ScrollRate::OnePage => st.tell_onepage(buf),
                 };
                 if snippet_info.should_wait_for_kb(&st.opts().scroll_rate) {
                     st.wait_kb();
@@ -527,7 +539,7 @@ impl<'a> StatefulStoryTeller<'a> {
             Backspacing(st) => {
                 if st.state.num > 0 {
                     if st.state.unit.is_char() {
-                        TermAction::EraseCharsOnLine(1).execute();
+                        TermAction::EraseCharsOnLine(1).execute_raw();
                         st.state.num -= 1;
                         let _ = stdout().flush();
                         sleep(st.state.pace);
@@ -539,9 +551,10 @@ impl<'a> StatefulStoryTeller<'a> {
             }
             Repeating(st) => {
                 if st.state.num > 0 {
-                    print!("{}", st.state.text);
+                    //print!("{}", st.state.text);
+                    buf.write_text(&st.state.text);
                     st.state.num -= 1;
-                    let _ = stdout().flush();
+                    //let _ = stdout().flush();
                     if st.state.num > 0 {
                         sleep(st.state.pace);
                     }
@@ -551,7 +564,7 @@ impl<'a> StatefulStoryTeller<'a> {
             WaitingForKB(..) => SnippetInfo::Nothing,
         }
     }
-    pub fn transition(self) -> Self {
+    pub fn transition(self, buf: &mut TermBuffer) -> Self {
         use StatefulStoryTeller::*;
 
         const ESC_KEY: u8 = 27;
@@ -568,7 +581,7 @@ impl<'a> StatefulStoryTeller<'a> {
                 Paused(st) => Quit(st.quit()),
                 Backspacing(st) => Quit(st.quit()),
                 Repeating(st) => Quit(st.quit()),
-                WaitingForKB(st) => Telling(st.key_pressed()),
+                WaitingForKB(st) => Telling(st.key_pressed(buf)),
                 Quit(..) => self,
             },
             Some(ESC_KEY) => match self {
@@ -582,8 +595,8 @@ impl<'a> StatefulStoryTeller<'a> {
             k => match self {
                 Backspacing(st) if st.state.num == 0 => Telling(st.into_telling()),
                 Repeating(st) if st.state.num == 0 => Telling(st.into_telling()),
-                WaitingForKB(st) if k.is_some() => Telling(st.key_pressed()),
-                Telling(st) => st.transition(),
+                WaitingForKB(st) if k.is_some() => Telling(st.key_pressed(buf)),
+                Telling(st) => st.transition(buf),
                 _ => self,
             },
         }

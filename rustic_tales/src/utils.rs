@@ -89,7 +89,7 @@ pub fn clear_screen() {
     TermAction::ClearScreen
         .then(TermAction::SetCursor(0, 0))
         .then(TermAction::ResetColor)
-        .execute();
+        .execute_raw();
 }
 
 pub fn menu(

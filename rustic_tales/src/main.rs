@@ -18,6 +18,7 @@ mod options;
 mod storyteller;
 mod utils;
 
+use buffer::TermBuffer;
 use debug::debug_menu;
 use err::Result;
 use options::{Options, STOptions};
@@ -28,12 +29,15 @@ fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
     let orig_term_settings = no_term_echo();
 
     st.setup(opts);
+    let mut buf = TermBuffer::default();
+    buf.resize();
     let mut narrator = StatefulStoryTeller::from_telling(st);
     loop {
-        if narrator.step().story_ended() {
+        if narrator.step(&mut buf).story_ended() {
             break;
         }
-        narrator = narrator.transition();
+        buf.clear_and_dump();
+        narrator = narrator.transition(&mut buf);
     }
     narrator.cleanup();
     restore_term(orig_term_settings);

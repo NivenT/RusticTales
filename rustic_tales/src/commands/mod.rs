@@ -6,7 +6,7 @@ use image::io::Reader as ImgReader;
 
 use terminal_size::{terminal_size, Height, Width};
 
-use crate::ansi::TermAction;
+use crate::buffer::{TermBuffer, TextEffect};
 use crate::err::{RTError, Result};
 use crate::options::DisplayUnit;
 use crate::utils::wait_for_kb;
@@ -14,17 +14,15 @@ use crate::utils::wait_for_kb;
 pub mod prompts;
 
 // TODO: Implement the rest of this
-pub fn backspace(len: isize, unit: DisplayUnit) {
+pub fn backspace(count: usize, unit: DisplayUnit, buf: &mut TermBuffer) {
     if unit.is_char() {
-        TermAction::MoveCursor(-len, 0)
-            .then(TermAction::EraseLineFromCursor)
-            .execute()
+        buf.erase_chars(count);
     } else {
         unimplemented!()
     }
 }
 
-pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
+pub fn img_to_ascii(path: impl AsRef<Path>, buf: &mut TermBuffer) -> Result<()> {
     // Adapted from the short sequence here: http://paulbourke.net/dataformats/asciiart/
     const ASCII_CHARS: &[u8] = " .,:;-=+*#&%@$".as_bytes();
     const NUM_CHARS: usize = ASCII_CHARS.len();
@@ -32,13 +30,13 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
     if let Some((Width(w), Height(h))) = terminal_size() {
         let (w, h) = (w as u32, h as u32);
         let img = ImgReader::open(path)?.decode()?;
-        println!();
+        buf.write_char('\n');
         img.resize_exact(w, h, imageops::FilterType::Lanczos3)
             .grayscale()
             .to_bytes()
             .into_iter()
             .map(|b| ASCII_CHARS[NUM_CHARS * (b as usize) / 256])
-            .for_each(|c| print!("{}", c as char));
+            .for_each(|c| buf.write_char(c as char));
         let _ = stdout().flush();
         wait_for_kb();
         Ok(())
@@ -47,7 +45,7 @@ pub fn img_to_ascii<P: AsRef<Path>>(path: P) -> Result<()> {
     }
 }
 
-pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
+pub fn img_to_term(path: impl AsRef<Path>, buf: &mut TermBuffer) -> Result<()> {
     // I thought I stopped having to look at ugly type names when I decided not to use C++
     const TERM_COLORS: [(&str, [u8; 3]); 15] = [
         ("\x1b[0;40m", [0, 0, 0]),   // black
@@ -70,7 +68,7 @@ pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
         let (w, h) = (w as u32, h as u32);
         let img = ImgReader::open(path)?.decode()?;
 
-        println!();
+        buf.write_char('\n');
         // I can't tell if this is trashy or idiomatic rust
         img.resize_exact(w, h, imageops::FilterType::CatmullRom)
             .into_rgb8()
@@ -88,10 +86,13 @@ pub fn img_to_term<P: AsRef<Path>>(path: P) -> Result<()> {
                     .expect("Iterator is not empty")
                     .0
             })
-            .for_each(|c| print!("{} ", c));
+            .for_each(|c| {
+                buf.write_text(c); // Add color modifier
+                buf.write_char(' ');
+            });
         let _ = stdout().flush();
         wait_for_kb();
-        TermAction::ResetColor.execute();
+        buf.add_text_effect(TextEffect::None);
         Ok(())
     } else {
         Err(RTError::Internal("Could not get the terminal dimensions"))

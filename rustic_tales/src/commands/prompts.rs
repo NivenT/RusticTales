@@ -2,13 +2,13 @@ use std::io::{stdin, stdout, Read, Write};
 use std::os::unix::io::AsRawFd;
 use std::time::{Duration, Instant};
 
-use crate::ansi::TermAction;
+use crate::buffer::TermBuffer;
 use crate::err::{RTError, Result};
 use crate::utils::menu;
 
-pub fn prompt_yesno(def: Option<String>) -> String {
-    print!(" (y/n) ");
-    let _ = stdout().flush();
+pub fn prompt_yesno(def: Option<String>, buf: &mut TermBuffer) -> String {
+    buf.write_text(" (y/n)");
+    buf.clear_and_dump();
     let mut temp = String::new();
     let _ = stdin().read_line(&mut temp);
     match temp.trim().to_lowercase().as_ref() {
@@ -19,7 +19,7 @@ pub fn prompt_yesno(def: Option<String>) -> String {
 }
 
 // This function could probably use some comments/documentation
-pub fn force_input(input: &str) -> Result<()> {
+pub fn force_input(input: &str, buf: &mut TermBuffer) -> Result<()> {
     use termios::*;
     const SLOW_ERASE_THRESHOLD: Duration = Duration::from_millis(1000);
     const FAST_ERASE_THRESHOLD: Duration = Duration::from_millis(600);
@@ -58,7 +58,7 @@ pub fn force_input(input: &str) -> Result<()> {
             last_erase_time = now;
             erase_threshold = FAST_ERASE_THRESHOLD;
 
-            TermAction::EraseCharsOnLine(1).execute();
+            buf.erase_chars(1);
             user_str.pop();
         } else if input.starts_with(&user_str) {
             last_erase_time = now;
@@ -74,7 +74,8 @@ pub fn force_input(input: &str) -> Result<()> {
             erase_threshold = SLOW_ERASE_THRESHOLD;
 
             user_str += &new_stuff;
-            print!("{}", new_stuff);
+            //print!("{}", new_stuff);
+            buf.write_text(&new_stuff);
             let _ = stdout().flush();
         }
     }
@@ -84,13 +85,14 @@ pub fn force_input(input: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn choice_menu(choices: &[impl AsRef<str>]) -> Result<String> {
-    println!();
+pub fn choice_menu(choices: &[impl AsRef<str>], buf: &mut TermBuffer) -> Result<String> {
+    buf.write_char('\n');
     let mut choice = menu(choices, None, false);
     while choice.is_err() {
-        TermAction::EraseLines(choices.len() + 2).execute();
+        //TermAction::EraseLines(choices.len() + 2).execute();
+        buf.erase_lines(choices.len() + 2);
         choice = menu(choices, None, false);
     }
-    TermAction::EraseLines(choices.len() + 2).execute();
+    buf.erase_lines(choices.len() + 2);
     Ok(choices[choice.unwrap()].as_ref().to_owned())
 }

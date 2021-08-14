@@ -3,7 +3,6 @@ use std::fs;
 use std::path::Path;
 
 use crate::ansi::TermAction;
-use crate::buffer::*;
 use crate::err::Result;
 use crate::options::{STOptions, ScrollRate};
 use crate::utils::*;
@@ -42,7 +41,6 @@ pub struct StoryTeller<'a, S> {
     pub(super) story: Story,
     pub(super) options: Option<&'a STOptions>,
     pub(super) env: HashMap<String, String>,
-    //pub(super) buf: TermBuffer,
     pub(super) state: S,
 }
 
@@ -89,19 +87,14 @@ impl<'a, S> StoryTeller<'a, S> {
     }
     pub fn setup(&mut self, opts: &'a STOptions) {
         self.options = Some(opts);
-        TermAction::ClearScreen
-            .then(TermAction::SetCursor(0, 0))
-            .then(TermAction::ResetColor)
-            .execute();
     }
+
     pub(super) fn cleanup(&self) {
-        TermAction::ResetColor.execute();
+        TermAction::ResetColor.execute_raw();
         wait_for_kb_with_prompt("The end...");
-        TermAction::ClearScreen
-            .then(TermAction::SetCursor(0, 0))
-            .execute();
+        clear_screen();
     }
-    pub fn opts(&self) -> &STOptions {
+    pub(super) fn opts(&self) -> &STOptions {
         self.options
             .expect("opts should only be called after setup")
     }

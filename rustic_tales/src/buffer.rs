@@ -7,6 +7,7 @@ use crate::utils::*;
 
 #[derive(Clone, Copy, Debug)]
 #[repr(u8)]
+#[allow(dead_code)]
 pub enum BaseColor {
     Black,
     Red,
@@ -49,6 +50,7 @@ impl Color {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum TextEffect {
     None,
     Bold,
@@ -223,6 +225,21 @@ impl TermBuffer {
         }
         self.curr_idx = new_idx;
     }
+    // TODO: Make this not trash
+    pub fn erase_lines(&mut self, count: usize) {
+        let (orig_last_line, _) = self.get_cursor();
+        let mut last_line = orig_last_line;
+        while last_line > 0 && (orig_last_line - last_line) < count {
+            self.erase_chars(1);
+            last_line = self.get_cursor().0;
+        }
+    }
+    pub fn clear_and_dump(&self) {
+        use std::io::Write;
+        clear_screen();
+        print!("{}", self);
+        let _ = std::io::stdout().flush();
+    }
 
     fn get_curr_mut(&mut self) -> &mut Cell {
         &mut self.cells[self.curr_idx]
@@ -232,7 +249,6 @@ impl TermBuffer {
         re.captures(m).and_then(|cap| {
             let num = cap[1].to_string().parse::<usize>();
 
-            println!("match! {:?}", num);
             wait_for_kb();
             match num {
                 Ok(n) if n < 256 => CellModifier::from_val(n as u8),
