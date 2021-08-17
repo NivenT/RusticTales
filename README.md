@@ -107,4 +107,8 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [ ] Make the TODO list coherent
   - [X] Reticulate splines
   - [ ] Fix all the spelling/grammar mistakes
-- [ ] Somehow reduce the amount of logic duplication in this codebase
+- [ ] Clean up code
+  - [ ] Somehow reduce the amount of logic duplication in this codebase
+  - [ ] Remove old code that's no longer needed
+    - [ ] Get rid of ansi.rs?
+
