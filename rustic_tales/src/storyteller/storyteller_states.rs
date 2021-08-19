@@ -7,7 +7,6 @@ use std::{thread::sleep, time::Duration};
 
 use script::token::{tokenize, Token};
 
-use crate::ansi::TermAction;
 use crate::buffer::TermBuffer;
 use crate::commands::prompts::*;
 use crate::commands::*;
@@ -98,7 +97,7 @@ impl<'a> StoryTeller<'a, Telling> {
         // self.eval_command mutably borrows self, so need to clone or something
         let unit = self.story.get_curr().clone();
         match unit {
-            Unit::Char(c) => buf.write_char(c), // print!("{}", c),
+            Unit::Char(c) => buf.write_char(c),
             Unit::Word(w) => {
                 if self.opts().disp_by == DisplayUnit::Char {
                     buf.write_char(
@@ -106,28 +105,18 @@ impl<'a> StoryTeller<'a, Telling> {
                             .nth(self.story.get_place().letter)
                             .expect("story.place should be a valid index"),
                     );
-                    /*
-                    print!(
-                        "{}",
-                        w.chars()
-                            .nth(self.story.get_place().letter)
-                            .expect("story.place should be a valid index")
-                    );
-                    */
                 } else {
                     buf.write_text(&w);
-                    // print!("{}", w);
                 }
             }
-            Unit::WhiteSpace(w) => buf.write_text(&w), // print!("{}", w),
+            Unit::WhiteSpace(w) => buf.write_text(&w),
             Unit::Special(t) => {
                 debug_assert!(!t.is_text() && !t.is_page_end() && !t.is_sect_start());
                 match t {
-                    Token::Variable(s) => buf.write_text(&self.get_val(&s)), //print!("{}", self.get_val(&s)),
-                    Token::Symbol(s) => buf.write_text(&format!("${}$", s)), //print!("${}$", s),
+                    Token::Variable(s) => buf.write_text(&self.get_val(&s)),
+                    Token::Symbol(s) => buf.write_text(&format!("${}$", s)),
                     Token::Command(func, args, _) => {
                         // Do I want this?
-                        let _ = std::io::stdout().flush();
                         if let Err(e) = self.eval_command(&func, &args, buf) {
                             eprintln!("\nError: {}", e)
                         }
@@ -142,7 +131,7 @@ impl<'a> StoryTeller<'a, Telling> {
         let the_story_goes_on = !self.story.is_over();
         let ret = self.story.advance(disp_by);
         if ret == Span::Page && !self.story.is_over() {
-            self.turn_page(buf);
+            //self.turn_page(buf);
         }
         the_story_goes_on.then(|| ret)
     }
@@ -243,16 +232,9 @@ impl<'a> StoryTeller<'a, Telling> {
         info
     }
 
-    fn turn_page(&self, buf: &mut TermBuffer) {
-        wait_for_kb_with_prompt("\nNext page...");
-        // TODO: Actual page stuff
-        TermAction::ClearScreen
-            .then(TermAction::SetCursor(0, 0))
-            .execute(buf);
-    }
     fn parse_arg(&self, arg: &str) -> Result<String> {
         use Token::*;
-        let mut tkns = tokenize(&arg);
+        let mut tkns = tokenize(arg);
         if tkns.len() != 1 {
             let msg = format!("Could not parse arg '{}'", arg);
             let e = RTError::InvalidInput(msg);
@@ -302,9 +284,19 @@ impl<'a> StoryTeller<'a, Telling> {
                         "'display_img' takes 1 or 2 args".to_string(),
                     ))
                 } else if args.len() == 2 && args[1].eq_ignore_ascii_case("term") {
-                    img_to_term(self.get_full_path(&args[0]), buf)
+                    let _ = img_to_term(self.get_full_path(&args[0]), buf)?;
+                    /*
+                    self.state.to =
+                        TransitionInfo::WaitingForKB(WaitingForKB(self.opts().prompt_when_wait));
+                    */
+                    Ok(())
                 } else {
-                    img_to_ascii(self.get_full_path(&args[0]), buf)
+                    let _ = img_to_ascii(self.get_full_path(&args[0]), buf)?;
+                    /*
+                    self.state.to =
+                        TransitionInfo::WaitingForKB(WaitingForKB(self.opts().prompt_when_wait));
+                    */
+                    Ok(())
                 }
             }
             "prompt_yesno" => {
@@ -430,7 +422,6 @@ impl<'a> StoryTeller<'a, Telling> {
             TransitionInfo::Repeating(rp) => StatefulStoryTeller::Repeating(self.into_state(rp)),
             TransitionInfo::WaitingForKB(wfkb) => {
                 if let Some(ref c) = wfkb.0 {
-                    //print!("{}", c);
                     buf.write_char(*c);
                     let _ = stdout().flush();
                 }
@@ -539,7 +530,6 @@ impl<'a> StatefulStoryTeller<'a> {
             Backspacing(st) => {
                 if st.state.num > 0 {
                     if st.state.unit.is_char() {
-                        //TermAction::EraseCharsOnLine(1).execute_raw();
                         buf.erase_chars(1);
                         st.state.num -= 1;
                         let _ = stdout().flush();
@@ -552,10 +542,8 @@ impl<'a> StatefulStoryTeller<'a> {
             }
             Repeating(st) => {
                 if st.state.num > 0 {
-                    //print!("{}", st.state.text);
                     buf.write_text(&st.state.text);
                     st.state.num -= 1;
-                    //let _ = stdout().flush();
                     if st.state.num > 0 {
                         sleep(st.state.pace);
                     }
@@ -600,17 +588,6 @@ impl<'a> StatefulStoryTeller<'a> {
                 Telling(st) => st.transition(buf),
                 _ => self,
             },
-        }
-    }
-    pub fn cleanup(&self) {
-        use StatefulStoryTeller::*;
-        match self {
-            Telling(st) => st.cleanup(),
-            Paused(st) => st.cleanup(),
-            Backspacing(st) => st.cleanup(),
-            Repeating(st) => st.cleanup(),
-            WaitingForKB(st) => st.cleanup(),
-            Quit(st) => st.cleanup(),
         }
     }
 }

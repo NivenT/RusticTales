@@ -18,28 +18,39 @@ mod options;
 mod storyteller;
 mod utils;
 
+use ansi::TermAction;
 use buffer::TermBuffer;
 use debug::debug_menu;
 use err::Result;
 use options::{Options, STOptions};
 use storyteller::{StatefulStoryTeller, StoryTeller, Telling};
-use utils::{choose_story, clear_screen, menu, no_term_echo, restore_term, wait_for_enter};
+use utils::*;
 
 fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
     let orig_term_settings = no_term_echo();
 
     st.setup(opts);
-    let mut buf = TermBuffer::default();
-    buf.resize();
+    let mut buf = TermBuffer::new();
     let mut narrator = StatefulStoryTeller::from_telling(st);
     loop {
-        if narrator.step(&mut buf).story_ended() {
-            break;
+        let story_over = narrator.step(&mut buf).story_ended();
+
+        if buf.just_turned_page() {
+            buf.clear_and_dump_prev_page();
+            wait_for_kb_with_prompt("\nNext page...");
+        } else if buf.just_modified() {
+            buf.clear_and_dump();
         }
-        buf.clear_and_dump();
-        narrator = narrator.transition(&mut buf);
+
+        if story_over {
+            break;
+        } else {
+            narrator = narrator.transition(&mut buf);
+        }
     }
-    narrator.cleanup();
+
+    TermAction::ResetColor.execute_raw();
+    wait_for_kb_with_prompt("\nThe end...");
     restore_term(orig_term_settings);
 }
 

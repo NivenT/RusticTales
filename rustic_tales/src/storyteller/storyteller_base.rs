@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use crate::ansi::TermAction;
 use crate::err::Result;
 use crate::options::{STOptions, ScrollRate};
 use crate::utils::*;
@@ -89,11 +88,6 @@ impl<'a, S> StoryTeller<'a, S> {
         self.options = Some(opts);
     }
 
-    pub(super) fn cleanup(&self) {
-        TermAction::ResetColor.execute_raw();
-        wait_for_kb_with_prompt("The end...");
-        clear_screen();
-    }
     pub(super) fn opts(&self) -> &STOptions {
         self.options
             .expect("opts should only be called after setup")

@@ -1,7 +1,5 @@
 use std::fmt;
 
-use crate::buffer::TermBuffer;
-
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TermAction {
@@ -61,9 +59,6 @@ impl TermAction {
     pub fn execute_raw(&self) {
         print!("{}", self)
     }
-    pub fn execute(&self, buf: &mut TermBuffer) {
-        buf.write_text(&format!("{}", self))
-    }
     pub fn then(&self, next: TermAction) -> TermActions {
         TermActions::Nil.then(*self).then(next)
     }
@@ -80,12 +75,6 @@ impl TermActions {
         if let TermActions::Cons(pre, last) = self {
             pre.execute_raw();
             last.execute_raw();
-        }
-    }
-    pub fn execute(&self, buf: &mut TermBuffer) {
-        if let TermActions::Cons(pre, last) = self {
-            pre.execute(buf);
-            last.execute(buf);
         }
     }
     pub fn then(self, next: TermAction) -> Self {

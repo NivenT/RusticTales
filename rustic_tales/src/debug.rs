@@ -125,7 +125,7 @@ fn run_buffer_tests() {
         wait_for_kb_with_prompt(">");
     }
 
-    let mut buf = TermBuffer::default();
+    let mut buf = TermBuffer::new();
     buf.resize();
 
     buf.write_text("Test text. Just making sure the basics work...\n");
@@ -135,19 +135,15 @@ fn run_buffer_tests() {
     buf.write_text("More text (but now inverted)\n");
     buf.undo_modifiers();
     buf.write_text("Normal text and then ");
-    /*
-    buf.add_bg_color(Color::dark(BaseColor::Red));
-    buf.add_text_effect(TextEffect::Blink);
-    buf.add_text_effect(TextEffect::Bold);
-     */
-    buf.write_text("\x1b[41m");
-    buf.write_text("\x1b[5m");
-    buf.write_text("\x1b[1m");
+    buf.write_text("\x1b[1;5;41m");
     buf.write_text("blinking bold text on a red background.\n\n");
     buf.undo_modifiers();
 
-    buf.write_text("Let's now test some other stuff\n");
-    buf.write_text("For example, we can delete a ton of text");
+    buf.write_text("Let's now test some other stuff ");
+    buf.write_text("\x1b[0;105m");
+    buf.write_char(' ');
+    buf.undo_modifiers();
+    buf.write_text("\nWe can delete a ton of text");
     print_and_wait(&mut buf);
     buf.erase_chars(50);
     print_and_wait(&mut buf);
