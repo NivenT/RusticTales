@@ -10,6 +10,8 @@ pub enum RTError {
     RonError(ron::Error),
     GlobError(globset::Error),
     DurError(humantime::DurationError),
+    ReqwestError(reqwest::Error),
+    JsonError(serde_json::Error),
 
     InvalidInput(String),
     UnrecognizedCommand(String),
@@ -29,6 +31,8 @@ impl fmt::Display for RTError {
             RonError(e) => write!(f, "RON error: {}", e),
             GlobError(e) => write!(f, "Glob error: {}", e),
             DurError(e) => write!(f, "Parse duration error: {}", e),
+            ReqwestError(e) => write!(f, "Reqwest error: {}", e),
+            JsonError(e) => write!(f, "Json error: {}", e),
             InvalidInput(r) => write!(f, "Invalid input: {}", r),
             UnrecognizedCommand(c) => write!(f, "Unrecognized command: {}", c),
             WrongNumArguments(name, exp, got) => {
@@ -74,5 +78,17 @@ impl From<globset::Error> for RTError {
 impl From<humantime::DurationError> for RTError {
     fn from(e: humantime::DurationError) -> Self {
         RTError::DurError(e)
+    }
+}
+
+impl From<reqwest::Error> for RTError {
+    fn from(e: reqwest::Error) -> Self {
+        RTError::ReqwestError(e)
+    }
+}
+
+impl From<serde_json::Error> for RTError {
+    fn from(e: serde_json::Error) -> Self {
+        RTError::JsonError(e)
     }
 }

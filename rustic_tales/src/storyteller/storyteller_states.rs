@@ -285,17 +285,9 @@ impl<'a> StoryTeller<'a, Telling> {
                     ))
                 } else if args.len() == 2 && args[1].eq_ignore_ascii_case("term") {
                     let _ = img_to_term(self.get_full_path(&args[0]), buf)?;
-                    /*
-                    self.state.to =
-                        TransitionInfo::WaitingForKB(WaitingForKB(self.opts().prompt_when_wait));
-                    */
                     Ok(())
                 } else {
                     let _ = img_to_ascii(self.get_full_path(&args[0]), buf)?;
-                    /*
-                    self.state.to =
-                        TransitionInfo::WaitingForKB(WaitingForKB(self.opts().prompt_when_wait));
-                    */
                     Ok(())
                 }
             }
@@ -396,6 +388,21 @@ impl<'a> StoryTeller<'a, Telling> {
                     Ok(())
                 }
             }
+            "random_word_generator" => {
+                if args.len() != 1 {
+                    Err(RTError::WrongNumArguments(
+                        "random_word_generator",
+                        "1",
+                        args.len(),
+                    ))
+                } else {
+                    let res =
+                        get_random_phrase(&self.parse_arg(&args[0])?.to_ascii_lowercase(), buf);
+                    sleep(Duration::from_millis(1000));
+                    res
+                }
+            }
+
             _ => Err(RTError::UnrecognizedCommand(func.to_string())),
         }
     }

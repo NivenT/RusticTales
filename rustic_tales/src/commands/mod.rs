@@ -94,3 +94,24 @@ pub fn img_to_term(path: impl AsRef<Path>, buf: &mut TermBuffer) -> Result<()> {
         Err(RTError::Internal("Could not get the terminal dimensions"))
     }
 }
+
+// I should probably be caching these big json lists I'm getting with every call
+pub fn get_random_phrase(kind: &str, buf: &mut TermBuffer) -> Result<()> {
+    let url = format!("https://randomwordgenerator.com/json/{}s.json", kind);
+    let list: serde_json::Value = serde_json::from_str(&reqwest::blocking::get(&url)?.text()?)?;
+    let list = &list["data"];
+
+    if !list.is_array() {
+        return Ok(());
+    }
+    let list = list.as_array().unwrap();
+
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    let idx = rng.gen::<usize>() % list.len();
+
+    if let Some(t) = list[idx][kind].as_str() {
+        buf.write_text(t)
+    }
+    Ok(())
+}

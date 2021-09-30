@@ -11,9 +11,12 @@ script = { path = "../script" }
 regex = "1"
 image = "0.23.12"
 terminal_size = "0.1.15"
-ron = "0.6.4"
+ron = "0.6.4" # TODO: Remove depency and store options using json instead?
 serde = "1.0.117"
+serde_json = "1.0"
 globset = "0.4.6"
 termios = "0.3.3"
 humantime = "2.1.0"
-either = "1.6.1" 
+either = "1.6.1"
+reqwest = { version = "0.10.10", features = ["blocking"]}
+rand = "0.8.4"
