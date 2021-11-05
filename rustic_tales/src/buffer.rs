@@ -314,6 +314,13 @@ impl TermBuffer {
 
 impl fmt::Display for TermBuffer {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}Page {}\n{}",
+            CellModifier::FGColor(Color::light(BaseColor::Red)),
+            self.curr_page(),
+            TextEffect::None
+        )?;
         for cell in self.curr_content() {
             write!(f, "{}", cell)?
         }
