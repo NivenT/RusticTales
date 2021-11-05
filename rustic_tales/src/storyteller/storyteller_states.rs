@@ -3,7 +3,8 @@ use humantime::parse_duration;
 use std::fs;
 use std::io::{stdout, Write};
 use std::num::NonZeroUsize;
-use std::{thread::sleep, time::Duration};
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 
 use script::token::{tokenize, Token};
 
@@ -45,12 +46,18 @@ pub struct Repeating {
 }
 #[derive(Debug, Clone, Copy)]
 pub struct WaitingForKB(Option<char>);
+#[derive(Debug, Clone)]
+pub struct Sleeping {
+    start: Instant,
+    dur: Duration,
+}
 
 #[derive(Debug, Clone)]
 enum TransitionInfo {
     Backspacing(Backspacing),
     Repeating(Repeating),
     WaitingForKB(WaitingForKB),
+    Sleeping(Sleeping),
     Nothing,
 }
 
@@ -329,12 +336,18 @@ impl<'a> StoryTeller<'a, Telling> {
                     Err(e)
                 } else {
                     let dur = parse_duration(&args[0])?;
+                    self.state.to = TransitionInfo::Sleeping(Sleeping {
+                        dur,
+                        start: Instant::now(),
+                    });
+                    /*
                     let _ = std::io::stdout().flush();
                     let orig = no_term_echo();
                     sleep(dur);
                     restore_term(orig);
                     // Ignore all keys user pressed while paused
                     exhaust_kb();
+                    */
                     Ok(())
                 }
             }
@@ -434,6 +447,9 @@ impl<'a> StoryTeller<'a, Telling> {
                 }
                 StatefulStoryTeller::WaitingForKB(self.into_state(wfkb))
             }
+            TransitionInfo::Sleeping(sleep) => {
+                StatefulStoryTeller::Sleeping(self.into_state(sleep))
+            }
             TransitionInfo::Nothing => StatefulStoryTeller::Telling(self),
         }
     }
@@ -448,6 +464,9 @@ impl<'a> StoryTeller<'a, Paused> {
             TransitionInfo::Repeating(rp) => StatefulStoryTeller::Repeating(self.into_state(rp)),
             TransitionInfo::WaitingForKB(wfkb) => {
                 StatefulStoryTeller::WaitingForKB(self.into_state(wfkb))
+            }
+            TransitionInfo::Sleeping(sleep) => {
+                StatefulStoryTeller::Sleeping(self.into_state(sleep))
             }
             TransitionInfo::Nothing => StatefulStoryTeller::Telling(self.into_telling()),
         }
@@ -503,6 +522,19 @@ impl<'a> StoryTeller<'a, Debug> {
     }
 }
 
+impl<'a> StoryTeller<'a, Sleeping> {
+    fn pause(self) -> StoryTeller<'a, Paused> {
+        StoryTeller {
+            story: self.story,
+            options: self.options,
+            env: self.env,
+            state: Paused {
+                from: TransitionInfo::Sleeping(self.state),
+            },
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum StatefulStoryTeller<'a> {
     Telling(StoryTeller<'a, Telling>),
@@ -511,6 +543,7 @@ pub enum StatefulStoryTeller<'a> {
     Backspacing(StoryTeller<'a, Backspacing>),
     Repeating(StoryTeller<'a, Repeating>),
     WaitingForKB(StoryTeller<'a, WaitingForKB>),
+    Sleeping(StoryTeller<'a, Sleeping>),
 }
 
 impl<'a> StatefulStoryTeller<'a> {
@@ -558,6 +591,7 @@ impl<'a> StatefulStoryTeller<'a> {
                 SnippetInfo::Nothing
             }
             WaitingForKB(..) => SnippetInfo::Nothing,
+            Sleeping(..) => SnippetInfo::Nothing,
         }
     }
     pub fn transition(self, buf: &mut TermBuffer) -> Self {
@@ -571,6 +605,7 @@ impl<'a> StatefulStoryTeller<'a> {
                 Backspacing(st) => Paused(st.pause()),
                 Repeating(st) => Paused(st.pause()),
                 Quit(..) | WaitingForKB(..) => self,
+                Sleeping(st) => Paused(st.pause()),
             },
             Some(b'q') => match self {
                 Telling(st) => Quit(st.quit()),
@@ -578,6 +613,7 @@ impl<'a> StatefulStoryTeller<'a> {
                 Backspacing(st) => Quit(st.quit()),
                 Repeating(st) => Quit(st.quit()),
                 WaitingForKB(st) => Telling(st.key_pressed(buf)),
+                Sleeping(st) => Quit(st.quit()),
                 Quit(..) => self,
             },
             Some(ESC_KEY) => match self {
@@ -586,12 +622,16 @@ impl<'a> StatefulStoryTeller<'a> {
                 Backspacing(st) => Quit(st.quit()),
                 Repeating(st) => Quit(st.quit()),
                 WaitingForKB(st) => Quit(st.quit()),
+                Sleeping(st) => Quit(st.quit()),
                 Quit(..) => self,
             },
             k => match self {
                 Backspacing(st) if st.state.num == 0 => Telling(st.into_telling()),
                 Repeating(st) if st.state.num == 0 => Telling(st.into_telling()),
                 WaitingForKB(st) if k.is_some() => Telling(st.key_pressed(buf)),
+                Sleeping(st) if Instant::now().duration_since(st.state.start) >= st.state.dur => {
+                    Telling(st.into_telling())
+                }
                 Telling(st) => st.transition(buf),
                 _ => self,
             },
