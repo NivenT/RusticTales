@@ -43,6 +43,7 @@ impl SnippetInfo {
 pub struct StoryTeller<'a, S> {
     pub(super) story: Story,
     pub(super) options: Option<&'a STOptions>,
+    pub(super) term_settings: Option<termios::Termios>,
     pub(super) env: HashMap<String, String>,
     pub(super) state: S,
 }
@@ -88,8 +89,9 @@ impl<'a, S> StoryTeller<'a, S> {
 
         env
     }
-    pub fn setup(&mut self, opts: &'a STOptions) {
+    pub fn setup(&mut self, opts: &'a STOptions, term_settings: Option<termios::Termios>) {
         self.options = Some(opts);
+        self.term_settings = term_settings;
     }
 
     pub(super) fn opts(&self) -> &STOptions {
@@ -114,6 +116,7 @@ impl<'a, S: Default> StoryTeller<'a, S> {
         Ok(StoryTeller {
             story,
             options: None,
+            term_settings: None,
             env: StoryTeller::<S>::prepare_builtins(),
             state: Default::default(),
         })

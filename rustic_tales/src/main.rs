@@ -29,7 +29,7 @@ use utils::*;
 fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
     let orig_term_settings = no_term_echo();
 
-    st.setup(opts);
+    st.setup(opts, orig_term_settings);
     let mut buf = TermBuffer::new();
     let mut narrator = StatefulStoryTeller::from_telling(st);
     loop {
@@ -54,7 +54,7 @@ fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
 
     TermAction::ResetColor.execute_raw();
     wait_for_kb_with_prompt("\nThe end...");
-    restore_term(orig_term_settings);
+    change_term(orig_term_settings);
 }
 
 fn main() -> Result<()> {

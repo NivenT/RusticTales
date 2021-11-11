@@ -4,13 +4,20 @@ use std::time::{Duration, Instant};
 
 use crate::buffer::TermBuffer;
 use crate::err::{RTError, Result};
-use crate::utils::menu;
+use crate::utils::*;
 
-pub fn prompt_yesno(def: Option<String>, buf: &mut TermBuffer) -> String {
+pub fn prompt_yesno(
+    def: Option<String>,
+    term_settings: Option<termios::Termios>,
+    buf: &mut TermBuffer,
+) -> String {
+    let orig_term_settings = change_term(term_settings);
     buf.write_text(" (y/n) ");
     buf.clear_and_dump();
     let mut temp = String::new();
     let _ = stdin().read_line(&mut temp);
+    change_term(orig_term_settings);
+
     match temp.trim().to_lowercase().as_ref() {
         "yes" | "y" | "sure" | "yeah" | "ok" | "k" | "yup" | "yy" => "y".to_owned(),
         "no" | "n" | "nah" | "no thanks" | "nope" | "nn" => "n".to_owned(),
@@ -19,8 +26,15 @@ pub fn prompt_yesno(def: Option<String>, buf: &mut TermBuffer) -> String {
 }
 
 // This function could probably use some comments/documentation
-pub fn force_input(input: &str, buf: &mut TermBuffer) -> Result<()> {
+// TODO: Make the terminal setting stuff here less confusing
+pub fn force_input(
+    input: &str,
+    settings: Option<termios::Termios>,
+    buf: &mut TermBuffer,
+) -> Result<()> {
     use termios::*;
+    let orig_term_settings = change_term(settings);
+
     const SLOW_ERASE_THRESHOLD: Duration = Duration::from_millis(1000);
     const FAST_ERASE_THRESHOLD: Duration = Duration::from_millis(600);
 
@@ -82,6 +96,7 @@ pub fn force_input(input: &str, buf: &mut TermBuffer) -> Result<()> {
     std::thread::sleep(Duration::from_millis(350));
     tcsetattr(stdin_fd, TCSANOW, &orig_termios)?;
 
+    change_term(orig_term_settings);
     Ok(())
 }
 

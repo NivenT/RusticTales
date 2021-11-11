@@ -36,12 +36,15 @@ pub fn no_term_echo() -> Option<termios::Termios> {
     Some(orig_termios)
 }
 
-pub fn restore_term(settings: Option<termios::Termios>) {
+pub fn change_term(settings: Option<termios::Termios>) -> Option<termios::Termios> {
     use termios::*;
+
+    let orig_termios = Termios::from_fd(stdin().as_raw_fd()).ok()?;
     if let Some(termios) = settings {
         let stdin_fd = stdin().as_raw_fd();
         let _ = tcsetattr(stdin_fd, TCSANOW, &termios);
     }
+    Some(orig_termios)
 }
 
 // This works on unix-like systems only

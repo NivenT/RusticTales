@@ -85,6 +85,7 @@ impl<'a, S> StoryTeller<'a, S> {
         StoryTeller {
             story: self.story,
             options: self.options,
+            term_settings: self.term_settings,
             env: self.env,
             state: SS::default(),
         }
@@ -93,6 +94,7 @@ impl<'a, S> StoryTeller<'a, S> {
         StoryTeller {
             story: self.story,
             options: self.options,
+            term_settings: self.term_settings,
             env: self.env,
             state,
         }
@@ -307,7 +309,7 @@ impl<'a> StoryTeller<'a, Telling> {
                     // person has the patience to write correct code?
                     self.set_val(
                         self.parse_arg(&args[0])?,
-                        prompt_yesno(args.get(1).cloned(), buf),
+                        prompt_yesno(args.get(1).cloned(), self.term_settings, buf),
                     );
                     Ok(())
                 }
@@ -357,7 +359,7 @@ impl<'a> StoryTeller<'a, Telling> {
                     let e = RTError::InvalidInput(msg);
                     Err(e)
                 } else {
-                    force_input(&self.parse_arg(&args[0])?, buf)
+                    force_input(&self.parse_arg(&args[0])?, self.term_settings, buf)
                 }
             }
             "choice_menu" => {
@@ -430,6 +432,7 @@ impl<'a> StoryTeller<'a, Telling> {
         StoryTeller {
             story: self.story,
             options: self.options,
+            term_settings: self.term_settings,
             env: self.env,
             state: Paused::default(),
         }
@@ -478,6 +481,7 @@ impl<'a> StoryTeller<'a, Backspacing> {
         StoryTeller {
             story: self.story,
             options: self.options,
+            term_settings: self.term_settings,
             env: self.env,
             state: Paused {
                 from: TransitionInfo::Backspacing(self.state),
@@ -491,6 +495,7 @@ impl<'a> StoryTeller<'a, Repeating> {
         StoryTeller {
             story: self.story,
             options: self.options,
+            term_settings: self.term_settings,
             env: self.env,
             state: Paused {
                 from: TransitionInfo::Repeating(self.state),
@@ -527,6 +532,7 @@ impl<'a> StoryTeller<'a, Sleeping> {
         StoryTeller {
             story: self.story,
             options: self.options,
+            term_settings: self.term_settings,
             env: self.env,
             state: Paused {
                 from: TransitionInfo::Sleeping(self.state),
