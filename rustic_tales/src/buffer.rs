@@ -332,7 +332,7 @@ impl<'a> TermBuffer<'a> {
     }
     fn advance_idx(&mut self) {
         self.curr_idx += 1;
-        while self.curr_idx >= self.cells.len() || self.get_cursor().0 >= self.rows {
+        if self.curr_idx >= self.cells.len() || self.get_cursor().0 >= self.rows {
             self.dirty.page_turned = true;
             self.cells
                 .resize_with(self.cells.len() + self.page_size(), Default::default);
