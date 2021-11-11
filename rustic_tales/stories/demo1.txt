@@ -110,10 +110,10 @@ ${{NORMAL}}.
 .
 {{ pause : 500ms }}
 {{ backspace : 3 |,| chars }}
-"${{BLINK}}Ha ha ha!
+${{NORMAL}}"${{BLINK}}Ha ha ha!
 {{ pause : 4200ms }}
 {{ backspace : 9 |,| chars }}
-${{NORMAL}}Ha ha ha! Surely you must be joking, Creature. You would revive my brother, and kill the villagers who have tormented me so? This is no price, but a two-fold gift. While you're at it, why not get rid of pesky monsters too? Of course, I accept!"
+Ha ha ha! Surely you must be joking, Creature. You would revive my brother, and kill the villagers who have tormented me so? This is no price, but a two-fold gift. While you're at it, why not get rid of pesky monsters too? Of course, I accept!"
 
 
 ${{BOLD}}Tormented you, huh? I suppose you believe this to be true, but let me warn you. Do not mistake the nature of my offer, Ukuth. Tempting as it may sound, I call it a 'price' for a reason. And if you truly want to be rid of those "pesky monsters," why not leave this place and return to your village? It was only there that you ever avoided them, no?
@@ -140,13 +140,14 @@ ${{NORMAL}}"I see no one else here, but if you are out there, take his offer. If
 [Type "save the villagers" or "save Iskhith"]{ }
 {{ force_input : save Iskhith }}
 {{ backspace : 59 |,| chars }}
+
 ${{YELLOW_FG}}${{DIM}}save Iskhith
 
 
 ${{NORMAL}}${{BOLD}}So be it.
 
 
-${{NORMAL}}Upon the utterance of those words, Ukuth say the Creature don a distrubing smile, heard a distance chiseling sound, and then before he could say anything else, everything went black.
+${{NORMAL}}Upon the utterance of those words, Ukuth saw the Creature don a distrubing smile, heard a distance chiseling sound, and then before he could say anything else, everything went black.
 /PAGE/
 {{ pause : 1300ms}}
 The next morning, Iskhith awoke in his modest shelter tucked away in the wilds. He barely had time to sort out his memories of how he got there before he was greeted with a familiar face.

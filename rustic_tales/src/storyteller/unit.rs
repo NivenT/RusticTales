@@ -54,6 +54,7 @@ impl Unit {
     // basically len but keeps track of vertical spacing as well
     pub fn area(&self) -> (usize, usize) {
         match self {
+            Unit::Char('\0') => (0, 0),
             Unit::Char('\n') => (0, 1),
             Unit::Char(_) => (1, 0),
             // words aren't allowed to have newline/space type characters in them

@@ -10,6 +10,7 @@ extern crate terminal_size;
 extern crate termios;
 
 mod ansi;
+mod buffer;
 mod commands;
 mod debug;
 mod err;
@@ -17,25 +18,45 @@ mod options;
 mod storyteller;
 mod utils;
 
+use ansi::TermAction;
+use buffer::TermBuffer;
 use debug::debug_menu;
 use err::Result;
-use options::{Options, STOptions};
+use options::Options;
 use storyteller::{StatefulStoryTeller, StoryTeller, Telling};
-use utils::{choose_story, clear_screen, menu, no_term_echo, restore_term, wait_for_enter};
+use utils::*;
 
-fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
+fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a Options) {
     let orig_term_settings = no_term_echo();
 
-    st.setup(opts);
+    st.setup(opts.get_story_opts(), orig_term_settings);
+    let mut buf = TermBuffer::new(opts.get_buf_opts());
     let mut narrator = StatefulStoryTeller::from_telling(st);
     loop {
-        if narrator.step().story_ended() {
-            break;
+        let info = narrator.step(&mut buf);
+        if info.page_over() {
+            buf.turn_page();
         }
-        narrator = narrator.transition();
+        buf.set_info(narrator.state_str(), narrator.info_str());
+
+        if buf.just_turned_page() {
+            buf.clear_and_dump_prev_page();
+            exhaust_kb();
+            wait_for_kb_with_prompt("\nNext page...");
+        } else if buf.just_modified() {
+            buf.clear_and_dump();
+        }
+
+        if info.story_ended() {
+            break;
+        } else {
+            narrator = narrator.transition(&mut buf);
+        }
     }
-    narrator.cleanup();
-    restore_term(orig_term_settings);
+
+    TermAction::ResetColor.execute_raw();
+    wait_for_kb_with_prompt("\nThe end...");
+    change_term(orig_term_settings);
 }
 
 fn main() -> Result<()> {
@@ -63,7 +84,7 @@ fn main() -> Result<()> {
                 Ok(story) => match StoryTeller::<Telling>::new(&story) {
                     Ok(st) => {
                         skip_enter = true;
-                        tell_story(st, options.get_story_opts());
+                        tell_story(st, &options);
                     }
                     Err(e) => println!("Could not parse story because '{}'", e),
                 },

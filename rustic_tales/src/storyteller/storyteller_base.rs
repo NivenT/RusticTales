@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use crate::ansi::TermAction;
 use crate::err::Result;
 use crate::options::{STOptions, ScrollRate};
 use crate::utils::*;
@@ -34,13 +33,17 @@ impl SnippetInfo {
         use SnippetInfo::*;
         matches!(self, StoryOver)
     }
+    pub fn page_over(&self) -> bool {
+        use SnippetInfo::*;
+        matches!(self, EndedWith(Span::Page))
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct StoryTeller<'a, S> {
-    // These first three members maybe should just be in their own struct
     pub(super) story: Story,
     pub(super) options: Option<&'a STOptions>,
+    pub(super) term_settings: Option<termios::Termios>,
     pub(super) env: HashMap<String, String>,
     pub(super) state: S,
 }
@@ -86,21 +89,12 @@ impl<'a, S> StoryTeller<'a, S> {
 
         env
     }
-    pub fn setup(&mut self, opts: &'a STOptions) {
+    pub fn setup(&mut self, opts: &'a STOptions, term_settings: Option<termios::Termios>) {
         self.options = Some(opts);
-        TermAction::ClearScreen
-            .then(TermAction::SetCursor(0, 0))
-            .then(TermAction::ResetColor)
-            .execute();
+        self.term_settings = term_settings;
     }
-    pub(super) fn cleanup(&self) {
-        TermAction::ResetColor.execute();
-        wait_for_kb_with_prompt("The end...");
-        TermAction::ClearScreen
-            .then(TermAction::SetCursor(0, 0))
-            .execute();
-    }
-    pub fn opts(&self) -> &STOptions {
+
+    pub(super) fn opts(&self) -> &STOptions {
         self.options
             .expect("opts should only be called after setup")
     }
@@ -122,6 +116,7 @@ impl<'a, S: Default> StoryTeller<'a, S> {
         Ok(StoryTeller {
             story,
             options: None,
+            term_settings: None,
             env: StoryTeller::<S>::prepare_builtins(),
             state: Default::default(),
         })

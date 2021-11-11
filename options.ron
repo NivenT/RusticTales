@@ -5,6 +5,12 @@
         stories_directory: "rustic_tales/stories",
         prompt_when_wait: Some('>'),
     ),
+    buf_opts: (
+        display_page_number: false,
+        max_num_rows: Some(40),
+        max_num_cols: Some(100),
+        display_storyteller_state: false,
+    ),
     file_ignore_patterns: [
         "*~",
         "#*#",

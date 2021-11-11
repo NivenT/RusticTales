@@ -5,4 +5,5 @@ That's what I thought you'd say.
 
 Do you believe me?
 {{ choice_menu : $ANSWER$ |,| yes |,| no |,| maybe }}
+
 You answered '${{ANSWER}}'.

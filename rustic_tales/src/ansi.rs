@@ -56,7 +56,7 @@ impl fmt::Display for TermAction {
 }
 
 impl TermAction {
-    pub fn execute(&self) {
+    pub fn execute_raw(&self) {
         print!("{}", self)
     }
     pub fn then(&self, next: TermAction) -> TermActions {
@@ -71,10 +71,10 @@ pub enum TermActions {
 }
 
 impl TermActions {
-    pub fn execute(&self) {
+    pub fn execute_raw(&self) {
         if let TermActions::Cons(pre, last) = self {
-            pre.execute();
-            last.execute();
+            pre.execute_raw();
+            last.execute_raw();
         }
     }
     pub fn then(self, next: TermAction) -> Self {

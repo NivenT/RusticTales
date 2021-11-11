@@ -46,7 +46,7 @@ fn parse_symbol(stream: &str) -> Option<(Token, usize)> {
 fn parse_command(stream: &str) -> Option<(Token, usize)> {
     // regex are completely incomprehensible (it doesn't help that I suck at writing them)
     let re =
-        Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:([^:\}]*)(: wait_for_kb )?\}\}(\n|$)")
+        Regex::new(r"^\{\{[[:space:]]*(\b\w+\b)[[:space:]]*:([^:]*)(: wait_for_kb )?\}\}(\n|$)")
             .expect("If this is invalid, there is a bug");
     re.captures(stream).map(|cap| {
         let name = cap[1].to_string();
@@ -276,6 +276,22 @@ mod tests {
                     true
                 ),
                 46
+            ))
+        );
+        assert_eq!(
+            parse_command("{{ jump_if_eq : ${{ANSWER}} |,| y |,| yes section |,| no section }}"),
+            Some((
+                Token::Command(
+                    "jump_if_eq".to_owned(),
+                    vec![
+                        "${{ANSWER}}".to_owned(),
+                        "y".to_owned(),
+                        "yes section".to_owned(),
+                        "no section".to_owned()
+                    ],
+                    false
+                ),
+                67
             ))
         );
     }

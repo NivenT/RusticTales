@@ -2,15 +2,22 @@ use std::io::{stdin, stdout, Read, Write};
 use std::os::unix::io::AsRawFd;
 use std::time::{Duration, Instant};
 
-use crate::ansi::TermAction;
+use crate::buffer::TermBuffer;
 use crate::err::{RTError, Result};
-use crate::utils::menu;
+use crate::utils::*;
 
-pub fn prompt_yesno(def: Option<String>) -> String {
-    print!(" (y/n) ");
-    let _ = stdout().flush();
+pub fn prompt_yesno(
+    def: Option<String>,
+    term_settings: Option<termios::Termios>,
+    buf: &mut TermBuffer,
+) -> String {
+    let orig_term_settings = change_term(term_settings);
+    buf.write_text(" (y/n) ");
+    buf.clear_and_dump();
     let mut temp = String::new();
     let _ = stdin().read_line(&mut temp);
+    change_term(orig_term_settings);
+
     match temp.trim().to_lowercase().as_ref() {
         "yes" | "y" | "sure" | "yeah" | "ok" | "k" | "yup" | "yy" => "y".to_owned(),
         "no" | "n" | "nah" | "no thanks" | "nope" | "nn" => "n".to_owned(),
@@ -19,8 +26,15 @@ pub fn prompt_yesno(def: Option<String>) -> String {
 }
 
 // This function could probably use some comments/documentation
-pub fn force_input(input: &str) -> Result<()> {
+// TODO: Make the terminal setting stuff here less confusing
+pub fn force_input(
+    input: &str,
+    settings: Option<termios::Termios>,
+    buf: &mut TermBuffer,
+) -> Result<()> {
     use termios::*;
+    let orig_term_settings = change_term(settings);
+
     const SLOW_ERASE_THRESHOLD: Duration = Duration::from_millis(1000);
     const FAST_ERASE_THRESHOLD: Duration = Duration::from_millis(600);
 
@@ -49,6 +63,8 @@ pub fn force_input(input: &str) -> Result<()> {
     let mut user_str = String::new();
     let mut last_erase_time = Instant::now();
     let mut erase_threshold = SLOW_ERASE_THRESHOLD;
+
+    buf.clear_and_dump();
     while user_str != input {
         let now = Instant::now();
         if now.duration_since(last_erase_time) > erase_threshold
@@ -58,7 +74,7 @@ pub fn force_input(input: &str) -> Result<()> {
             last_erase_time = now;
             erase_threshold = FAST_ERASE_THRESHOLD;
 
-            TermAction::EraseCharsOnLine(1).execute();
+            buf.erase_chars(1);
             user_str.pop();
         } else if input.starts_with(&user_str) {
             last_erase_time = now;
@@ -66,31 +82,46 @@ pub fn force_input(input: &str) -> Result<()> {
 
         let new_stuff = String::from_utf8(stdin().bytes().filter_map(|res| res.ok()).collect())
             .map_err(|_| {
-                RTError::InvalidInput(
-                    "Could not understand key strokes for some reasone".to_owned(),
-                )
+                RTError::InvalidInput("Could not understand key strokes for some reason".to_owned())
             })?;
         if is_alpha_num(&new_stuff) {
             erase_threshold = SLOW_ERASE_THRESHOLD;
 
             user_str += &new_stuff;
-            print!("{}", new_stuff);
+            //print!("{}", new_stuff);
+            buf.write_text(&new_stuff);
             let _ = stdout().flush();
+        }
+
+        if buf.just_modified() {
+            buf.clear_and_dump();
         }
     }
     std::thread::sleep(Duration::from_millis(350));
     tcsetattr(stdin_fd, TCSANOW, &orig_termios)?;
 
+    change_term(orig_term_settings);
     Ok(())
 }
 
-pub fn choice_menu(choices: &[impl AsRef<str>]) -> Result<String> {
-    println!();
+pub fn choice_menu(
+    choices: &[impl AsRef<str>],
+    settings: Option<termios::Termios>,
+    buf: &mut TermBuffer,
+) -> Result<String> {
+    let orig = change_term(settings);
+
+    buf.write_char('\n');
+    buf.clear_and_dump();
     let mut choice = menu(choices, None, false);
     while choice.is_err() {
-        TermAction::EraseLines(choices.len() + 2).execute();
+        //TermAction::EraseLines(choices.len() + 2).execute();
+        buf.erase_lines(choices.len() + 2);
+        buf.clear_and_dump();
         choice = menu(choices, None, false);
     }
-    TermAction::EraseLines(choices.len() + 2).execute();
+    buf.erase_lines(choices.len() + 2);
+
+    change_term(orig);
     Ok(choices[choice.unwrap()].as_ref().to_owned())
 }

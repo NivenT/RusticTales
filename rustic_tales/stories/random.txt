@@ -1,0 +1,11 @@
+Here's a random sentence
+
+{{ random_word_generator : sentence : wait_for_kb }}
+
+Here's a random question
+
+{{ random_word_generator : question : wait_for_kb }}
+
+Here's a random fact
+
+{{ random_word_generator : fact : wait_for_kb }}

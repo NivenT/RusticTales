@@ -1,3 +1,7 @@
+use std::io::Write;
+use std::{thread::sleep, time::Duration};
+
+use crate::buffer::*;
 use crate::err::Result;
 use crate::options::Options;
 use crate::storyteller::story::{Line, Page};
@@ -13,6 +17,7 @@ pub fn debug_menu(opts: &Options) -> Result<bool> {
             "Separate Story into Units",
             "Pagination Info for Story",
             "Print Some Constants",
+            "Test the buffer stuff",
         ],
         None,
         true,
@@ -31,10 +36,8 @@ pub fn debug_menu(opts: &Options) -> Result<bool> {
                 Err(e) => println!("Something went wrong: '{}'", e),
             }
         }
-        Ok(3) => {
-            should_wait = false;
-            print_some_constants(opts)
-        }
+        Ok(3) => print_some_constants(opts),
+        Ok(4) => run_buffer_tests(opts),
         Ok(_) => unreachable!("Menu only returns valid choices"),
     }
     Ok(!should_wait)
@@ -113,5 +116,65 @@ fn print_some_constants(opts: &Options) {
     println!("max_line_length: {}", Line::max_line_len());
     println!("max_page_height: {}", Page::max_page_height());
     println!("Options: {:?}", opts);
-    wait_for_enter("Press enter to continue...");
+}
+
+fn run_buffer_tests(opts: &Options) {
+    fn print_and_wait(buf: &mut TermBuffer) {
+        clear_screen();
+        print!("{}", buf);
+        wait_for_kb_with_prompt(">");
+    }
+
+    let mut buf = TermBuffer::new(opts.get_buf_opts());
+    buf.resize();
+
+    buf.write_text("Test text. Just making sure the basics work...\n");
+    buf.add_fg_color(Color::light(BaseColor::Blue));
+    buf.write_text("Blue text. Fancy, huh?\n");
+    buf.add_text_effect(TextEffect::Inverse);
+    buf.write_text("More text (but now inverted)\n");
+    buf.undo_modifiers();
+    buf.write_text("Normal text and then ");
+    buf.write_text("\x1b[1;5;41m");
+    buf.write_text("blinking bold text on a red background.\n\n");
+    buf.undo_modifiers();
+
+    buf.write_text("Let's now test some other stuff ");
+    buf.write_text("\x1b[0;105m");
+    buf.write_char(' ');
+    buf.undo_modifiers();
+    buf.write_text("\nWe can delete a ton of text");
+    print_and_wait(&mut buf);
+    buf.erase_chars(50);
+    print_and_wait(&mut buf);
+
+    buf.write_text("\n\nHow about overwriting text?");
+    print_and_wait(&mut buf);
+    buf.move_cursor(-5);
+    buf.write_text("test!\n");
+    print_and_wait(&mut buf);
+
+    buf.clear();
+    buf.write_text("Now let's try something more story like.");
+    print_and_wait(&mut buf);
+    buf.write_text("\n");
+    for word in &[
+        "Once",
+        "upon",
+        "a",
+        "time",
+        "something",
+        "happend.",
+        "The",
+        "end.",
+    ] {
+        buf.write_text(word);
+        buf.write_char(' ');
+        clear_screen();
+        print!("{}", buf);
+        let _ = std::io::stdout().flush();
+        sleep(Duration::from_millis(400));
+    }
+
+    println!();
 }
