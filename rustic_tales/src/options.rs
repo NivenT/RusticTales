@@ -77,12 +77,18 @@ impl Default for STOptions {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BufOptions {
     pub display_page_number: bool,
+    pub max_num_rows: Option<usize>,
+    pub max_num_cols: Option<usize>,
+    pub display_storyteller_state: bool,
 }
 
 impl Default for BufOptions {
     fn default() -> Self {
         BufOptions {
             display_page_number: false,
+            max_num_cols: Some(100),
+            max_num_rows: Some(40),
+            display_storyteller_state: false,
         }
     }
 }

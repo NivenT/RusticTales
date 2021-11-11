@@ -163,6 +163,12 @@ struct DirtyFlags {
     modified: bool,
 }
 
+#[derive(Debug, Clone, Default)]
+struct InfoStrings {
+    state: String,
+    user_info: Option<String>,
+}
+
 #[derive(Debug, Clone)]
 pub struct TermBuffer<'a> {
     cells: Vec<Cell>,
@@ -171,6 +177,7 @@ pub struct TermBuffer<'a> {
     curr_idx: usize,
     dirty: DirtyFlags,
     opts: &'a BufOptions,
+    info: InfoStrings,
 }
 
 impl<'a> TermBuffer<'a> {
@@ -182,15 +189,17 @@ impl<'a> TermBuffer<'a> {
             curr_idx: 0,
             dirty: DirtyFlags::default(),
             opts,
+            info: InfoStrings::default(),
         };
         buf.resize();
         buf.cells.resize_with(buf.page_size(), Default::default);
         buf
     }
     pub fn resize(&mut self) {
-        let (rows, cols) = terminal_dims();
-        self.rows = rows as usize;
-        self.cols = cols as usize;
+        let (cols, rows) = terminal_dims();
+        // clean code, just like the README asked for
+        self.rows = (rows as usize).min(self.opts.max_num_rows.unwrap_or(usize::MAX));
+        self.cols = (cols as usize).min(self.opts.max_num_cols.unwrap_or(usize::MAX));
     }
     pub fn just_turned_page(&mut self) -> bool {
         let ret = self.dirty.page_turned;
@@ -201,6 +210,9 @@ impl<'a> TermBuffer<'a> {
         let ret = self.dirty.modified;
         self.dirty.modified = false;
         ret
+    }
+    pub fn get_width_by_height(&self) -> (u32, u32) {
+        (self.cols as u32, self.rows as u32)
     }
     pub fn page_size(&self) -> usize {
         self.rows * self.cols
@@ -217,6 +229,10 @@ impl<'a> TermBuffer<'a> {
             let (dr, dc) = cell.area();
             ret.0 += dr;
             ret.1 += dc;
+            while ret.1 >= self.cols {
+                ret.1 -= self.cols;
+                ret.0 += 1;
+            }
         }
         ret
     }
@@ -289,6 +305,17 @@ impl<'a> TermBuffer<'a> {
         self.curr_idx += self.page_size();
     }
 
+    pub fn set_info(&mut self, state: String, info: Option<String>) {
+        if self.info.state != state {
+            self.dirty.modified = true;
+            self.info.state = state;
+        }
+        if self.info.user_info != info {
+            self.dirty.modified = true;
+            self.info.user_info = info;
+        }
+    }
+
     fn try_parse_modifier(&mut self, m: &str) -> usize {
         let re = Regex::new(r"^\u{1b}\[((\d+;?)+)m").expect("Typo if this does not work");
         re.captures(m)
@@ -305,7 +332,7 @@ impl<'a> TermBuffer<'a> {
     }
     fn advance_idx(&mut self) {
         self.curr_idx += 1;
-        while self.curr_idx >= self.cells.len() {
+        while self.curr_idx >= self.cells.len() || self.get_cursor().0 >= self.rows {
             self.dirty.page_turned = true;
             self.cells
                 .resize_with(self.cells.len() + self.page_size(), Default::default);
@@ -330,18 +357,45 @@ impl<'a> TermBuffer<'a> {
 
 impl<'a> fmt::Display for TermBuffer<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let light_red = CellModifier::FGColor(Color::light(BaseColor::Red));
         if self.opts.display_page_number {
             write!(
                 f,
                 "{}Page {}\n{}",
-                CellModifier::FGColor(Color::light(BaseColor::Red)),
+                light_red,
                 self.curr_page() + 1,
                 TextEffect::None
             )?;
         }
+
+        let mut c = 0;
         for cell in self.curr_content() {
+            let (_, dc) = cell.area();
+            c += dc;
+            while c >= self.cols {
+                writeln!(f)?;
+                c -= self.cols;
+            }
+
             write!(f, "{}", cell)?
         }
+
+        write!(f, "{}", light_red)?;
+        if let Some(ref info) = self.info.user_info {
+            write!(f, "\n{}", info)?;
+        }
+        if self.opts.display_storyteller_state {
+            write!(f, "\n{}", self.info.state)?;
+        }
+
+        /*
+        let (r, c) = self.get_cursor();
+        write!(
+            f,
+            "\n({}, {}) of ({}, {})",
+            r, c, self.rows, self.cols
+        );
+         */
         // return things to normal
         write!(f, "\x1b[0m")
     }

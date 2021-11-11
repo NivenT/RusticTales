@@ -82,13 +82,7 @@ impl<'a, S> StoryTeller<'a, S> {
         self.into_state_def()
     }
     fn into_state_def<SS: Default>(self) -> StoryTeller<'a, SS> {
-        StoryTeller {
-            story: self.story,
-            options: self.options,
-            term_settings: self.term_settings,
-            env: self.env,
-            state: SS::default(),
-        }
+        self.into_state(SS::default())
     }
     fn into_state<SS>(self, state: SS) -> StoryTeller<'a, SS> {
         StoryTeller {
@@ -644,6 +638,25 @@ impl<'a> StatefulStoryTeller<'a> {
                 Telling(st) => st.transition(buf),
                 _ => self,
             },
+        }
+    }
+    pub fn state_str(&self) -> String {
+        use StatefulStoryTeller::*;
+        match self {
+            Telling(..) => "Telling".to_owned(),
+            Paused(..) => "Paused".to_owned(),
+            Backspacing(..) => "Backspacing".to_owned(),
+            Repeating(..) => "Repeating".to_owned(),
+            WaitingForKB(..) => "Waiting for keybaord".to_owned(),
+            Sleeping(st) => format!("Sleeping ({:?})", st.state.dur),
+            Quit(..) => "Quit".to_owned(),
+        }
+    }
+    pub fn info_str(&self) -> Option<String> {
+        use StatefulStoryTeller::*;
+        match self {
+            Paused(..) => Some("Paused".to_owned()),
+            _ => None,
         }
     }
 }

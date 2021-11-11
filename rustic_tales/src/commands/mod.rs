@@ -3,10 +3,8 @@ use std::path::Path;
 use image::imageops;
 use image::io::Reader as ImgReader;
 
-use terminal_size::{terminal_size, Height, Width};
-
 use crate::buffer::{BaseColor, Color, TermBuffer, TextEffect};
-use crate::err::{RTError, Result};
+use crate::err::Result;
 use crate::options::DisplayUnit;
 
 pub mod prompts;
@@ -25,20 +23,16 @@ pub fn img_to_ascii(path: impl AsRef<Path>, buf: &mut TermBuffer) -> Result<()> 
     const ASCII_CHARS: &[u8] = " .,:;-=+*#&%@$".as_bytes();
     const NUM_CHARS: usize = ASCII_CHARS.len();
 
-    if let Some((Width(w), Height(h))) = terminal_size() {
-        let (w, h) = (w as u32, h as u32);
-        let img = ImgReader::open(path)?.decode()?;
-        buf.turn_page();
-        img.resize_exact(w, h, imageops::FilterType::Lanczos3)
-            .grayscale()
-            .to_bytes()
-            .into_iter()
-            .map(|b| ASCII_CHARS[NUM_CHARS * (b as usize) / 256])
-            .for_each(|c| buf.write_char(c as char));
-        Ok(())
-    } else {
-        Err(RTError::Internal("Could not get the terminal dimensions"))
-    }
+    let (w, h) = buf.get_width_by_height();
+    let img = ImgReader::open(path)?.decode()?;
+    buf.turn_page();
+    img.resize_exact(w, h, imageops::FilterType::Lanczos3)
+        .grayscale()
+        .to_bytes()
+        .into_iter()
+        .map(|b| ASCII_CHARS[NUM_CHARS * (b as usize) / 256])
+        .for_each(|c| buf.write_char(c as char));
+    Ok(())
 }
 
 pub fn img_to_term(path: impl AsRef<Path>, buf: &mut TermBuffer) -> Result<()> {
@@ -61,38 +55,34 @@ pub fn img_to_term(path: impl AsRef<Path>, buf: &mut TermBuffer) -> Result<()> {
         (Color::dark(Grey), [128, 128, 128]), // grey
         (Color::light(Grey), [255, 255, 255]),
     ];
-    if let Some((Width(w), Height(h))) = terminal_size() {
-        let (w, h) = (w as u32, h as u32);
-        let img = ImgReader::open(path)?.decode()?;
+    let (w, h) = buf.get_width_by_height();
+    let img = ImgReader::open(path)?.decode()?;
 
-        buf.turn_page();
-        // I can't tell if this is trashy or idiomatic rust
-        img.resize_exact(w, h, imageops::FilterType::CatmullRom)
-            .into_rgb8()
-            .pixels()
-            .map(|p| {
-                TERM_COLORS
-                    .iter()
-                    .min_by_key(|&c| {
-                        c.1.iter()
-                            .zip(p.0.iter())
-                            .map(|(&l, &r)| l as isize - r as isize)
-                            .map(|diff| diff * diff)
-                            .sum::<isize>()
-                    })
-                    .expect("Iterator is not empty")
-                    .0
-            })
-            .for_each(|c| {
-                buf.undo_modifiers();
-                buf.add_bg_color(c); // Add color modifier
-                buf.write_char(' ');
-            });
-        buf.add_text_effect(TextEffect::None);
-        Ok(())
-    } else {
-        Err(RTError::Internal("Could not get the terminal dimensions"))
-    }
+    buf.turn_page();
+    // I can't tell if this is trashy or idiomatic rust
+    img.resize_exact(w, h, imageops::FilterType::CatmullRom)
+        .into_rgb8()
+        .pixels()
+        .map(|p| {
+            TERM_COLORS
+                .iter()
+                .min_by_key(|&c| {
+                    c.1.iter()
+                        .zip(p.0.iter())
+                        .map(|(&l, &r)| l as isize - r as isize)
+                        .map(|diff| diff * diff)
+                        .sum::<isize>()
+                })
+                .expect("Iterator is not empty")
+                .0
+        })
+        .for_each(|c| {
+            buf.undo_modifiers();
+            buf.add_bg_color(c); // Add color modifier
+            buf.write_char(' ');
+        });
+    buf.add_text_effect(TextEffect::None);
+    Ok(())
 }
 
 // I should probably be caching these big json lists I'm getting with every call

@@ -18,6 +18,7 @@ pub enum RTError {
     WrongNumArguments(&'static str, &'static str, usize),
     #[allow(dead_code)]
     NotYetImplemented(String),
+    #[allow(dead_code)]
     Internal(&'static str),
 }
 

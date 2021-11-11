@@ -37,9 +37,11 @@ fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a Options) {
         if info.page_over() {
             buf.turn_page();
         }
+        buf.set_info(narrator.state_str(), narrator.info_str());
 
         if buf.just_turned_page() {
             buf.clear_and_dump_prev_page();
+            exhaust_kb();
             wait_for_kb_with_prompt("\nNext page...");
         } else if buf.just_modified() {
             buf.clear_and_dump();

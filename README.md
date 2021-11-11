@@ -86,11 +86,12 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
     - [X] See e.g. how the `repeat` command is implemented. It's an annoying amount of work, but doing this for every command will make for a better program.
   - [ ] Somthing something proc macro?
 - [ ] Internal story buffer thingy
-  - [ ] Don't just immedately print to terminal
+  - [X] Don't just immedately print to terminal
   - [ ] Keep track of cursor position
-    - [ ] (Reliably) erase characters not on the current line
+    - [X] (Reliably) erase characters not on the current line
   - [ ] Dynamic pagination?
   - [ ] Text wrapping (e.g. set max row length)
+  - [ ] Make sure this thing actually words as intended
 - [ ] Better naviagation
   - [ ] Move back a page
   - [ ] General purpose undo?
@@ -111,4 +112,5 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [ ] Somehow reduce the amount of logic duplication in this codebase
   - [ ] Remove old code that's no longer needed
     - [ ] Get rid of ansi.rs?
+  - [ ] Rewrite it Rust? I feel like this is suppose to fix anything
 
