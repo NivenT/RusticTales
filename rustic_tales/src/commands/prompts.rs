@@ -63,6 +63,8 @@ pub fn force_input(
     let mut user_str = String::new();
     let mut last_erase_time = Instant::now();
     let mut erase_threshold = SLOW_ERASE_THRESHOLD;
+
+    buf.clear_and_dump();
     while user_str != input {
         let now = Instant::now();
         if now.duration_since(last_erase_time) > erase_threshold
@@ -80,9 +82,7 @@ pub fn force_input(
 
         let new_stuff = String::from_utf8(stdin().bytes().filter_map(|res| res.ok()).collect())
             .map_err(|_| {
-                RTError::InvalidInput(
-                    "Could not understand key strokes for some reasone".to_owned(),
-                )
+                RTError::InvalidInput("Could not understand key strokes for some reason".to_owned())
             })?;
         if is_alpha_num(&new_stuff) {
             erase_threshold = SLOW_ERASE_THRESHOLD;
@@ -92,6 +92,10 @@ pub fn force_input(
             buf.write_text(&new_stuff);
             let _ = stdout().flush();
         }
+
+        if buf.just_modified() {
+            buf.clear_and_dump();
+        }
     }
     std::thread::sleep(Duration::from_millis(350));
     tcsetattr(stdin_fd, TCSANOW, &orig_termios)?;
@@ -100,14 +104,24 @@ pub fn force_input(
     Ok(())
 }
 
-pub fn choice_menu(choices: &[impl AsRef<str>], buf: &mut TermBuffer) -> Result<String> {
+pub fn choice_menu(
+    choices: &[impl AsRef<str>],
+    settings: Option<termios::Termios>,
+    buf: &mut TermBuffer,
+) -> Result<String> {
+    let orig = change_term(settings);
+
     buf.write_char('\n');
+    buf.clear_and_dump();
     let mut choice = menu(choices, None, false);
     while choice.is_err() {
         //TermAction::EraseLines(choices.len() + 2).execute();
         buf.erase_lines(choices.len() + 2);
+        buf.clear_and_dump();
         choice = menu(choices, None, false);
     }
     buf.erase_lines(choices.len() + 2);
+
+    change_term(orig);
     Ok(choices[choice.unwrap()].as_ref().to_owned())
 }
