@@ -3,6 +3,7 @@ use std::fmt;
 
 use regex::Regex;
 
+use crate::options::BufOptions;
 use crate::utils::*;
 
 #[derive(Clone, Copy, Debug)]
@@ -162,18 +163,26 @@ struct DirtyFlags {
     modified: bool,
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct TermBuffer {
+#[derive(Debug, Clone)]
+pub struct TermBuffer<'a> {
     cells: Vec<Cell>,
     rows: usize,
     cols: usize,
     curr_idx: usize,
     dirty: DirtyFlags,
+    opts: &'a BufOptions,
 }
 
-impl TermBuffer {
-    pub fn new() -> TermBuffer {
-        let mut buf = TermBuffer::default();
+impl<'a> TermBuffer<'a> {
+    pub fn new(opts: &'a BufOptions) -> TermBuffer<'a> {
+        let mut buf = TermBuffer {
+            cells: Vec::new(),
+            rows: 0,
+            cols: 0,
+            curr_idx: 0,
+            dirty: DirtyFlags::default(),
+            opts,
+        };
         buf.resize();
         buf.cells.resize_with(buf.page_size(), Default::default);
         buf
@@ -319,15 +328,17 @@ impl TermBuffer {
     }
 }
 
-impl fmt::Display for TermBuffer {
+impl<'a> fmt::Display for TermBuffer<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}Page {}\n{}",
-            CellModifier::FGColor(Color::light(BaseColor::Red)),
-            self.curr_page(),
-            TextEffect::None
-        )?;
+        if self.opts.display_page_number {
+            write!(
+                f,
+                "{}Page {}\n{}",
+                CellModifier::FGColor(Color::light(BaseColor::Red)),
+                self.curr_page() + 1,
+                TextEffect::None
+            )?;
+        }
         for cell in self.curr_content() {
             write!(f, "{}", cell)?
         }

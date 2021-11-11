@@ -75,8 +75,22 @@ impl Default for STOptions {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BufOptions {
+    pub display_page_number: bool,
+}
+
+impl Default for BufOptions {
+    fn default() -> Self {
+        BufOptions {
+            display_page_number: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Options {
     st_opts: STOptions,
+    buf_opts: BufOptions,
     file_ignore_patterns: Vec<String>,
 }
 
@@ -84,6 +98,7 @@ impl Default for Options {
     fn default() -> Self {
         Options {
             st_opts: STOptions::default(),
+            buf_opts: BufOptions::default(),
             file_ignore_patterns: vec!["*~".to_owned(), "#*#".to_owned()],
         }
     }
@@ -107,5 +122,8 @@ impl Options {
     }
     pub fn get_story_folder(&self) -> &String {
         &self.st_opts.stories_directory
+    }
+    pub fn get_buf_opts(&self) -> &BufOptions {
+        &self.buf_opts
     }
 }

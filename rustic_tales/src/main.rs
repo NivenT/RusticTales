@@ -22,15 +22,15 @@ use ansi::TermAction;
 use buffer::TermBuffer;
 use debug::debug_menu;
 use err::Result;
-use options::{Options, STOptions};
+use options::Options;
 use storyteller::{StatefulStoryTeller, StoryTeller, Telling};
 use utils::*;
 
-fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
+fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a Options) {
     let orig_term_settings = no_term_echo();
 
-    st.setup(opts, orig_term_settings);
-    let mut buf = TermBuffer::new();
+    st.setup(opts.get_story_opts(), orig_term_settings);
+    let mut buf = TermBuffer::new(opts.get_buf_opts());
     let mut narrator = StatefulStoryTeller::from_telling(st);
     loop {
         let info = narrator.step(&mut buf);
@@ -82,7 +82,7 @@ fn main() -> Result<()> {
                 Ok(story) => match StoryTeller::<Telling>::new(&story) {
                     Ok(st) => {
                         skip_enter = true;
-                        tell_story(st, options.get_story_opts());
+                        tell_story(st, &options);
                     }
                     Err(e) => println!("Could not parse story because '{}'", e),
                 },

@@ -37,7 +37,7 @@ pub fn debug_menu(opts: &Options) -> Result<bool> {
             }
         }
         Ok(3) => print_some_constants(opts),
-        Ok(4) => run_buffer_tests(),
+        Ok(4) => run_buffer_tests(opts),
         Ok(_) => unreachable!("Menu only returns valid choices"),
     }
     Ok(!should_wait)
@@ -118,14 +118,14 @@ fn print_some_constants(opts: &Options) {
     println!("Options: {:?}", opts);
 }
 
-fn run_buffer_tests() {
+fn run_buffer_tests(opts: &Options) {
     fn print_and_wait(buf: &mut TermBuffer) {
         clear_screen();
         print!("{}", buf);
         wait_for_kb_with_prompt(">");
     }
 
-    let mut buf = TermBuffer::new();
+    let mut buf = TermBuffer::new(opts.get_buf_opts());
     buf.resize();
 
     buf.write_text("Test text. Just making sure the basics work...\n");
