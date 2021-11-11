@@ -33,7 +33,10 @@ fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
     let mut buf = TermBuffer::new();
     let mut narrator = StatefulStoryTeller::from_telling(st);
     loop {
-        let story_over = narrator.step(&mut buf).story_ended();
+        let info = narrator.step(&mut buf);
+        if info.page_over() {
+            buf.turn_page();
+        }
 
         if buf.just_turned_page() {
             buf.clear_and_dump_prev_page();
@@ -42,7 +45,7 @@ fn tell_story<'a>(mut st: StoryTeller<'a, Telling>, opts: &'a STOptions) {
             buf.clear_and_dump();
         }
 
-        if story_over {
+        if info.story_ended() {
             break;
         } else {
             narrator = narrator.transition(&mut buf);

@@ -1,6 +1,7 @@
 This is the first page. That is all there is to it. I can end it now if I want.
 /PAGE/
-The second page is also short. /PAGE/
+The second page is also short.
+/PAGE/
 Now, page three is a real doosey. There is only so much text that can fit in the terminal screen, so even with adding in a page token, RusticTales should figure out that it needs to paginate long strings of text. So, um, hopefully this will eventually get long enough to be made it's own page. I just realized that the code for doing this currently does not take into accout new lines, so that's a bit annoying. I'm running out of fillter, so...
 
 

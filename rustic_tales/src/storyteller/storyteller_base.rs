@@ -33,6 +33,10 @@ impl SnippetInfo {
         use SnippetInfo::*;
         matches!(self, StoryOver)
     }
+    pub fn page_over(&self) -> bool {
+        use SnippetInfo::*;
+        matches!(self, EndedWith(Span::Page))
+    }
 }
 
 #[derive(Debug, Clone)]

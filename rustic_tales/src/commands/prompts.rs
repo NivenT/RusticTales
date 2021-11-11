@@ -7,7 +7,7 @@ use crate::err::{RTError, Result};
 use crate::utils::menu;
 
 pub fn prompt_yesno(def: Option<String>, buf: &mut TermBuffer) -> String {
-    buf.write_text(" (y/n)");
+    buf.write_text(" (y/n) ");
     buf.clear_and_dump();
     let mut temp = String::new();
     let _ = stdin().read_line(&mut temp);

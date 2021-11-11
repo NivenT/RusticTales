@@ -125,14 +125,19 @@ impl CellModifier {
 pub struct Cell {
     c: char, // Tried 'character' but that's just long
     modifiers: LinkedList<CellModifier>,
+    page_end: bool,
 }
 
 impl Cell {
     pub fn clear(&mut self) {
         self.c = '\0';
         self.modifiers.clear();
+        self.page_end = false;
     }
     pub fn area(&self) -> (usize, usize) {
+        if self.page_end {
+            return (0, 0);
+        }
         // tabs don't exist
         match self.c {
             '\0' => (0, 0),
@@ -207,8 +212,10 @@ impl TermBuffer {
         ret
     }
     pub fn turn_page(&mut self) {
-        self.curr_idx = self.curr_page_end_idx();
-        self.advance_idx();
+        if !self.dirty.page_turned {
+            self.curr_idx = self.curr_page_end_idx();
+            self.advance_idx();
+        }
     }
     pub fn write_char(&mut self, c: char) {
         self.dirty.modified = true;
@@ -267,7 +274,7 @@ impl TermBuffer {
         let _ = std::io::stdout().flush();
     }
     pub fn clear_and_dump_prev_page(&mut self) {
-        debug_assert!(self.curr_page() > 0);
+        //debug_assert!(self.curr_page() > 0);
         self.curr_idx -= self.page_size();
         self.clear_and_dump();
         self.curr_idx += self.page_size();
