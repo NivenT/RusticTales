@@ -90,7 +90,7 @@ Again, I'll type up something more helpful when I feel like it. For now, see the
   - [ ] Keep track of cursor position
     - [X] (Reliably) erase characters not on the current line
   - [ ] Dynamic pagination?
-  - [ ] Text wrapping (e.g. set max row length)
+  - [X] Text wrapping (e.g. set max row length)
   - [ ] Make sure this thing actually words as intended
 - [ ] Better naviagation
   - [ ] Move back a page
